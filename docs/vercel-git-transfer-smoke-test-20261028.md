@@ -4,7 +4,7 @@ Date: 2026-10-28.
 
 This documentation-only change verifies that the existing Vercel project still creates preview deployments for pull requests after transferring the repository to `Altovena/chatgenius`.
 
-Retry after verifying that the Vercel GitHub App has repository access under the Altovena organization.
+Retest after reconnecting the existing ChatGenius Vercel project to the new organization repository.
 
 No runtime code, production configuration, website content, or catalog data is changed.
 
