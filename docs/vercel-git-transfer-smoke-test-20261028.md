@@ -9,3 +9,5 @@ Retest after reconnecting the existing ChatGenius Vercel project to the new orga
 No runtime code, production configuration, website content, or catalog data is changed.
 
 Expected outcome: Vercel preview READY on the draft PR. Close the draft PR without merging once verified.
+
+Second diagnostic retest: 2026-10-29, after verifying the installed Vercel GitHub App has explicit access to `Altovena/chatgenius`.
