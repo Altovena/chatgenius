@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const glyph={w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'},b:{k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟'}};
 const value={p:100,n:320,b:335,r:500,q:900,k:0};
 const difficultyCopy={1:'Spiller enkle, til dels tilfeldige trekk. Fin for å komme i gang.',2:'En vennlig motstander som også ser noen taktiske muligheter.',3:'Ser etter materiell og enkle kombinasjoner.',4:'Beregner flere trekk fremover og straffer feil.',5:'Den sterkeste lokale motstanderen, men ikke en stormestermotor.'};
-let game=new Chess(),selected=null,orientation='w',thinking=false,gameRecorded=false,hintSquare=null;
+let game=new Chess(),selected=null,orientation='w',thinking=false,gameRecorded=false,hintSquare=null,analysisApi=null;
 let appearance={theme:'sage',pieces:'classic',level:'2'};
 try{appearance={...appearance,...JSON.parse(localStorage.getItem('freddyChessAppearance')||'{}')}}catch{}
 if(!['sage','wood','blue','mono','luxury','marble'].includes(appearance.theme))appearance.theme='sage';
@@ -150,6 +150,7 @@ function setTab(tab){document.body.classList.toggle('chess-playing',tab==='play'
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='train'){trainingOrigin='general';queue=[];loadPuzzle()}setTab(b.dataset.tab)});$('dailyGo').onclick=()=>{trainingOrigin='general';queue=[];loadPuzzle();setTab('train')};$('progressTrain').onclick=()=>{trainingOrigin='general';queue=[];loadPuzzle();setTab('train')};
 const files='abcdefgh';
 function renderBoard(target,position,sel,side,onClick,marked=null){
+  if(target==='board'&&document.getElementById('reviewFinishedGame'))$('reviewFinishedGame').hidden=!game.isGameOver();
   const root=$(target);
   // Build the 64 DOM cells ONCE. Never remove a piece node during a move:
   // Safari's scroll anchoring can otherwise visibly shift the chessboard.
@@ -231,6 +232,14 @@ liveCoach.querySelector('h2').textContent='Analyse og anbefalinger';
 liveCoach.parentElement.prepend(liveCoach);
 const analyzePosition=document.createElement('button');analyzePosition.type='button';analyzePosition.id='analyzePosition';analyzePosition.className='primary';analyzePosition.textContent='♟ Få Stockfish-anbefaling';
 $('coachMessage').after(analyzePosition);
+const reviewFinishedGame=document.createElement('button');reviewFinishedGame.id='reviewFinishedGame';reviewFinishedGame.type='button';reviewFinishedGame.className='primary';reviewFinishedGame.textContent='♟ Analyser partiet jeg nettopp spilte →';reviewFinishedGame.hidden=true;
+analyzePosition.after(reviewFinishedGame);
+reviewFinishedGame.onclick=()=>{
+  if(!game.isGameOver()||!analysisApi)return;
+  const history=game.pgn({maxWidth:0,newline:'\n'});
+  const pgn=`[Event "Parti mot datamaskinen"]\n[White "Freddy"]\n[Black "Datamaskinen"]\n[Result "${game.isCheckmate()?(game.turn()==='b'?'1-0':'0-1'):'1/2-1/2'}"]\n\n${history}`;
+  setTab('analysis');analysisApi.analyzeFinishedGame(pgn);
+};
 analyzePosition.onclick=async()=>{
   if(thinking||game.turn()!=='w'){ $('coachMessage').textContent='Vent til det er din tur før du analyserer.';return }
   if(game.isGameOver()){$('coachMessage').textContent='Partiet er avsluttet. Bruk «Angre» for å se på en tidligere stilling, eller start et nytt parti.';return}
@@ -512,7 +521,7 @@ const skipPuzzle=document.createElement('button');skipPuzzle.id='skipPuzzle';ski
 skipPuzzle.onclick=()=>{if(trainingOrigin==='analysis'){if(!puzzleSolved){recordPuzzleAttempt(false);stats.attempts++;stats.streak=0;persist()}if(analysisPracticeIndex+1<analysisPractice.length){analysisPracticeIndex++;loadPuzzle()}else completeOwnQueue();return}if(!puzzleSolved){recordPuzzleAttempt(false);stats.attempts++;stats.streak=0;const skill=stats.skills[puzzle.skill]||{attempts:0,correct:0};skill.attempts++;stats.skills[puzzle.skill]=skill;if(!queue.includes(puzzleData.indexOf(puzzle)))queue.push(puzzleData.indexOf(puzzle));persist()}loadPuzzle()};
 const lessons=[{title:'Kontroller sentrum',tag:'ÅPNING',body:'Feltene e4, d4, e5 og d5 er sjakkbrettets knutepunkt.',points:['Flytt én eller to sentrumsbønder tidlig.','Utvikle springere og løpere mot sentrum.','Unngå å flytte samme brikke mange ganger i åpningen.']},{title:'Sikre kongen',tag:'KONGESIKKERHET',body:'Selv en sterk stilling kan rakne hvis kongen står utsatt.',points:['Gjør rokade relativt tidlig.','Unngå unødvendige bondetrekk foran kongen.','Se etter motstanderens sjakker før hvert trekk.']},{title:'Se etter taktikk',tag:'MØNSTRE',body:'Gaffel, binding og spidd er mønstre som vinner materiell.',points:['Se først etter sjakker, deretter slag og trusler.','Undersøk alle ubeskyttede brikker.','Spør: Hva truer motstanderen etter mitt trekk?']},{title:'Tenk som en trener',tag:'BESLUTNINGER',body:'En enkel sjekkliste gir færre unødvendige feil.',points:['Hva var hensikten med motstanderens trekk?','Hvilke to eller tre kandidattrekk har jeg?','Kan en av mine brikker slås gratis etterpå?']},{title:'Lær sluttspill',tag:'SLUTTSPILL',body:'Når få brikker er igjen blir kongen sterkere og bondene avgjør.',points:['Aktiver kongen.','Lag fribønder som kan forvandles.','Øv på matt med dronning og tårn.']},{title:'Bygg gode vaner',tag:'SMART TRENING',body:'Hyppig, fokusert trening med repetisjon slår ofte lange tilfeldige økter.',points:['Ta 10 minutter med taktikk daglig.','Gå gjennom partier og finn én lærdom.','Gjenta vanskelige mønstre til de sitter.']}];
 $('lessons').innerHTML=lessons.map((l,i)=>`<article class="lesson"><span class="num">LEKSJON ${String(i+1).padStart(2,'0')} · ${l.tag}</span><h3>${l.title}</h3><p>${l.body}</p><ul>${l.points.map(p=>`<li>${p}</li>`).join('')}</ul><button data-lesson="${i}">${i===2||i===4?'Øv på temaet →':'Prøv i et parti →'}</button></article>`).join('');document.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{if(['2','4'].includes(b.dataset.lesson)){setTab('train')}else{setTab('play')}});
-setupAnalysis(engine,(positions,index)=>{analysisScrollY=window.scrollY;analysisReturnTab='analysis';trainingOrigin='analysis';analysisPractice=positions;analysisPracticeIndex=index;loadPuzzle();setTab('train')},summary=>{stats.analyzedGames[summary.gameId]={topics:summary.topics,count:summary.count,positions:summary.positions,date:summary.date,white:summary.white,black:summary.black,checked:summary.checked,analysisVersion:summary.analysisVersion};const keys=Object.keys(stats.analyzedGames);if(keys.length>100)delete stats.analyzedGames[keys[0]];persist()});
+analysisApi=setupAnalysis(engine,(positions,index)=>{analysisScrollY=window.scrollY;analysisReturnTab='analysis';trainingOrigin='analysis';analysisPractice=positions;analysisPracticeIndex=index;loadPuzzle();setTab('train')},summary=>{stats.analyzedGames[summary.gameId]={topics:summary.topics,count:summary.count,positions:summary.positions,date:summary.date,white:summary.white,black:summary.black,checked:summary.checked,analysisVersion:summary.analysisVersion};const keys=Object.keys(stats.analyzedGames);if(keys.length>100)delete stats.analyzedGames[keys[0]];persist()});
 $('coachAnalyze').onclick=()=>setTab('analysis');
 function startOwnPractice(positions,resumeIndex=0){
   if(!positions.length){setTab('analysis');return}
