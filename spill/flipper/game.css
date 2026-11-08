@@ -35,3 +35,6 @@
  #tilt,#launch{min-height:38px}
  .footer{display:none}
 }
+
+/* Prevent double-tap zoom, callout/selection, and accidental browser panning during rapid pinball input. */
+@media(max-width:799px){.shell,.controls,.control,.playfield,.modal,.start{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}.control{appearance:none;-webkit-appearance:none}.start{touch-action:manipulation}}

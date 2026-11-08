@@ -2,6 +2,7 @@
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d');
 const W=420,H=720,DPR=2;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
 const bg=new Image(),dragon=new Image();bg.src='/spill/flipper/art/castle-playfield.webp';dragon.src='/spill/flipper/art/dragon-target.webp';
+let resumeGraceUntil=0,lastContinueTap=0;
 let state='menu',balls=[],stock=3,score=0,best=0,level=1,last=0,frame=0,charge=0,muted=false,audio,tiltHeat=0,tilted=false,tiltDecay=0,dragonHits=0,combo=0,mode='READY',modeTime=0,flash=0,particles=[],ringLights=[false,false,false,false,false];
 const key={left:false,right:false,launch:false};
 const flipKickUntil={left:0,right:0};
@@ -27,7 +28,7 @@ const makeBall=(x,y,vx=0,vy=0,inLane=false)=>({x,y,vx,vy,r:8,inLane,route:null,r
 function readyBall(){balls=[makeBall(369,644,0,0,true)];charge=0;tilted=false;tiltHeat=0;tiltDecay=0;hud()}
 function start(){multiplier=1;targetHits=0;lockHits=0;extraAwarded=false;scoreTargets.forEach(t=>t.cd=0);score=0;stock=3;level=1;dragonHits=0;combo=0;ringLights=[false,false,false,false,false];particles=[];mode='READY';modeTime=0;readyBall();state='playing';$('overlay').classList.add('hidden');$('pause').disabled=false;hud();tone(650,.15)}
 function gameOver(){state='over';$('pause').disabled=true;modal('GAME OVER','CASTLE<br>CHAOS',`Du fikk ${score.toLocaleString('no-NO')} poeng og nådde nivå ${level}. Spill igjen!`,'SPILL IGJEN ▶');tone(165,.43,'sawtooth')}
-function pause(){if(state==='playing'){state='paused';modal('PAUSE','PAUSE','Slottets magi venter.','FORTSETT ▶');$('pause').textContent='▶ FORTSETT'}else if(state==='paused'){state='playing';$('overlay').classList.add('hidden');$('pause').textContent='Ⅱ PAUSE'}}
+function pause(){if(state==='playing'){state='paused';key.left=key.right=key.launch=false;modal('PAUSE','PAUSE','Slottets magi venter.','FORTSETT ▶');$('pause').textContent='▶ FORTSETT'}else if(state==='paused'){state='playing';resumeGraceUntil=Date.now()+1600;key.left=key.right=key.launch=false;$('overlay').classList.add('hidden');$('pause').textContent='Ⅱ PAUSE';last=performance.now()}}
 function launch(){if(state!=='playing')return;let b=balls.find(b=>b.inLane&&b.vy===0);if(!b)return;b.vx=0;b.vy=-850-charge*6;charge=0;tone(160,.23,'sawtooth',.05);setMode('BALL I SPILL',1.1)}
 function nudge(){if(state!=='playing'||!balls.some(b=>!b.inLane))return;tiltHeat+=1;tiltDecay=2.2;for(const b of balls)if(!b.inLane){b.vx+=(Math.random()-.5)*180;b.vy-=115}tone(115,.09,'triangle');if(tiltHeat>=3){tilted=true;setMode('TILT!',3);tone(90,.45,'sawtooth',.055)}hud()}
 function collideCircle(b,o,boost=1){const dx=b.x-o.x,dy=b.y-o.y,d=Math.hypot(dx,dy),min=b.r+o.r;if(d>=min||d<.001)return false;let nx=dx/d,ny=dy/d,approach=b.vx*nx+b.vy*ny;b.x=o.x+nx*(min+.5);b.y=o.y+ny*(min+.5);if(approach<0){b.vx-=1.75*approach*nx;b.vy-=1.75*approach*ny;b.vx+=nx*boost;b.vy+=ny*boost;return true}return false}
@@ -104,5 +105,13 @@ for(const k of ['left','right','launch','tilt'])bind(k,k);
 const map={ArrowLeft:'left',z:'left',Z:'left',ArrowRight:'right',x:'right',X:'right','/':'right'};
 window.addEventListener('keydown',e=>{if(map[e.key]){const side=map[e.key];if(!key[side])flipKickUntil[side]=frame+.15;key[side]=true;e.preventDefault()}if(e.key===' '){key.launch=true;e.preventDefault()}if(['t','T','ArrowUp'].includes(e.key)){if(!e.repeat)nudge();e.preventDefault()}if(['p','P','Escape'].includes(e.key))pause()});
 window.addEventListener('keyup',e=>{if(map[e.key])key[map[e.key]]=false;if(e.key===' '){if(key.launch)launch();key.launch=false}});
-window.addEventListener('blur',()=>{key.left=key.right=key.launch=false;if(state==='playing')pause()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing')pause()});
-$('start').addEventListener('click',()=>state==='paused'?pause():start());$('pause').addEventListener('click',pause);$('sound').addEventListener('click',()=>{muted=!muted;$('sound').textContent=muted?'AV':'PÅ ♪'});hud();})();
+window.addEventListener('blur',()=>{key.left=key.right=key.launch=false;if(state==='playing'&&Date.now()>resumeGraceUntil)pause()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing'&&Date.now()>resumeGraceUntil)pause()});
+function continueOrStart(e){if(e)e.preventDefault();const now=Date.now();if(now-lastContinueTap<500)return;lastContinueTap=now;if(state==='paused')pause();else if(state==='menu'||state==='over')start()}
+$('start').addEventListener('pointerup',e=>{if(e.pointerType==='touch'||e.pointerType==='pen')continueOrStart(e)});
+$('start').addEventListener('click',continueOrStart);
+$('pause').addEventListener('click',()=>{if(Date.now()>resumeGraceUntil)pause()});
+// Keep rapid pinball taps in the game. Browser/system edge gestures may still be reserved by iOS.
+for(const el of document.querySelectorAll('.controls,.control,.playfield')){
+ el.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+}
+document.addEventListener('gesturestart',e=>{if(e.target.closest?.('.shell'))e.preventDefault()},{passive:false});$('sound').addEventListener('click',()=>{muted=!muted;$('sound').textContent=muted?'AV':'PÅ ♪'});hud();})();
