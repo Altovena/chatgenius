@@ -318,6 +318,10 @@ $('puzzleHint').after(showThreats);
 showThreats.onclick=()=>{if(checkingAlternative)return;const result=explainThreats();trainHint=result.square;$('puzzleFeedback').textContent=result.text;$('puzzleFeedback').style.color='#e2d39f';renderPuzzle()};
 const compareMoves=document.createElement('button');compareMoves.id='compareMoves';compareMoves.className='secondary';compareMoves.type='button';compareMoves.textContent='⚖ Sammenlign tre trekk med Stockfish';
 showThreats.after(compareMoves);
+const comparisonPreview=document.createElement('div');comparisonPreview.id='comparisonPreview';comparisonPreview.className='comparison-preview hidden';
+comparisonPreview.innerHTML='<p class="muted">Trykk på et alternativ for å se trekkene på brettet.</p><div class="comparison-choices"></div><div class="board-frame comparison-frame"><div id="comparisonBoard" class="chessboard" aria-label="Analysebrett"></div></div><p class="muted comparison-caption" aria-live="polite"></p><div class="comparison-steps"><button type="button" class="secondary" data-step="0">Startstilling</button><button type="button" class="secondary" data-step="1">Ditt trekk</button><button type="button" class="secondary" data-step="2">Motstanderens svar</button></div>';
+compareMoves.after(comparisonPreview);
+function clearComparison(){comparisonPreview.classList.add('hidden');comparisonPreview.querySelector('.comparison-choices').replaceChildren()}
 compareMoves.onclick=async()=>{
   if(checkingAlternative||puzzleSolved||trainingStage!==0)return;
   if(!engine.ready){$('puzzleFeedback').textContent='Stockfish starter fortsatt. Prøv sammenligningen igjen om litt.';return}
@@ -341,20 +345,32 @@ compareMoves.onclick=async()=>{
       const evaluation=await engine.search(next.fen(),{ms:650,skill:20});
       if(round!==trainingRound||training.fen()!==fen)return;
       if(!Number.isFinite(evaluation.score))throw new Error('Ingen gyldig motorevaluering');
-      let reply='';
+      let reply='',replyMove=null;
       if(typeof evaluation.move==='string'&&/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(evaluation.move)){
         try{
           const response=next.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'});
-          reply=response?.san||'';
+          reply=response?.san||'';replyMove=response?{from:response.from,to:response.to,promotion:response.promotion||'q'}:null;
         }catch{/* A returned principal variation may be unavailable in this position */}
       }
-      results.push({...candidate,score:-evaluation.score,reply});
+      results.push({...candidate,score:-evaluation.score,reply,replyMove});
     }
     results.sort((a,b)=>b.score-a.score);
     const best=results[0].score;
     const lines=results.map((r,i)=>`${i+1}. ${r.move.san} (${r.reason})${r.reply?' → motstanderen svarer '+r.reply:''}${i===0?' – beste av disse':' – ca. '+Math.max(0,Math.round((best-r.score)/10)/10)+' bondepoeng svakere'}`);
     $('puzzleFeedback').textContent=`Stockfish sammenlignet ${results.length} kandidater: ${lines.join(' · ')}. Motstanderens svar er motorens forslag ved kort betenkningstid, ikke en garantert fortsettelse.`;
     $('puzzleFeedback').style.color='#e2d39f';
+    const choices=comparisonPreview.querySelector('.comparison-choices');choices.replaceChildren();comparisonPreview.classList.remove('hidden');
+    const view=(result,step)=>{
+      const position=new Chess(fen);
+      if(step>=1)position.move(result.move);
+      if(step>=2&&result.replyMove)position.move(result.replyMove);
+      renderBoard('comparisonBoard',position,null,puzzleColor,()=>{});
+      comparisonPreview.querySelector('.comparison-caption').textContent=step===0?'Startstillingen':step===1?`Etter ${result.move.san}`:result.replyMove?`Etter ${result.move.san} og motstanderens ${result.reply}`:'Motoren fant ikke et tilgjengelig svar. Viser ditt trekk.';
+      comparisonPreview.querySelectorAll('[data-step]').forEach(b=>{b.onclick=()=>view(result,Number(b.dataset.step));b.disabled=Number(b.dataset.step)===2&&!result.replyMove});
+      [...choices.children].forEach((b,i)=>b.classList.toggle('picked',results[i]===result));
+    };
+    for(const result of results){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=`${result.move.san}${result.reply?' → '+result.reply:''}`;button.onclick=()=>view(result,2);choices.appendChild(button)}
+    view(results[0],2);
   }catch{$('puzzleFeedback').textContent='Stockfish klarte ikke å fullføre sammenligningen. Prøv igjen om litt.'}
   finally{checkingAlternative=false;compareMoves.disabled=false}
 };
@@ -366,7 +382,7 @@ function loadPuzzle(){
     if(!queue.length)newQueue();const idx=queue.shift();puzzle=puzzleData[idx];
   }
   training=new Chess(puzzle.fen);puzzleColor=training.turn();puzzleSelected=null;puzzleSolved=false;puzzleMissed=false;checkingAlternative=false;trainHint=null;trainingStage=0;hintCount=0;trainingRound++;
-  compareMoves.disabled=false;
+  compareMoves.disabled=false;clearComparison();
   if(trainingOrigin==='analysis'&&analysisReturnTab==='progress'&&stats.ownQueue){stats.ownQueue.index=analysisPracticeIndex;persist()}
   $('puzzleTitle').textContent=trainingOrigin==='analysis'?puzzle.title:`Utfordring ${trainingRound}`;$('puzzleLevel').textContent=trainingOrigin==='analysis'?'Fra Chess.com-analysen din':'Tenk selv – se etter sjakker, slag og trusler';
   $('puzzleIndex').textContent=trainingOrigin==='analysis'?`Forbedringspunkt ${analysisPracticeIndex+1} av ${analysisPractice.length}`:`${puzzleData.length} varianter`;$('skillBadge').hidden=true;
