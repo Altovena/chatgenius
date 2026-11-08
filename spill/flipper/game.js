@@ -39,6 +39,8 @@ function updateBall(b,dt){b.life+=dt;b.routeCd=Math.max(0,b.routeCd-dt);b.hitCd=
 if(b.route){const p=b.route;p.time+=dt;const t=Math.min(1,p.time/p.duration);[b.x,b.y]=routePosition(p.points,t);if(t>=1){b.route=null;[b.vx,b.vy]=p.exit}return}
 if(b.inLane){if(b.vy!==0){b.vy+=600*dt;b.y+=b.vy*dt;if(b.y<=118){b.inLane=false;routeBall(b,[[369,118],[353,101],[334,94],[318,110],[304,133]],.37,[-205,185],'SKYTERAMPE',100);b.routeCd=.8;tone(840,.13,'triangle')}else if(b.y>660){b.y=644;b.vy=0}}return}
 b.vy+=790*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.vx*=1-.12*dt;
+// Side outlanes: a ball trapped outside the lower pivots must drain, never rattle forever.
+if(b.y>600&&(b.x<140||b.x>280)){b.vy=Math.max(260,b.vy);b.y+=260*dt;return}
 if(b.x<36){b.x=36;b.vx=Math.abs(b.vx)*.86}if(b.x>332&&b.y>248){b.x=332;b.vx=-Math.abs(b.vx)*.85}if(b.x>383){b.x=383;b.vx=-Math.abs(b.vx)*.8}if(b.y<60){b.y=60;b.vy=Math.abs(b.vy)*.85}
 for(const [a,z] of segments)rail(b,a,z);
 for(const o of bumper)if(collideCircle(b,o,550)&&b.hitCd<=0){scoreHit(150+combo%10*20,o.x,o.y,'BUMPER!');tone(710+Math.random()*180,.11,'sine',.055);b.hitCd=.09;flash=.09}
@@ -60,6 +62,7 @@ ctx.fillStyle='#081027a6';ctx.fillRect(26,520,367,155);ctx.fillStyle='#070d21bf'
 // Open steel shooter lane: no rail across its top, and a visible upper exit gate.
 ctx.strokeStyle='#e0ceef';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(343,260);ctx.lineTo(343,655);ctx.moveTo(391,95);ctx.lineTo(391,659);ctx.stroke();ctx.strokeStyle='#6df8e6';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(343,252);ctx.quadraticCurveTo(342,166,318,128);ctx.stroke();
 for(const [a,z] of segments){ctx.strokeStyle='#a6a3cb';ctx.lineWidth=6;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...z);ctx.stroke();ctx.strokeStyle='#5f477c';ctx.lineWidth=2;ctx.stroke()}
+ctx.save();ctx.strokeStyle='#ffb96e';ctx.shadowColor='#ff9d54';ctx.shadowBlur=12;ctx.lineWidth=3;for(const x of [102,307]){ctx.beginPath();ctx.moveTo(x,591);ctx.lineTo(x,626);ctx.stroke();ctx.beginPath();ctx.moveTo(x-6,621);ctx.lineTo(x,630);ctx.lineTo(x+6,621);ctx.stroke()}ctx.restore();
 for(const r of ramps){let d=r.x<200?1:-1;ctx.strokeStyle='#090a28';ctx.lineWidth=23;ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.bezierCurveTo(r.x+d*10,300,r.x+d*65,245,r.to[0],r.to[1]);ctx.stroke();ctx.strokeStyle=r.color;ctx.lineWidth=7;ctx.shadowColor=r.color;ctx.shadowBlur=13;ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=r.color;ctx.beginPath();ctx.arc(r.x,r.y,13,0,Math.PI*2);ctx.fill()}
 for(const o of orbits){ctx.strokeStyle='#efca78';ctx.lineWidth=8;ctx.beginPath();ctx.arc(o.x,o.y,o.r,Math.PI*.4,Math.PI*1.65);ctx.stroke()}
 ctx.save();ctx.strokeStyle='#b98aff';ctx.lineWidth=10;ctx.shadowColor='#c58aff';ctx.shadowBlur=18;ctx.setLineDash([14,9]);ctx.beginPath();ctx.arc(bonusLoop.x,bonusLoop.y,bonusLoop.r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#f9e6ff';ctx.beginPath();ctx.arc(bonusLoop.entry.x,bonusLoop.entry.y,10,0,Math.PI*2);ctx.fill();ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillStyle='#ffedbd';ctx.shadowBlur=7;ctx.fillText('TÅRNSLØYFE',bonusLoop.x,bonusLoop.y-69);ctx.restore();
