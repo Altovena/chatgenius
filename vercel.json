@@ -33,6 +33,10 @@
       "dest": "/spill/$1/$2/index.html"
     },
     {
+      "src": "/spill/sjakk/?",
+      "dest": "/spill/sjakk/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
