@@ -125,6 +125,21 @@ export function setupAnalysis(engine,onPractice,onFindings){
     finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
   };
   el('stopBatch').onclick=()=>{stopBatch=true;el('analysisStatus').textContent='Stopper etter pågående stilling …'};
+  async function analyzeFinishedGame(pgn){
+    if(busy)return false;
+    const [local]=parsePgn(pgn);
+    if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
+    if(!engine.ready){el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
+    selected=local;el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
+    el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
+    try{
+      const result=await analyzeOne(local,(k,total)=>el('analysisStatus').textContent=`Analyserer ditt siste parti · trekk ${k} av ${total} …`,100);
+      showFindings(result);
+      el('analysisStatus').textContent=result.findings.length?`Fant ${result.findings.length} forbedringspunkter. Trykk «Tren på denne stillingen» under et av funnene for å øve.`:'Analysen er ferdig. Ingen tydelige forbedringspunkter ble funnet i de undersøkte trekkene.';
+    }catch(e){el('analysisStatus').textContent='Kunne ikke analysere partiet: '+e.message}
+    finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
+    return true;
+  }
   try{
     const saved=JSON.parse(sessionStorage.getItem(ARCHIVE_KEY)||'null');
     if(saved&&Array.isArray(saved.games)&&saved.games.length<=MAX_GAMES&&saved.games.every(g=>typeof g.pgn==='string'&&typeof g.white==='string'&&typeof g.black==='string')&&Date.now()-saved.savedAt<7*86400000){
@@ -134,4 +149,5 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
   }catch{/* Corrupt or disabled session storage must not prevent loading */}
   updateBatchControls();
+  return {analyzeFinishedGame};
 }
