@@ -302,7 +302,16 @@ function explainThreats(position=training){
   const threatened=threatenedPieces(position,position.turn());
   if(!threatened.length)return {square:null,text:'Ingen av dine brikker står under direkte angrep akkurat nå. Se videre etter sjakker, slag, trusler og ubeskyttede brikker hos motstanderen.'};
   const top=threatened[0];
-  return {square:top.square,text:`Vær oppmerksom: ${top.name} på ${top.square} er angrepet${top.defended?' (men har også forsvar)':' og ser ut til å være ubeskyttet'}. Undersøk om du bør flytte brikken, slå angriperen eller spille et sterkere mellomtrekk. Et angrep betyr ikke alltid at brikken går tapt.`};
+  const attackers=position.attackers(top.square,position.turn()==='w'?'b':'w');
+  const attackersText=attackers.map(sq=>{const piece=position.get(sq);return `${{p:'bonden',n:'springeren',b:'løperen',r:'tårnet',q:'dronningen',k:'kongen'}[piece?.type]||'brikken'} på ${sq}`}).join(' og ');
+  const legal=position.moves({verbose:true});
+  const captures=legal.filter(m=>attackers.includes(m.to));
+  const escapes=legal.filter(m=>m.from===top.square&&(()=>{const next=new Chess(position.fen());next.move(m);return !next.isAttacked(m.to,next.turn())})());
+  const options=[];
+  if(captures.length)options.push(`Slå angriperen: ${captures.slice(0,2).map(m=>m.san).join(' eller ')}.`);
+  if(escapes.length)options.push(`Flytt ${top.name} til et tryggere felt, for eksempel ${escapes.slice(0,2).map(m=>m.san).join(' eller ')}.`);
+  if(!options.length)options.push('Undersøk om du kan forsvare brikken, bytte brikker eller finne et taktisk mellomtrekk.');
+  return {square:top.square,text:`${top.name.charAt(0).toUpperCase()+top.name.slice(1)} på ${top.square} angripes av ${attackersText}${top.defended?', men har også forsvar':', og er ikke direkte forsvart'}. ${options.join(' ')} Dette er kandidater, ikke en fasit: kontroller motstanderens beste svar før du bestemmer deg.`};
 }
 const showThreats=document.createElement('button');showThreats.id='showThreats';showThreats.className='secondary';showThreats.type='button';showThreats.textContent='♛ Hva er truet i stillingen?';
 $('puzzleHint').after(showThreats);
