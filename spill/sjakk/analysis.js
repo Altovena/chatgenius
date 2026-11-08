@@ -4,6 +4,27 @@ export function setupAnalysis(engine,onPractice,onFindings){
   const el=id=>document.getElementById(id);
   let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false;
   const PAGE_SIZE=12,MAX_GAMES=100,ARCHIVE_KEY='chess-academy-analysis-archive-v1';
+  const progressBox=document.createElement('div');
+  progressBox.className='finished-analysis-progress';
+  progressBox.hidden=true;
+  progressBox.style.cssText='margin:14px 0;padding:14px;border:1px solid #406259;border-radius:12px;background:#1a3631';
+  const progressLabel=document.createElement('div');
+  progressLabel.style.cssText='display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-weight:700';
+  const progressText=document.createElement('span');progressText.textContent='Stockfish analyserer partiet';
+  const progressPercent=document.createElement('span');progressPercent.textContent='0 %';
+  const progressBar=document.createElement('progress');
+  progressBar.max=100;progressBar.value=0;progressBar.style.cssText='display:block;width:100%;height:12px;accent-color:#b8d8a8';
+  progressLabel.append(progressText,progressPercent);progressBox.append(progressLabel,progressBar);
+  const trainingBox=document.createElement('div');
+  trainingBox.hidden=true;trainingBox.className='finished-analysis-training';
+  trainingBox.style.cssText='margin:14px 0;padding:16px;border:1px solid #648779;border-radius:12px;background:#224039';
+  const trainingSummary=document.createElement('p');trainingSummary.style.cssText='margin:0 0 12px;line-height:1.5';
+  const trainingButton=document.createElement('button');trainingButton.className='primary';
+  trainingButton.textContent='🎯 Start personlig trening fra dette partiet →';
+  trainingButton.style.cssText='width:100%;min-height:52px;font-weight:700;background:#bdd9b0;color:#18302b;border-radius:10px';
+  trainingBox.append(trainingSummary,trainingButton);
+  el('analysisStatus').after(progressBox,trainingBox);
+  function resetFinishedExtras(){progressBox.hidden=true;trainingBox.hidden=true;trainingButton.onclick=null}
   function saveArchive(){
     try{sessionStorage.setItem(ARCHIVE_KEY,JSON.stringify({games,batchCursor,username:el('chessUser').value.trim(),savedAt:Date.now()}))}catch{/* Analysis remains usable if browser storage is unavailable */}
   }
@@ -24,7 +45,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     return result;
   }
-  function choose(i){selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
+  function choose(i){resetFinishedExtras();selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
   function renderGames(){
     const root=el('importedGames');root.replaceChildren();
     const start=page*PAGE_SIZE;
@@ -103,6 +124,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
   }
   el('analyzeGame').onclick=async()=>{
     if(!selected||busy)return;if(!engine.ready){el('analysisStatus').textContent='Stockfish starter fortsatt. Vent litt og prøv igjen.';return}
+    resetFinishedExtras();
     busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10);
@@ -129,14 +151,25 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(busy)return false;
     const [local]=parsePgn(pgn);
     if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
-    if(!engine.ready){el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
+    if(!engine.ready){resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
     selected=local;el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
+    resetFinishedExtras();progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
     el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
-      const result=await analyzeOne(local,(k,total)=>el('analysisStatus').textContent=`Analyserer ditt siste parti · trekk ${k} av ${total} …`,100);
+      const result=await analyzeOne(local,(k,total)=>{
+        const percent=Math.min(99,Math.round((k-1)/total*100));
+        progressBar.value=percent;progressPercent.textContent=`${percent} %`;
+        el('analysisStatus').textContent=`Analyserer ditt siste parti · trekk ${k} av ${total} …`;
+      },100);
+      progressBar.value=100;progressPercent.textContent='100 %';progressText.textContent='Analysen er ferdig';
       showFindings(result);
       el('analysisStatus').textContent=result.findings.length?`Fant ${result.findings.length} forbedringspunkter. Trykk «Tren på denne stillingen» under et av funnene for å øve.`:'Analysen er ferdig. Ingen tydelige forbedringspunkter ble funnet i de undersøkte trekkene.';
-    }catch(e){el('analysisStatus').textContent='Kunne ikke analysere partiet: '+e.message}
+      if(result.findings.length){
+        trainingSummary.textContent=`♟ ${result.findings.length} forbedringspunkter funnet. Øv på stillingene fra partiet du nettopp spilte, med de viktigste feilene først.`;
+        trainingButton.onclick=()=>onPractice(result.practicePositions,0);
+        trainingBox.hidden=false;
+      }
+    }catch(e){progressBox.hidden=true;el('analysisStatus').textContent='Kunne ikke analysere partiet: '+e.message}
     finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
     return true;
   }
