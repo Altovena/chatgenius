@@ -98,3 +98,11 @@ body,.shell,.content,.play-layout,.training-layout,.board-card,.board-frame,.che
 }
 [hidden]{display:none!important}
 .analysis-back{max-width:310px;margin-bottom:14px;text-align:left}
+.own-topic-guidance{margin:1rem 0 1.2rem;display:grid;gap:.7rem}
+.own-topic-guidance h3{font-size:1.05rem;margin:0 0 .15rem;color:var(--text,#e9f1e9)}
+.own-topic-row{padding:.8rem .95rem;border:1px solid rgba(170,207,185,.2);border-radius:12px;background:rgba(99,154,117,.08)}
+.own-topic-row>div:first-child{display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap;font-size:.91rem}
+.own-topic-row span,.own-topic-row small{color:var(--muted,#9cb3aa)}
+.own-topic-row small{display:block;margin-top:.4rem}
+.own-topic-track{height:7px;background:rgba(166,186,173,.18);border-radius:99px;overflow:hidden;margin-top:.65rem}
+.own-topic-track i{display:block;background:linear-gradient(90deg,#83b990,#d5c182);height:100%;border-radius:inherit}
