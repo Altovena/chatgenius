@@ -92,7 +92,7 @@ $('accountLoginForm').addEventListener('submit',async event=>{
   setStatus('Sender innloggingslenke …');
   try{
     const client=await getSupabase();
-    const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+'/spill/sjakk/'}});
+    const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+'/spill/sjakk/?chessAccount=1'}});
     if(error)throw error;
     setStatus('Sjekk e-posten din og åpne innloggingslenken på denne eller en annen enhet.');
   }catch(error){setStatus(`Innlogging er ikke tilgjengelig nå: ${error.message}`);}
