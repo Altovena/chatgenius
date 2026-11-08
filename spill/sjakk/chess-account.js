@@ -138,7 +138,14 @@ $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
   setSyncStatus('Fremgangen ble hentet. Laster sjakkakademiet på nytt …');
   window.location.reload();
 }));
-window.addEventListener('chess:game-saved',renderGames);
+window.addEventListener('chess:game-saved',event=>{
+  renderGames();
+  // Skyarkivering er ekstra sikring: lokalt arkiv er allerede skrevet til disk.
+  if(!session?.access_token||!event.detail)return;
+  api('POST',{type:'game',game:event.detail})
+    .then(()=>loadCloud())
+    .catch(()=>setSyncStatus('Partiet er lagret lokalt. Kunne ikke synkronisere automatisk; prøv «Synkroniser lokale partier».'));
+});
 renderGames();
 // Start sesjonskontroll først etter at hele sjakkspillet er klart.
 getSupabase().catch(error=>setSyncStatus('Konto kan ikke kobles til nå. Partier lagres fortsatt lokalt.'));
