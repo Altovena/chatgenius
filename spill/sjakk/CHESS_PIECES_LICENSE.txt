@@ -1,0 +1,6 @@
+Chess piece artwork: Cburnett / Wikimedia Commons standard chess pieces,
+adapted into an SVG sprite by shaack for cm-chessboard.
+License: Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/
+https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces/Standard
+https://github.com/shaack/cm-chessboard

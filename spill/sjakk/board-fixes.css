@@ -1,0 +1,75 @@
+/* Tydelig 8 × 8-brett med kvadratiske felt og klassiske Staunton-brikker. */
+.board-frame{position:relative;width:100%;aspect-ratio:1/1;isolation:isolate}
+.chessboard{width:100%;height:100%;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr))}
+.square{width:100%;height:100%;aspect-ratio:1/1;overflow:hidden}
+.square.light{background:#f1e9d7}
+.square.dark{background:#668876}
+.square.last.light{background:#e6dd8e}
+.square.last.dark{background:#a4ad58}
+.square.selected{background:#e9c65f}
+.square.check{background:#ed8277;box-shadow:inset 0 0 0 3px #a32e2e}
+.piece-svg{display:block;width:88%;height:88%;filter:drop-shadow(0 2px 1px #1d2b2755);pointer-events:none;overflow:visible}
+.board-alert{position:absolute;z-index:5;left:50%;top:16px;transform:translateX(-50%);min-width:60%;max-width:92%;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;background:#ffedc9;color:#5d3319;border:2px solid #daac64;border-radius:12px;padding:10px 16px;box-shadow:0 8px 28px #17251e70;pointer-events:none}
+.board-alert strong{font:800 19px Outfit,sans-serif;letter-spacing:1.2px}
+.board-alert span{font-size:12px;font-weight:700;line-height:1.4}
+.board-alert.mate{top:50%;transform:translate(-50%,-50%);width:78%;padding:23px 16px;background:#173d34;color:#f6f4dc;border:3px solid #d9d5a0;box-shadow:0 0 0 100vmax #07151055,0 15px 35px #0007}
+.board-alert.mate strong{font-size:clamp(23px,5vw,35px)}
+.board-alert.mate span{font-size:14px}
+@media(max-width:520px){.board-alert{top:7px;min-width:72%;padding:7px 10px}.board-alert strong{font-size:15px}.board-alert span{font-size:10px}.board-alert.mate{top:50%;padding:17px 12px}}
+
+/* Keep dimensions and scroll anchoring stable through move updates. */
+.board-card,.board-frame,.chessboard{overflow-anchor:none}
+.board-card{min-width:0}
+.board-frame{contain:layout size}
+.chessboard>.square{min-width:0;min-height:0}
+.motor-status{margin:0 0 12px;color:#d4b880;font-size:11px;font-weight:700}
+.motor-status.ready{color:#b9d6ad}
+.analysis-layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.analysis-layout .panel{min-width:0}
+.analysis-layout h2{margin-bottom:17px}
+.inline-form{display:flex;gap:8px;margin-bottom:9px}
+.inline-form input,.analysis-layout textarea{min-width:0;background:#223d3d;border:1px solid #49645a;border-radius:8px;color:#f1f4ee;font:inherit;padding:12px;width:100%;outline:none}
+.inline-form .primary{width:auto;white-space:nowrap}
+.analysis-layout textarea{resize:vertical;display:block;margin:8px 0 12px;font-size:12px}
+.imported-games{max-height:270px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.game-choice{display:block;text-align:left;background:#203837;border:1px solid #3e5951;color:#cfdfd3;border-radius:7px;padding:10px;font-size:12px}
+.game-choice.picked{background:#345547;border-color:#b6d8a6}
+.archive-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:9px;color:#d9e8da;font-size:12px}
+.archive-pagination button{padding:9px 12px;font-size:12px}
+.analysis-meta{color:#c6d9cd;font-size:12px;padding:13px;background:#244039;border-radius:8px;margin-bottom:16px}
+.analysis-results{display:flex;flex-direction:column;gap:9px;max-height:440px;overflow:auto}
+.finding{border:1px solid #3f5c53;border-radius:8px;padding:13px;background:#223b37}
+.finding-head{display:flex;justify-content:space-between;color:#cfe8b9;font-size:12px;gap:10px}
+.finding-head span{color:#d6b889;font-size:11px}
+.finding p{font-size:12px;color:#aac4b6}
+.finding button{margin:0}
+@media(max-width:800px){.analysis-layout{grid-template-columns:1fr}}
+@media(max-width:420px){.inline-form{flex-direction:column}.inline-form .primary{width:100%}}
+
+/* iOS Safari: disable scroll anchoring and stabilize page width when moves update. */
+html{overflow-anchor:none;scrollbar-gutter:stable}
+body,.shell,.content,.play-layout,.training-layout,.board-card,.board-frame,.chessboard{overflow-anchor:none}
+.chessboard{grid-auto-rows:0;align-content:stretch;justify-content:stretch}
+.chessboard>.square{box-sizing:border-box;contain:layout paint;aspect-ratio:auto}
+.chessboard .piece-svg{flex:none;min-width:0;min-height:0}
+
+/* iPhone: all taps on the board are moves, never touch-based page scrolling. */
+.chessboard{touch-action:none!important;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.chessboard .square,.chessboard .piece-svg{touch-action:none!important;-webkit-tap-highlight-color:transparent}
+
+/* Independent SVG images are cached and only their src changes after a move. */
+.chessboard img.piece-svg{width:88%;height:88%;object-fit:contain;display:block;pointer-events:none;position:absolute;inset:6%;transform:translateZ(0)}
+
+/* A fixed iPhone game viewport: the document itself never scrolls during play.
+   Settings remain reachable in the game's separate scroll container. */
+@media(max-width:800px){
+  body.chess-playing{height:100dvh;overflow:hidden;overscroll-behavior:none}
+  body.chess-playing .top{height:65px}
+  body.chess-playing .shell{height:calc(100dvh - 65px);min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  body.chess-playing .sidebar{height:51px;min-height:51px;flex:none;overflow-x:auto;overflow-y:hidden}
+  body.chess-playing .content{height:auto;min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-top:10px}
+  body.chess-playing .hero{display:none}
+  body.chess-playing .board-card{margin-top:0}
+}
+[hidden]{display:none!important}
+.analysis-back{max-width:310px;margin-bottom:14px;text-align:left}

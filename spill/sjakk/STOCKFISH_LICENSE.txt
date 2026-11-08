@@ -1,0 +1,6 @@
+Stockfish.js 10 (JavaScript/WebAssembly)
+Copyright (C) Stockfish developers and contributors.
+Distributed under the GNU General Public License, version 3.
+Source: https://github.com/nmrugg/stockfish.js
+Upstream Stockfish: https://github.com/official-stockfish/Stockfish
+License: https://www.gnu.org/licenses/gpl-3.0.html
