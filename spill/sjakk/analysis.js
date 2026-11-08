@@ -3,7 +3,16 @@ import { Chess } from './chess.js';
 export function setupAnalysis(engine,onPractice,onFindings){
   const el=id=>document.getElementById(id);
   let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false;
-  const PAGE_SIZE=12,MAX_GAMES=100;
+  const PAGE_SIZE=12,MAX_GAMES=100,ARCHIVE_KEY='chess-academy-analysis-archive-v1';
+  function saveArchive(){
+    try{sessionStorage.setItem(ARCHIVE_KEY,JSON.stringify({games,batchCursor,username:el('chessUser').value.trim(),savedAt:Date.now()}))}catch{/* Analysis remains usable if browser storage is unavailable */}
+  }
+  function updateBatchControls(){
+    const done=games.length>0&&batchCursor>=games.length;
+    el('analyzeBatch').disabled=!games.length||done||busy;
+    el('analyzeBatch').textContent=done?'Alle partier gjennomgått':'Analyser neste 10 partier →';
+    if(games.length&&batchCursor>0)el('batchSummary').textContent=`${batchCursor} av ${games.length} partier gjennomgått. Du kan fortsette der du slapp.`;
+  }
   const status=(message)=>el('importStatus').textContent=message;
   const safe=(text)=>String(text||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
   function parsePgn(input){
@@ -32,7 +41,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
       controls.append(prev,count,next);root.appendChild(controls);
     }
   }
-  function showGames(list){games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';el('analyzeBatch').disabled=!games.length;if(games.length)choose(0);else renderGames()}
+  function showGames(list){games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';if(games.length)choose(0);else renderGames();updateBatchControls();saveArchive()}
   el('loadPgn').onclick=()=>{const results=parsePgn(el('pgnText').value);if(!results.length){status('Ingen gyldige PGN-partier funnet. Lim inn et komplett parti fra Chess.com.');return}showGames(results);status(`${results.length} parti(er) importert fra PGN.`)};
   el('fetchGames').onclick=async()=>{
     const name=el('chessUser').value.trim();if(!/^[\w-]{2,30}$/.test(name)){status('Skriv inn et gyldig Chess.com-brukernavn.');return}
@@ -98,23 +107,31 @@ export function setupAnalysis(engine,onPractice,onFindings){
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10);
       showFindings(result);el('analysisStatus').textContent=`Ferdig: ${result.findings.length} forbedringspunkter. ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
-    }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;el('analyzeBatch').disabled=false}
+    }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
   };
   el('analyzeBatch').onclick=async()=>{
-    if(busy||!games.length)return;if(!engine.ready){el('analysisStatus').textContent='Vent til Stockfish er klar.';return}
+    if(busy||!games.length||batchCursor>=games.length)return;if(!engine.ready){el('analysisStatus').textContent='Vent til Stockfish er klar.';return}
     busy=true;stopBatch=false;el('analyzeBatch').disabled=true;el('analyzeGame').disabled=true;el('stopBatch').hidden=false;
     const end=Math.min(games.length,batchCursor+10),start=batchCursor;let completed=0,found=0;
     try{
       for(let i=start;i<end&&!stopBatch;i++){
         const game=games[i];el('analysisStatus').textContent=`Parti ${i+1} av ${games.length} – forbereder analyse …`;
         const result=await analyzeOne(game,(k,total)=>el('analysisStatus').textContent=`Parti ${i+1} av ${games.length} · trekk ${k} av ${total} …`,6);
-        if(!stopBatch){completed++;found+=result.findings.length;batchCursor=i+1;el('batchSummary').textContent=`${batchCursor} av ${games.length} partier gjennomgått. ${found} nye forbedringspunkter i denne økten. Se «Din utvikling» for samlet læringsplan.`;}
+        if(!stopBatch){completed++;found+=result.findings.length;batchCursor=i+1;saveArchive();el('batchSummary').textContent=`${batchCursor} av ${games.length} partier gjennomgått. ${found} nye forbedringspunkter i denne økten. Se «Din utvikling» for samlet læringsplan.`;}
       }
       el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Ferdig med ${completed} partier. Du kan fortsette med neste gruppe.`;
-      if(batchCursor>=games.length){batchCursor=0;el('analysisStatus').textContent='Alle importerte partier er gjennomgått. Tren på forbedringspunktene under «Din utvikling».'}
+      if(batchCursor>=games.length)el('analysisStatus').textContent='Alle importerte partier er gjennomgått. Tren på forbedringspunktene under «Din utvikling».';
     }catch(e){el('analysisStatus').textContent='Batchanalysen stoppet: '+e.message}
-    finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;el('analyzeBatch').disabled=false;el('analyzeGame').disabled=false}
+    finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
   };
   el('stopBatch').onclick=()=>{stopBatch=true;el('analysisStatus').textContent='Stopper etter pågående stilling …'};
-  el('analyzeBatch').disabled=true;
+  try{
+    const saved=JSON.parse(sessionStorage.getItem(ARCHIVE_KEY)||'null');
+    if(saved&&Array.isArray(saved.games)&&saved.games.length<=MAX_GAMES&&saved.games.every(g=>typeof g.pgn==='string'&&typeof g.white==='string'&&typeof g.black==='string')&&Date.now()-saved.savedAt<7*86400000){
+      games=saved.games;batchCursor=Math.max(0,Math.min(games.length,Math.floor(Number(saved.batchCursor)||0)));
+      el('chessUser').value=typeof saved.username==='string'?saved.username:'';
+      if(games.length){choose(0);status(`${games.length} lagrede partier gjenopprettet. Fortsett analysen der du slapp.`)}
+    }
+  }catch{/* Corrupt or disabled session storage must not prevent loading */}
+  updateBatchControls();
 }
