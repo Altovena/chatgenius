@@ -1,3 +1,18 @@
+/* Mobile game shortcut — navigation remains reachable on phones. */
+.cg-mobile-games { display: none; }
+@media (max-width: 1160px) {
+  .design-2027 .cg-mobile-games, .home-2027 .cg-mobile-games {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 42px; padding: 8px 13px; border-radius: 12px;
+    border: 1px solid rgba(144,235,209,.42); background: rgba(72,177,151,.17);
+    color: #e3fff4; font-size: 14px; font-weight: 750;
+    text-decoration: none; white-space: nowrap;
+  }
+}
+@media (max-width: 420px) {
+  .design-2027 .header-action, .home-2027 .header-action { display: none; }
+}
+
 /* ChatGenius Design System 2027 — homepage pilot
    Scope: body.home-2027 only. The SEO/AEO/GEO structure and copy remain intact. */
 
