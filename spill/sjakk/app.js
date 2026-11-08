@@ -13,7 +13,7 @@ if(!['sage','wood','blue','mono','luxury','marble'].includes(appearance.theme))a
 if(!['classic','symbols','premium'].includes(appearance.pieces))appearance.pieces='classic';
 if(!['1','2','3','4','5'].includes(String(appearance.level)))appearance.level='2';
 let training=new Chess(),puzzleSelected=null,puzzle=null,puzzleSolved=false,trainHint=null,puzzleColor='w';
-let trainingStage=0,hintCount=0,trainingRound=0,puzzleMissed=false;
+let trainingStage=0,hintCount=0,trainingRound=0,puzzleMissed=false,checkingAlternative=false;
 let trainingOrigin='general',analysisScrollY=0,analysisPractice=[],analysisPracticeIndex=0,analysisReturnTab='analysis';
 const today=()=>new Date().toLocaleDateString('sv-SE');
 let stats;try{stats=JSON.parse(localStorage.getItem('freddyChessProgress'))||{xp:0,solved:0,attempts:0,streak:0,games:0,wins:0,skills:{},daily:{date:today(),count:0}}}catch{stats={xp:0,solved:0,attempts:0,streak:0,games:0,wins:0,skills:{},daily:{date:today(),count:0}}}
@@ -294,7 +294,7 @@ function loadPuzzle(){
   }else{
     if(!queue.length)newQueue();const idx=queue.shift();puzzle=puzzleData[idx];
   }
-  training=new Chess(puzzle.fen);puzzleColor=training.turn();puzzleSelected=null;puzzleSolved=false;puzzleMissed=false;trainHint=null;trainingStage=0;hintCount=0;trainingRound++;
+  training=new Chess(puzzle.fen);puzzleColor=training.turn();puzzleSelected=null;puzzleSolved=false;puzzleMissed=false;checkingAlternative=false;trainHint=null;trainingStage=0;hintCount=0;trainingRound++;
   if(trainingOrigin==='analysis'&&analysisReturnTab==='progress'&&stats.ownQueue){stats.ownQueue.index=analysisPracticeIndex;persist()}
   $('puzzleTitle').textContent=trainingOrigin==='analysis'?puzzle.title:`Utfordring ${trainingRound}`;$('puzzleLevel').textContent=trainingOrigin==='analysis'?'Fra Chess.com-analysen din':'Tenk selv – se etter sjakker, slag og trusler';
   $('puzzleIndex').textContent=trainingOrigin==='analysis'?`Forbedringspunkt ${analysisPracticeIndex+1} av ${analysisPractice.length}`:`${puzzleData.length} varianter`;$('skillBadge').hidden=true;
@@ -320,16 +320,41 @@ function finishPuzzle(){
   if($('showLine'))$('showLine').hidden=Number($('trainingDifficulty').value)>=2||!puzzle.continuation;
   persist();renderPuzzle();
 }
-function onPuzzleSquare(sq){
-  if(puzzleSolved)return;const p=training.get(sq);
+async function onPuzzleSquare(sq){
+  if(puzzleSolved||checkingAlternative)return;const p=training.get(sq);
   if(puzzleSelected){
     const valid=training.moves({square:puzzleSelected,verbose:true}).find(m=>m.to===sq);
     if(valid){
-      const expected=expectedStep(),correct=puzzleSelected===expected.from&&sq===expected.to;
+      const expected=expectedStep();let correct=puzzleSelected===expected.from&&sq===expected.to;
       puzzleSelected=null;trainHint=null;
+      let alternative=false;
+      if(!correct&&trainingOrigin==='analysis'&&trainingStage===0){
+        if(!engine.ready){$('puzzleFeedback').textContent='Motoren er ikke klar. Jeg kan ikke bedømme alternativet ditt ennå – prøv igjen om litt.';renderPuzzle();return}
+        checkingAlternative=true;
+        $('puzzleFeedback').textContent='Stockfish vurderer trekket ditt mot anbefalingen …';renderPuzzle();
+        try{
+          const expectedBoard=new Chess(training.fen());expectedBoard.move({...expected,promotion:'q'});
+          const candidateBoard=new Chess(training.fen());candidateBoard.move(valid);
+          const [expectedScore,candidateScore]=await Promise.all([
+            engine.search(expectedBoard.fen(),{ms:550,skill:20}),
+            engine.search(candidateBoard.fen(),{ms:550,skill:20})
+          ]);
+          // Both evaluations are from the opponent's perspective after our move.
+          // An alternative within roughly 0.75 pawns is good enough for practice.
+          const difference=candidateScore.score-expectedScore.score;
+          alternative=Number.isFinite(difference)&&difference<=75;
+          correct=alternative;
+          if(!alternative)$('puzzleFeedback').textContent=`Dette trekket ser svakere ut (omtrent ${Math.max(0,Math.round(difference/10)/10)} bondepoeng). Se etter sjakker, slag og trusler før du prøver igjen.`;
+        }catch{
+          $('puzzleFeedback').textContent='Motoren klarte ikke å vurdere dette alternativet. Trekket regnes ikke som feil. Prøv igjen eller gå videre.';
+          checkingAlternative=false;renderPuzzle();return;
+        }
+        checkingAlternative=false;
+      }
       if(correct){
-        training.move({...expected,promotion:puzzle.toPromotion||'q'});
-        if(trainingStage===0&&puzzle.continuation&&Number($('trainingDifficulty').value)>=2){
+        training.move(alternative?valid:{...expected,promotion:puzzle.toPromotion||'q'});
+        if(alternative){finishPuzzle();$('puzzleFeedback').textContent='✓ Godt alternativ! Stockfish vurderer trekket ditt som omtrent like godt som forslaget. '+puzzle.explain}
+        else if(trainingStage===0&&puzzle.continuation&&Number($('trainingDifficulty').value)>=2){
           trainingStage=1;const reply=training.move({...puzzle.continuation[0],promotion:'q'});
           $('puzzleFeedback').textContent=`Svart/hvit svarte ${reply.san}. Nå må du finne neste trekk selv.`;
           $('puzzleTurn').textContent='Finn fortsettelsen';
@@ -338,7 +363,7 @@ function onPuzzleSquare(sq){
         puzzleMissed=true;
         recordPuzzleAttempt(false);
         stats.streak=0;stats.attempts++;const skill=stats.skills[puzzle.skill]||{attempts:0,correct:0};skill.attempts++;stats.skills[puzzle.skill]=skill;
-        $('puzzleFeedback').textContent=trainingOrigin==='analysis'?'Dette er et lovlig trekk, men ikke Stockfish sitt foreslåtte trekk i denne stillingen. Undersøk også hva motstanderen kan svare, og prøv igjen.':'Trekket er lovlig, men det gir ikke den beste fortsettelsen. Se etter motspillet og prøv igjen.';
+        if(trainingOrigin!=='analysis')$('puzzleFeedback').textContent='Trekket er lovlig, men det gir ikke den beste fortsettelsen. Se etter motspillet og prøv igjen.';
         $('puzzleFeedback').style.color='#e5bb8f';
         if(trainingOrigin!=='analysis'&&!queue.includes(puzzleData.indexOf(puzzle)))queue.push(puzzleData.indexOf(puzzle));
       }
