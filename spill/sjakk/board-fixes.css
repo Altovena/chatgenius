@@ -106,3 +106,12 @@ body,.shell,.content,.play-layout,.training-layout,.board-card,.board-frame,.che
 .own-topic-row small{display:block;margin-top:.4rem}
 .own-topic-track{height:7px;background:rgba(166,186,173,.18);border-radius:99px;overflow:hidden;margin-top:.65rem}
 .own-topic-track i{display:block;background:linear-gradient(90deg,#83b990,#d5c182);height:100%;border-radius:inherit}
+.game-trend{margin:1rem 0 1.35rem;padding:1rem;border-radius:14px;border:1px solid rgba(170,207,185,.2);background:rgba(99,154,117,.06)}
+.game-trend h3{margin:0;font-size:1.05rem}
+.game-trend p{margin:.6rem 0}
+.game-trend-chart{height:146px;display:flex;align-items:end;gap:4px;overflow-x:auto;padding:.7rem 0 0;border-bottom:1px solid rgba(180,205,189,.3)}
+.game-trend-item{height:100%;min-width:19px;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.game-trend-bar{width:min(100%,28px);min-height:5px;background:linear-gradient(180deg,#d1b372,#76b7a0);border-radius:6px 6px 2px 2px}
+.game-trend-item small{font-size:.62rem;white-space:nowrap;color:var(--muted,#9cb3aa)}
+.game-trend>.muted:last-child{display:block;margin-top:.65rem}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
