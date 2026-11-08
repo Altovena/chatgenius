@@ -341,12 +341,19 @@ compareMoves.onclick=async()=>{
       const evaluation=await engine.search(next.fen(),{ms:650,skill:20});
       if(round!==trainingRound||training.fen()!==fen)return;
       if(!Number.isFinite(evaluation.score))throw new Error('Ingen gyldig motorevaluering');
-      results.push({...candidate,score:-evaluation.score});
+      let reply='';
+      if(typeof evaluation.move==='string'&&/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(evaluation.move)){
+        try{
+          const response=next.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'});
+          reply=response?.san||'';
+        }catch{/* A returned principal variation may be unavailable in this position */}
+      }
+      results.push({...candidate,score:-evaluation.score,reply});
     }
     results.sort((a,b)=>b.score-a.score);
     const best=results[0].score;
-    const lines=results.map((r,i)=>`${i+1}. ${r.move.san} (${r.reason})${i===0?' – beste av disse':' – ca. '+Math.max(0,Math.round((best-r.score)/10)/10)+' bondepoeng svakere'}`);
-    $('puzzleFeedback').textContent=`Stockfish sammenlignet ${results.length} kandidater: ${lines.join(' · ')}. Dette er en kort motoranalyse, ikke en garanti mot taktiske overraskelser.`;
+    const lines=results.map((r,i)=>`${i+1}. ${r.move.san} (${r.reason})${r.reply?' → motstanderen svarer '+r.reply:''}${i===0?' – beste av disse':' – ca. '+Math.max(0,Math.round((best-r.score)/10)/10)+' bondepoeng svakere'}`);
+    $('puzzleFeedback').textContent=`Stockfish sammenlignet ${results.length} kandidater: ${lines.join(' · ')}. Motstanderens svar er motorens forslag ved kort betenkningstid, ikke en garantert fortsettelse.`;
     $('puzzleFeedback').style.color='#e2d39f';
   }catch{$('puzzleFeedback').textContent='Stockfish klarte ikke å fullføre sammenligningen. Prøv igjen om litt.'}
   finally{checkingAlternative=false;compareMoves.disabled=false}
