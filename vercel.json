@@ -17,6 +17,10 @@
       "dest": "/api/article?slug=$1"
     },
     {
+      "src": "/spill/donkey-kong/(mobil|desktop)/?",
+      "dest": "/spill/donkey-kong/$1/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
