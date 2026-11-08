@@ -21,6 +21,10 @@
       "dest": "/spill/donkey-kong/$1/index.html"
     },
     {
+      "src": "/spill/flipper/(mobil|desktop)/?",
+      "dest": "/spill/flipper/$1/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
