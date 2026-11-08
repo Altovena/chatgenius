@@ -64,11 +64,11 @@ export function setupAnalysis(engine,onPractice,onFindings){
       progress(k+1,indices.length);
       const i=indices[k],actual=allMoves[i],fen=before[i];
       try{
-        const suggestion=await engine.search(fen,{ms:250,skill:20});
+        const suggestion=await engine.search(fen,{ms:500,skill:20});
         if(!suggestion.move||suggestion.move==='(none)')continue;
         const trial=new Chess(fen),recommended=trial.move({from:suggestion.move.slice(0,2),to:suggestion.move.slice(2,4),promotion:suggestion.move[4]||'q'});
         const played=new Chess(fen);played.move({from:actual.from,to:actual.to,promotion:actual.promotion||'q'});
-        const evaluation=await engine.search(played.fen(),{ms:250,skill:20});
+        const evaluation=await engine.search(played.fen(),{ms:500,skill:20});
         const lost=Math.max(0,suggestion.score+evaluation.score);
         if(suggestion.move.slice(0,4)!==actual.from+actual.to&&lost>=75){
           const topic=actual.piece==='k'?'Kongesikkerhet':i<20?'Åpning':actual.captured?'Taktikk':'Stillingsspill';
