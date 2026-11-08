@@ -34,6 +34,16 @@ if(tankMode){ctx.fillStyle='#e6d4a1';ctx.fillRect(W/2-37,H-34,74,27);ctx.fillSty
 for(const p of effects){ctx.globalAlpha=Math.min(1,p.t*2);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,4,4)}ctx.globalAlpha=1;if(hitFlash){ctx.fillStyle=`rgba(255,100,85,${hitFlash*.5})`;ctx.fillRect(0,0,W,H)}ctx.restore()}
 function loop(t){let dt=Math.min(.032,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
 function bind(id,k){const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;b.classList.add('active');b.setPointerCapture(e.pointerId)});for(const ev of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(ev,()=>{keys[k]=false;b.classList.remove('active')})}for(const k of ['left','right','up','down','fire'])bind(k,k);
+if(tankMode&&location.pathname.includes('/mobil/')){
+  // iOS Safari can interpret repeated thumb taps as double-tap zoom, despite touch-action on the buttons.
+  document.documentElement.style.overscrollBehavior='none';document.body.style.overscrollBehavior='none';
+  for(const node of [board,canvas,document.querySelector('.controls'),...document.querySelectorAll('.controls button')]){
+    node.style.touchAction='none';node.addEventListener('dblclick',e=>e.preventDefault());
+  }
+  document.querySelector('.controls').addEventListener('touchend',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+}
 function point(e){const r=canvas.getBoundingClientRect();aim.x=Math.max(10,Math.min(W-10,e.clientX-r.left));aim.y=Math.max(10,Math.min(H-10,e.clientY-r.top))}canvas.addEventListener('pointermove',e=>{if(state==='playing'&&(e.pointerType==='mouse'||e.buttons))point(e)});canvas.addEventListener('pointerdown',e=>{if(state!=='playing')return;point(e);if(tankMode)fire()});
 window.addEventListener('keydown',e=>{let k={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',' ':'fire'}[e.key];if(k){keys[k]=true;e.preventDefault()}if(['p','P','Escape'].includes(e.key)&&!e.repeat)pause()});window.addEventListener('keyup',e=>{let k={ArrowLeft:'left',a:'left',A:'left',ArrowRight:'right',d:'right',D:'right',ArrowUp:'up',w:'up',W:'up',ArrowDown:'down',s:'down',S:'down',' ':'fire'}[e.key];if(k)keys[k]=false});window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false});function restartOrResume(){if(state==='paused')pause();else if(state==='menu'||state==='over')start()}$('start').addEventListener('pointerup',restartOrResume);$('start').addEventListener('click',restartOrResume);$('overlay').addEventListener('click',e=>{if(state==='over'&&e.target===$('overlay'))start()});$('pause').addEventListener('click',pause);$('sound').addEventListener('click',()=>{muted=!muted;$('sound').textContent=muted?'AV':'PÅ ♪'});hud();
 if(!tankMode&&location.pathname.includes('/desktop/'))document.querySelector('.hint').textContent='Musen flytter siktekorset · MELLOMROM skyter · piltastene finjusterer siktingen.';
