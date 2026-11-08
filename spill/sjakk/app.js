@@ -410,12 +410,17 @@ compareMoves.onclick=async()=>{
       if(step>=1)position.move(result.move);
       if(step>=2&&result.replyMove)position.move(result.replyMove);
       renderBoard('comparisonBoard',position,null,puzzleColor,()=>{});
-      comparisonPreview.querySelector('.comparison-caption').textContent=step===0?'Startstillingen':step===1?`Etter ${result.move.san}`:result.replyMove?`Etter ${result.move.san} og motstanderens ${result.reply}`:'Motoren fant ikke et tilgjengelig svar. Viser ditt trekk.';
-      comparisonPreview.querySelectorAll('[data-step]').forEach(b=>{b.onclick=()=>view(result,Number(b.dataset.step));b.disabled=Number(b.dataset.step)===2&&!result.replyMove});
+      comparisonPreview.querySelector('.comparison-caption').textContent=step===0?'Startstillingen':step===1?`Valgt trekk: ${result.move.san}`:result.replyMove?`Motstanderens svar: ${result.reply} etter ${result.move.san}`:'Motoren fant ikke et tilgjengelig svar. Viser valgt trekk.';
+      comparisonPreview.querySelectorAll('[data-step]').forEach(b=>{
+        b.onclick=()=>view(result,Number(b.dataset.step));
+        b.disabled=Number(b.dataset.step)===2&&!result.replyMove;
+        b.classList.toggle('picked',Number(b.dataset.step)===step);
+        b.setAttribute('aria-pressed',String(Number(b.dataset.step)===step));
+      });
       [...choices.children].forEach((b,i)=>b.classList.toggle('picked',results[i]===result));
     };
-    for(const result of results){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=`${result.move.san}${result.reply?' → '+result.reply:''}`;button.onclick=()=>view(result,2);choices.appendChild(button)}
-    view(results[0],2);
+    for(const result of results){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=`${result.move.san}${result.reply?' → '+result.reply:''}`;button.onclick=()=>view(result,1);choices.appendChild(button)}
+    view(results[0],1);
     comparisonPreview.scrollIntoView({behavior:'smooth',block:'nearest'});
   }catch(e){$('puzzleFeedback').textContent=`Stockfish klarte ikke å fullføre sammenligningen: ${e?.message||'ukjent feil'}. Prøv igjen om litt.`}
   finally{checkingAlternative=false;compareMoves.disabled=false}
