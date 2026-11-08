@@ -58,6 +58,7 @@ function renderSession(){
   $('accountSignedIn').hidden=!signed;
   $('accountSyncGames').disabled=!signed||syncing;
   $('accountSyncProgress').disabled=!signed||syncing;
+  $('accountRestoreProgress').disabled=!signed||syncing;
   $('accountIdentity').textContent=signed?`Innlogget som ${session.user.email||'sjakkspiller'}`:'';
   setStatus(signed?'Du er innlogget. Nå kan du lagre ferdige partier på kontoen din.':'Du spiller uten innlogging. De lokale partiene dine er fortsatt tilgjengelige.');
   if(!signed)setSyncStatus('Innlogging kreves for skylagring.');
@@ -123,6 +124,19 @@ $('accountSyncProgress').addEventListener('click',()=>withSync(async()=>{
   const result=await api('POST',{type:'progress',state,expected_version:cloudProgress?.state_version??null});
   cloudProgress={state,state_version:result.state_version};
   setSyncStatus('Fremgangen er sikkerhetskopiert. Lokale data er beholdt.');
+}));
+$('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
+  await loadCloud();
+  if(!cloudProgress?.state){setSyncStatus('Det finnes ennå ingen lagret fremgang i skyen.');return;}
+  const existing=localStorage.getItem('freddyChessProgress');
+  if(existing&&!window.confirm('Dette erstatter treningsfremgangen på denne enheten med kopien i skyen. Vil du fortsette?')){
+    setSyncStatus('Din lokale fremgang ble beholdt.');return;
+  }
+  // En separat sikkerhetskopi lar brukeren gjenopprette den lokale tilstanden ved behov.
+  if(existing)localStorage.setItem('freddyChessProgressBeforeRestore',existing);
+  localStorage.setItem('freddyChessProgress',JSON.stringify(cloudProgress.state));
+  setSyncStatus('Fremgangen ble hentet. Laster sjakkakademiet på nytt …');
+  window.location.reload();
 }));
 window.addEventListener('chess:game-saved',renderGames);
 renderGames();
