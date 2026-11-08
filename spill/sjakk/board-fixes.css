@@ -59,6 +59,24 @@ body,.shell,.content,.play-layout,.training-layout,.board-card,.board-frame,.che
 
 /* Independent SVG images are cached and only their src changes after a move. */
 .chessboard img.piece-svg{width:88%;height:88%;object-fit:contain;display:block;pointer-events:none;position:absolute;inset:6%;transform:translateZ(0)}
+/* Readable board presets shared by play and training. */
+.chessboard[data-theme="wood"] .square.light{background:#e9cda5}
+.chessboard[data-theme="wood"] .square.dark{background:#a57750}
+.chessboard[data-theme="blue"] .square.light{background:#e5edf6}
+.chessboard[data-theme="blue"] .square.dark{background:#6594bd}
+.chessboard[data-theme="mono"] .square.light{background:#f4f4f1}
+.chessboard[data-theme="mono"] .square.dark{background:#66686a}
+.chessboard .square.last.light{background:#e6dd8e}
+.chessboard .square.last.dark{background:#a4ad58}
+.chessboard .square.selected{background:#e9c65f}
+.chessboard .square.check{background:#ed8277}
+.chessboard .piece-glyph{position:absolute;inset:0;display:grid;place-items:center;font-family:Georgia,'Times New Roman',serif;font-size:clamp(24px,5vw,52px);line-height:1;color:#152021;text-shadow:0 1px 1px #ffffffc4;pointer-events:none}
+.chessboard .piece-glyph.white-piece{color:#fffdf3;-webkit-text-stroke:1.2px #1e2929;text-shadow:0 2px 2px #17251b}
+.mobile-settings{display:none!important}
+.settings-focus{outline:2px solid #d1e5a5;outline-offset:3px}
+#gameSettings select{width:100%;min-height:44px;margin:7px 0 12px;touch-action:manipulation}
+#gameSettings .field-label{display:block;margin-top:10px}
+@media(max-width:800px){.mobile-settings{display:block!important;width:100%;margin:0 0 10px;text-align:center;min-height:48px;font-weight:700}.play-layout .right-col{display:flex;flex-direction:column;gap:12px}.play-layout .right-col>.panel{width:100%;min-width:0;flex:none}#gameSettings{scroll-margin-top:16px}}
 
 /* A fixed iPhone game viewport: the document itself never scrolls during play.
    Settings remain reachable in the game's separate scroll container. */

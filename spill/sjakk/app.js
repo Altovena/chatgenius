@@ -7,6 +7,11 @@ const glyph={w:{k:'♔',q:'♕',r:'♖',b:'♗',n:'♘',p:'♙'},b:{k:'♚',q:'�
 const value={p:100,n:320,b:335,r:500,q:900,k:0};
 const difficultyCopy={1:'Spiller enkle, til dels tilfeldige trekk. Fin for å komme i gang.',2:'En vennlig motstander som også ser noen taktiske muligheter.',3:'Ser etter materiell og enkle kombinasjoner.',4:'Beregner flere trekk fremover og straffer feil.',5:'Den sterkeste lokale motstanderen, men ikke en stormestermotor.'};
 let game=new Chess(),selected=null,orientation='w',thinking=false,gameRecorded=false,hintSquare=null;
+let appearance={theme:'sage',pieces:'classic',level:'2'};
+try{appearance={...appearance,...JSON.parse(localStorage.getItem('freddyChessAppearance')||'{}')}}catch{}
+if(!['sage','wood','blue','mono'].includes(appearance.theme))appearance.theme='sage';
+if(!['classic','symbols'].includes(appearance.pieces))appearance.pieces='classic';
+if(!['1','2','3','4','5'].includes(String(appearance.level)))appearance.level='2';
 let training=new Chess(),puzzleSelected=null,puzzle=null,puzzleSolved=false,trainHint=null,puzzleColor='w';
 let trainingStage=0,hintCount=0,trainingRound=0,puzzleMissed=false;
 let trainingOrigin='general',analysisScrollY=0,analysisPractice=[],analysisPracticeIndex=0,analysisReturnTab='analysis';
@@ -111,9 +116,11 @@ function renderBoard(target,position,sel,side,onClick,marked=null){
       svg.decoding='sync';
       const rank=document.createElement('span');rank.className='coord rank';
       const file=document.createElement('span');file.className='coord file';
-      sq.append(svg,rank,file);root.appendChild(sq);
+      const symbol=document.createElement('span');symbol.className='piece-glyph';symbol.setAttribute('aria-hidden','true');
+      sq.append(svg,rank,file,symbol);root.appendChild(sq);
     }
   }
+  root.dataset.theme=appearance.theme;
   const ranks=side==='w'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];
   const cols=side==='w'?[...files]:[...files].reverse();
   const legal=sel?position.moves({square:sel,verbose:true}).map(m=>m.to):[];
@@ -133,7 +140,9 @@ function renderBoard(target,position,sel,side,onClick,marked=null){
       svg.dataset.piece=image;
       if(p){svg.src=image;svg.alt=`${p.color==='w'?'Hvit':'Svart'} ${ {k:'konge',q:'dronning',r:'tårn',b:'løper',n:'springer',p:'bonde'}[p.type]}`}
     }
-    svg.style.visibility=p?'visible':'hidden';
+    svg.style.visibility=p&&appearance.pieces==='classic'?'visible':'hidden';
+    const symbol=square.children[3];symbol.textContent=p&&appearance.pieces==='symbols'?glyph[p.color][p.type]:'';
+    symbol.classList.toggle('white-piece',p?.color==='w');
     square.children[1].textContent=file===cols[0]?rank:'';
     square.children[2].textContent=rank===ranks.at(-1)?file:'';
   }
@@ -147,7 +156,14 @@ function orderedMoves(g){return g.moves({verbose:true}).sort((a,b)=>(b.captured?
 function search(g,depth,alpha,beta){if(depth===0||g.isGameOver())return evaluate(g);const maximize=g.turn()==='w';let best=maximize?-Infinity:Infinity;for(const m of orderedMoves(g)){g.move(m);const v=search(g,depth-1,alpha,beta);g.undo();best=maximize?Math.max(best,v):Math.min(best,v);if(maximize)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);if(beta<=alpha)break}return best}
 function fallbackComputerMove(){if(game.turn()!=='b'||game.isGameOver()){thinking=false;updateGame();return}const level=Number($('difficulty').value),moves=orderedMoves(game);let chosen;if(level===1){chosen=moves[Math.floor(Math.random()*moves.length)]}else{const depth=level<=2?1:level===3?2:3;let ranked=moves.map(m=>{game.move(m);const score=search(game,depth-1,-Infinity,Infinity);game.undo();return {m,score:score+(Math.random()-.5)*(level===2?165:level===3?60:level===4?15:4)}}).sort((a,b)=>a.score-b.score);chosen=ranked[0].m}const m=game.move(chosen);thinking=false;$('coachMessage').textContent=`Datamaskinen spilte ${m.san}. ${describeMove(m)} Se etter sjakker, slag og trusler før ditt neste trekk.`;updateGame()}
 async function computerMove(){const fen=game.fen(),level=Number($('difficulty').value);if(!engine.ready){fallbackComputerMove();return}try{const result=await engine.search(fen,{skill:[0,1,4,9,18,20][level],ms:[0,130,250,450,650,900][level]});if(game.fen()!==fen||game.turn()!=='b')return;const uci=result.move;const move=game.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]||'q'});thinking=false;$('coachMessage').textContent=`Stockfish spilte ${move.san}. ${describeMove(move)} Se etter sjakker, slag og trusler.`;updateGame()}catch{if(game.fen()===fen)fallbackComputerMove()}}
-$('difficulty').onchange=()=>{$('difficultyText').textContent=difficultyCopy[$('difficulty').value];$('opponentLabel').textContent='Datamaskin · '+$('difficulty').selectedOptions[0].textContent.replace(/[^\p{L} ]/gu,'').trim()};$('difficulty').dispatchEvent(new Event('change'));
+$('difficulty').value=String(appearance.level);
+$('boardTheme').value=appearance.theme;$('pieceStyle').value=appearance.pieces;
+function saveAppearance(){localStorage.setItem('freddyChessAppearance',JSON.stringify(appearance));$('appearanceStatus').textContent='✓ Innstillingene er lagret på denne enheten.'}
+$('difficulty').onchange=()=>{appearance.level=$('difficulty').value;$('difficultyText').textContent=difficultyCopy[appearance.level];$('opponentLabel').textContent='Datamaskin · '+$('difficulty').selectedOptions[0].textContent.replace(/[^\p{L} ]/gu,'').trim();saveAppearance()};
+$('boardTheme').onchange=()=>{appearance.theme=$('boardTheme').value;saveAppearance();updateGame();renderPuzzle()};
+$('pieceStyle').onchange=()=>{appearance.pieces=$('pieceStyle').value;saveAppearance();updateGame();renderPuzzle()};
+$('difficulty').dispatchEvent(new Event('change'));
+$('mobileSettings').onclick=()=>{$('gameSettings').scrollIntoView({behavior:'smooth',block:'start'});$('gameSettings').classList.add('settings-focus');setTimeout(()=>$('gameSettings').classList.remove('settings-focus'),1800)};
 $('newGame').onclick=()=>{game=new Chess();selected=null;thinking=false;hintSquare=null;gameRecorded=false;$('coachMessage').textContent='Nytt parti! Et godt mål er å kontrollere sentrum, utvikle offiserene og sikre kongen.';updateGame()};$('flipBtn').onclick=()=>{orientation=orientation==='w'?'b':'w';updateGame()};$('undoBtn').onclick=()=>{if(thinking)return;game.undo();if(game.turn()==='b')game.undo();gameRecorded=false;selected=null;hintSquare=null;$('coachMessage').textContent='Trekkene er angret. Prøv en annen plan.';updateGame()};$('hintBtn').onclick=()=>{if(thinking||game.turn()!=='w'||game.isGameOver())return;const moves=orderedMoves(game);let best=null,score=-Infinity;for(const m of moves){game.move(m);const v=search(game,1,-Infinity,Infinity);game.undo();if(v>score){score=v;best=m}}if(best){selected=best.from;hintSquare=best.to;$('coachMessage').textContent=`Prøv ${best.san}. Dette er et forslag basert på materiell og aktivitet – se også etter motstanderens svar.`;updateGame()}};
 const puzzleData=[
  {skill:'Matt',title:'Matt på bakerste rad',fen:'6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1',from:'e1',to:'e8',prompt:'Hvit trekker. Finn matt i ett.',hint:'Tårnet kan nå helt til åttende rad.',explain:'Te8# er matt: kongen er sperret av sine egne bønder.'},
