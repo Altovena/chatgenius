@@ -287,6 +287,26 @@ function newQueue(){
   }).sort((a,b)=>b.weight-a.weight).map(x=>x.i);
 }
 function expectedStep(){return trainingStage===0?{from:puzzle.from,to:puzzle.to}:puzzle.continuation[1]}
+function threatenedPieces(position,color){
+  const enemy=color==='w'?'b':'w',names={q:'dronningen',r:'tårnet',b:'løperen',n:'springeren',p:'bonden'};
+  const found=[];
+  for(const row of position.board())for(const piece of row){
+    if(!piece||piece.color!==color||piece.type==='k')continue;
+    const sq=piece.square;
+    if(position.isAttacked(sq,enemy))found.push({square:sq,name:names[piece.type],value:value[piece.type],defended:position.isAttacked(sq,color)});
+  }
+  return found.sort((a,b)=>b.value-a.value);
+}
+function explainThreats(position=training){
+  if(position.isCheck())return {square:null,text:'Kongen er i sjakk. Før du gjør noe annet må sjakken stoppes. Se etter å flytte kongen, slå angriperen eller blokkere angrepet.'};
+  const threatened=threatenedPieces(position,position.turn());
+  if(!threatened.length)return {square:null,text:'Ingen av dine brikker står under direkte angrep akkurat nå. Se videre etter sjakker, slag, trusler og ubeskyttede brikker hos motstanderen.'};
+  const top=threatened[0];
+  return {square:top.square,text:`Vær oppmerksom: ${top.name} på ${top.square} er angrepet${top.defended?' (men har også forsvar)':' og ser ut til å være ubeskyttet'}. Undersøk om du bør flytte brikken, slå angriperen eller spille et sterkere mellomtrekk. Et angrep betyr ikke alltid at brikken går tapt.`};
+}
+const showThreats=document.createElement('button');showThreats.id='showThreats';showThreats.className='secondary';showThreats.type='button';showThreats.textContent='♛ Hva er truet i stillingen?';
+$('puzzleHint').after(showThreats);
+showThreats.onclick=()=>{if(checkingAlternative)return;const result=explainThreats();trainHint=result.square;$('puzzleFeedback').textContent=result.text;$('puzzleFeedback').style.color='#e2d39f';renderPuzzle()};
 function loadPuzzle(){
   if(trainingOrigin==='analysis'){
     puzzle=analysisPractice[analysisPracticeIndex];
@@ -364,6 +384,11 @@ async function onPuzzleSquare(sq){
         recordPuzzleAttempt(false);
         stats.streak=0;stats.attempts++;const skill=stats.skills[puzzle.skill]||{attempts:0,correct:0};skill.attempts++;stats.skills[puzzle.skill]=skill;
         if(trainingOrigin!=='analysis')$('puzzleFeedback').textContent='Trekket er lovlig, men det gir ikke den beste fortsettelsen. Se etter motspillet og prøv igjen.';
+        else {
+          const after=new Chess(training.fen());after.move(valid);
+          const risk=threatenedPieces(after,puzzleColor).find(t=>t.value>=500);
+          if(risk)$('puzzleFeedback').textContent+=` Merk også at ${risk.name} på ${risk.square} er angrepet etter trekket. Vurder om den kan slås eller forsvares.`;
+        }
         $('puzzleFeedback').style.color='#e5bb8f';
         if(trainingOrigin!=='analysis'&&!queue.includes(puzzleData.indexOf(puzzle)))queue.push(puzzleData.indexOf(puzzle));
       }
