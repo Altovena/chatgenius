@@ -350,6 +350,7 @@ async function onPuzzleSquare(sq){
       let alternative=false;
       if(!correct&&trainingOrigin==='analysis'&&trainingStage===0){
         if(!engine.ready){$('puzzleFeedback').textContent='Motoren er ikke klar. Jeg kan ikke bedømme alternativet ditt ennå – prøv igjen om litt.';renderPuzzle();return}
+        const checkedRound=trainingRound,checkedFen=training.fen();
         checkingAlternative=true;
         $('puzzleFeedback').textContent='Stockfish vurderer trekket ditt mot anbefalingen …';renderPuzzle();
         try{
@@ -359,6 +360,8 @@ async function onPuzzleSquare(sq){
             engine.search(expectedBoard.fen(),{ms:550,skill:20}),
             engine.search(candidateBoard.fen(),{ms:550,skill:20})
           ]);
+          // A user may leave this exercise while Stockfish is still working.
+          if(checkedRound!==trainingRound||checkedFen!==training.fen()||trainingOrigin!=='analysis')return;
           // Both evaluations are from the opponent's perspective after our move.
           // An alternative within roughly 0.75 pawns is good enough for practice.
           const difference=candidateScore.score-expectedScore.score;
@@ -366,6 +369,7 @@ async function onPuzzleSquare(sq){
           correct=alternative;
           if(!alternative)$('puzzleFeedback').textContent=`Dette trekket ser svakere ut (omtrent ${Math.max(0,Math.round(difference/10)/10)} bondepoeng). Se etter sjakker, slag og trusler før du prøver igjen.`;
         }catch{
+          if(checkedRound!==trainingRound||checkedFen!==training.fen()||trainingOrigin!=='analysis')return;
           $('puzzleFeedback').textContent='Motoren klarte ikke å vurdere dette alternativet. Trekket regnes ikke som feil. Prøv igjen eller gå videre.';
           checkingAlternative=false;renderPuzzle();return;
         }
