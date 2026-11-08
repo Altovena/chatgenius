@@ -364,15 +364,25 @@ compareMoves.onclick=async()=>{
   const attackers=threat?startPosition.attackers(threat.square,startPosition.turn()==='w'?'b':'w'):[];
   const candidates=[];
   const add=(move,reason)=>{if(move&&!candidates.some(c=>c.move.from===move.from&&c.move.to===move.to))candidates.push({move,reason})};
-  add(legal.find(m=>attackers.includes(m.to)),'slår en angripende brikke');
-  add(legal.find(m=>m.from===threat?.square&&(()=>{const next=new Chess(startPosition.fen());next.move(m);return !next.isAttacked(m.to,next.turn())})()),'flytter en truet brikke');
-  add(legal.find(m=>m.from===puzzle.from&&m.to===puzzle.to),'treningsforslaget');
-  add(legal.find(m=>['n','b'].includes(m.piece)&&!candidates.some(c=>c.move.from===m.from&&c.move.to===m.to)),'utvikler en lett offiser');
-  for(const move of legal){if(candidates.length>=3)break;add(move,move.captured?'slår en brikke':'et annet lovlig valg')}
-  if(!candidates.length)return;
   const round=trainingRound,fen=startPosition.fen();checkingAlternative=true;compareMoves.disabled=true;
+  clearComparison();
   $('puzzleFeedback').textContent='Stockfish sammenligner trekkene. Dette kan ta noen sekunder …';
   try{
+    // Include what Freddy played, the exercise's recommendation, and the engine's
+    // own best move before filling any remaining slots with useful alternatives.
+    const played=training.history({verbose:true})[0];
+    if(played)add(legal.find(m=>m.from===played.from&&m.to===played.to&&m.promotion===played.promotion),'trekket du spilte');
+    add(legal.find(m=>m.from===puzzle.from&&m.to===puzzle.to),'treningsforslaget');
+    const bestSearch=await engine.search(fen,{ms:650,skill:20});
+    if(round!==trainingRound)return;
+    if(typeof bestSearch.move==='string'&&/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(bestSearch.move)){
+      add(legal.find(m=>m.from===bestSearch.move.slice(0,2)&&m.to===bestSearch.move.slice(2,4)&&(!m.promotion||m.promotion===(bestSearch.move[4]||'q'))),'Stockfish sitt forslag');
+    }
+    add(legal.find(m=>attackers.includes(m.to)),'slår en angripende brikke');
+    add(legal.find(m=>m.from===threat?.square&&(()=>{const next=new Chess(fen);next.move(m);return !next.isAttacked(m.to,next.turn())})()),'flytter en truet brikke');
+    add(legal.find(m=>['n','b'].includes(m.piece)),'utvikler en lett offiser');
+    for(const move of legal){if(candidates.length>=3)break;add(move,move.captured?'slår en brikke':'et annet lovlig valg')}
+    if(!candidates.length)throw new Error('Ingen lovlige trekk å sammenligne i denne stillingen');
     const results=[];
     for(const candidate of candidates.slice(0,3)){
       const next=new Chess(fen);next.move(candidate.move);
