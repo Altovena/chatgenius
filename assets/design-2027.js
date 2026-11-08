@@ -71,6 +71,12 @@
     const lang = right.querySelector(".lang-switch");
     right.innerHTML = "";
     if (lang) right.appendChild(lang);
+    const games = document.createElement("a");
+    games.className = "cg-mobile-games";
+    games.href = "/spill/";
+    games.textContent = "🎮 " + labels.games;
+    games.setAttribute("aria-label", labels.games + " – arkadespill for mobil og PC");
+    right.appendChild(games);
     const cta = document.createElement("a");
     cta.className = "header-action";
     cta.href = "/kom-i-gang/";
