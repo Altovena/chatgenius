@@ -16,6 +16,9 @@
 .board-alert.mate strong{font-size:clamp(23px,5vw,35px)}
 .board-alert.mate span{font-size:14px}
 @media(max-width:520px){.board-alert{top:7px;min-width:72%;padding:7px 10px}.board-alert strong{font-size:15px}.board-alert span{font-size:10px}.board-alert.mate{top:50%;padding:17px 12px}}
+/* The result must never cover the mating position or the highlighted king. */
+.board-card>.board-alert,.board-card>.board-alert.mate{position:static;left:auto;top:auto;transform:none;width:100%;min-width:0;max-width:none;margin:12px 0 0;padding:11px 14px;box-shadow:0 4px 15px #07151055;pointer-events:auto}
+.board-card>.board-alert.mate strong{font-size:clamp(19px,2.5vw,26px)}
 
 /* Keep dimensions and scroll anchoring stable through move updates. */
 .board-card,.board-frame,.chessboard{overflow-anchor:none}
