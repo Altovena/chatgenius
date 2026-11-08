@@ -9,8 +9,8 @@ const difficultyCopy={1:'Spiller enkle, til dels tilfeldige trekk. Fin for å ko
 let game=new Chess(),selected=null,orientation='w',thinking=false,gameRecorded=false,hintSquare=null;
 let appearance={theme:'sage',pieces:'classic',level:'2'};
 try{appearance={...appearance,...JSON.parse(localStorage.getItem('freddyChessAppearance')||'{}')}}catch{}
-if(!['sage','wood','blue','mono'].includes(appearance.theme))appearance.theme='sage';
-if(!['classic','symbols'].includes(appearance.pieces))appearance.pieces='classic';
+if(!['sage','wood','blue','mono','luxury','marble'].includes(appearance.theme))appearance.theme='sage';
+if(!['classic','symbols','premium'].includes(appearance.pieces))appearance.pieces='classic';
 if(!['1','2','3','4','5'].includes(String(appearance.level)))appearance.level='2';
 let training=new Chess(),puzzleSelected=null,puzzle=null,puzzleSolved=false,trainHint=null,puzzleColor='w';
 let trainingStage=0,hintCount=0,trainingRound=0,puzzleMissed=false;
@@ -121,6 +121,8 @@ function renderBoard(target,position,sel,side,onClick,marked=null){
     }
   }
   root.dataset.theme=appearance.theme;
+  root.dataset.pieces=appearance.pieces;
+  root.parentElement.dataset.theme=appearance.theme;
   const ranks=side==='w'?[8,7,6,5,4,3,2,1]:[1,2,3,4,5,6,7,8];
   const cols=side==='w'?[...files]:[...files].reverse();
   const legal=sel?position.moves({square:sel,verbose:true}).map(m=>m.to):[];
@@ -140,7 +142,7 @@ function renderBoard(target,position,sel,side,onClick,marked=null){
       svg.dataset.piece=image;
       if(p){svg.src=image;svg.alt=`${p.color==='w'?'Hvit':'Svart'} ${ {k:'konge',q:'dronning',r:'tårn',b:'løper',n:'springer',p:'bonde'}[p.type]}`}
     }
-    svg.style.visibility=p&&appearance.pieces==='classic'?'visible':'hidden';
+    svg.style.visibility=p&&appearance.pieces!=='symbols'?'visible':'hidden';
     const symbol=square.children[3];symbol.textContent=p&&appearance.pieces==='symbols'?glyph[p.color][p.type]:'';
     symbol.classList.toggle('white-piece',p?.color==='w');
     square.children[1].textContent=file===cols[0]?rank:'';
