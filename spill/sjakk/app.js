@@ -225,6 +225,30 @@ function orderedMoves(g){return g.moves({verbose:true}).sort((a,b)=>(b.captured?
 function search(g,depth,alpha,beta){if(depth===0||g.isGameOver())return evaluate(g);const maximize=g.turn()==='w';let best=maximize?-Infinity:Infinity;for(const m of orderedMoves(g)){g.move(m);const v=search(g,depth-1,alpha,beta);g.undo();best=maximize?Math.max(best,v):Math.min(best,v);if(maximize)alpha=Math.max(alpha,best);else beta=Math.min(beta,best);if(beta<=alpha)break}return best}
 function fallbackComputerMove(){if(game.turn()!=='b'||game.isGameOver()){thinking=false;updateGame();return}const level=Number($('difficulty').value),moves=orderedMoves(game);let chosen;if(level===1){chosen=moves[Math.floor(Math.random()*moves.length)]}else{const depth=level<=2?1:level===3?2:3;let ranked=moves.map(m=>{game.move(m);const score=search(game,depth-1,-Infinity,Infinity);game.undo();return {m,score:score+(Math.random()-.5)*(level===2?165:level===3?60:level===4?15:4)}}).sort((a,b)=>a.score-b.score);chosen=ranked[0].m}const m=game.move(chosen);thinking=false;$('coachMessage').textContent=`Datamaskinen spilte ${m.san}. ${describeMove(m)} Se etter sjakker, slag og trusler før ditt neste trekk.`;updateGame()}
 async function computerMove(){const fen=game.fen(),level=Number($('difficulty').value);if(!engine.ready){fallbackComputerMove();return}try{const result=await engine.search(fen,{skill:[0,1,4,9,18,20][level],ms:[0,130,250,450,650,900][level]});if(game.fen()!==fen||game.turn()!=='b')return;const uci=result.move;const move=game.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]||'q'});thinking=false;$('coachMessage').textContent=`Stockfish spilte ${move.san}. ${describeMove(move)} Se etter sjakker, slag og trusler.`;updateGame()}catch{if(game.fen()===fen)fallbackComputerMove()}}
+// Keep the coach immediately below the board on mobile and before settings on every screen.
+const liveCoach=$('coachMessage').closest('.panel');
+liveCoach.querySelector('h2').textContent='Analyse og anbefalinger';
+liveCoach.parentElement.prepend(liveCoach);
+const analyzePosition=document.createElement('button');analyzePosition.type='button';analyzePosition.id='analyzePosition';analyzePosition.className='primary';analyzePosition.textContent='♟ Få Stockfish-anbefaling';
+$('coachMessage').after(analyzePosition);
+analyzePosition.onclick=async()=>{
+  if(thinking||game.turn()!=='w'){ $('coachMessage').textContent='Vent til det er din tur før du analyserer.';return }
+  if(game.isGameOver()){$('coachMessage').textContent='Partiet er avsluttet. Bruk «Angre» for å se på en tidligere stilling, eller start et nytt parti.';return}
+  if(!engine.ready){$('coachMessage').textContent='Stockfish starter fortsatt. Prøv igjen om litt.';return}
+  const fen=game.fen();analyzePosition.disabled=true;$('coachMessage').textContent='Stockfish undersøker stillingen …';
+  try{
+    const result=await engine.search(fen,{ms:900,skill:20});
+    if(game.fen()!==fen)return;
+    if(!/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(result.move||''))throw new Error('Ugyldig trekk');
+    const trial=new Chess(fen),move=trial.move({from:result.move.slice(0,2),to:result.move.slice(2,4),promotion:result.move[4]||'q'});
+    if(!move)throw new Error('Ulovlig trekk');
+    const threatened=threatenedPieces(game,'w');
+    selected=move.from;hintSquare=move.to;
+    $('coachMessage').textContent=`Stockfish anbefaler ${move.san}. ${threatened.length?'Vær særlig oppmerksom på '+threatened[0].name+' på '+threatened[0].square+'. ':''}${describeMove(move)} Forslaget er markert på brettet; se alltid etter motstanderens beste svar.`;
+    updateGame();
+  }catch{if(game.fen()===fen)$('coachMessage').textContent='Analysen kunne ikke fullføres akkurat nå. Prøv igjen.'}
+  finally{analyzePosition.disabled=false}
+};
 $('difficulty').value=String(appearance.level);
 $('boardTheme').value=appearance.theme;$('pieceStyle').value=appearance.pieces;
 function saveAppearance(){localStorage.setItem('freddyChessAppearance',JSON.stringify(appearance));$('appearanceStatus').textContent='✓ Innstillingene er lagret på denne enheten.'}
