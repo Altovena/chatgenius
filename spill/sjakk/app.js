@@ -356,19 +356,21 @@ comparisonPreview.innerHTML='<p class="muted">Trykk på et alternativ for å se 
 compareMoves.after(comparisonPreview);
 function clearComparison(){comparisonPreview.classList.add('hidden');comparisonPreview.querySelector('.comparison-choices').replaceChildren()}
 compareMoves.onclick=async()=>{
-  if(checkingAlternative||puzzleSolved||trainingStage!==0)return;
+  if(checkingAlternative)return;
   if(!engine.ready){$('puzzleFeedback').textContent='Stockfish starter fortsatt. Prøv sammenligningen igjen om litt.';return}
-  const legal=training.moves({verbose:true}),threat=threatenedPieces(training,training.turn())[0];
-  const attackers=threat?training.attackers(threat.square,training.turn()==='w'?'b':'w'):[];
+  // Compare from the original exercise, even after the player has solved it.
+  const startPosition=new Chess(puzzle.fen);
+  const legal=startPosition.moves({verbose:true}),threat=threatenedPieces(startPosition,startPosition.turn())[0];
+  const attackers=threat?startPosition.attackers(threat.square,startPosition.turn()==='w'?'b':'w'):[];
   const candidates=[];
   const add=(move,reason)=>{if(move&&!candidates.some(c=>c.move.from===move.from&&c.move.to===move.to))candidates.push({move,reason})};
   add(legal.find(m=>attackers.includes(m.to)),'slår en angripende brikke');
-  add(legal.find(m=>m.from===threat?.square&&(()=>{const next=new Chess(training.fen());next.move(m);return !next.isAttacked(m.to,next.turn())})()),'flytter en truet brikke');
+  add(legal.find(m=>m.from===threat?.square&&(()=>{const next=new Chess(startPosition.fen());next.move(m);return !next.isAttacked(m.to,next.turn())})()),'flytter en truet brikke');
   add(legal.find(m=>m.from===puzzle.from&&m.to===puzzle.to),'treningsforslaget');
   add(legal.find(m=>['n','b'].includes(m.piece)&&!candidates.some(c=>c.move.from===m.from&&c.move.to===m.to)),'utvikler en lett offiser');
   for(const move of legal){if(candidates.length>=3)break;add(move,move.captured?'slår en brikke':'et annet lovlig valg')}
   if(!candidates.length)return;
-  const round=trainingRound,fen=training.fen();checkingAlternative=true;compareMoves.disabled=true;
+  const round=trainingRound,fen=startPosition.fen();checkingAlternative=true;compareMoves.disabled=true;
   $('puzzleFeedback').textContent='Stockfish sammenligner trekkene. Dette kan ta noen sekunder …';
   try{
     const results=[];
@@ -376,7 +378,7 @@ compareMoves.onclick=async()=>{
       const next=new Chess(fen);next.move(candidate.move);
       // After our candidate move Stockfish evaluates from the opponent's point of view.
       const evaluation=await engine.search(next.fen(),{ms:650,skill:20});
-      if(round!==trainingRound||training.fen()!==fen)return;
+      if(round!==trainingRound)return;
       if(!Number.isFinite(evaluation.score))throw new Error('Ingen gyldig motorevaluering');
       let reply='',replyMove=null;
       if(typeof evaluation.move==='string'&&/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(evaluation.move)){
@@ -404,7 +406,8 @@ compareMoves.onclick=async()=>{
     };
     for(const result of results){const button=document.createElement('button');button.type='button';button.className='secondary';button.textContent=`${result.move.san}${result.reply?' → '+result.reply:''}`;button.onclick=()=>view(result,2);choices.appendChild(button)}
     view(results[0],2);
-  }catch{$('puzzleFeedback').textContent='Stockfish klarte ikke å fullføre sammenligningen. Prøv igjen om litt.'}
+    comparisonPreview.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){$('puzzleFeedback').textContent=`Stockfish klarte ikke å fullføre sammenligningen: ${e?.message||'ukjent feil'}. Prøv igjen om litt.`}
   finally{checkingAlternative=false;compareMoves.disabled=false}
 };
 function loadPuzzle(){
