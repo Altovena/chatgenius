@@ -66,6 +66,37 @@ function topicLearningSnapshot(positions){
   }
   return [...result.values()].sort((a,b)=>b.due-a.due||b.total-a.total);
 }
+function updateGameTrend(analyzed){
+  let root=$('gameTrend');
+  if(!root){
+    root=document.createElement('section');root.id='gameTrend';root.className='game-trend';
+    $('ownLearningStats').after(root);
+  }
+  root.replaceChildren();
+  const heading=document.createElement('h3');heading.textContent='Utvikling fra parti til parti';root.appendChild(heading);
+  const tracked=analyzed.filter(g=>g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
+    .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
+  if(!tracked.length){
+    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se en sammenlignbar utvikling. Eldre analyser uten registrert antall undersøkte trekk vises ikke i denne rapporten.';root.appendChild(empty);return;
+  }
+  const latest=tracked.slice(-5),previous=tracked.slice(-10,-5);
+  const mean=arr=>arr.reduce((s,g)=>s+g.count/g.checked*100,0)/arr.length;
+  const summary=document.createElement('p');summary.className='muted';
+  const recentRate=mean(latest),earlierRate=previous.length?mean(previous):null;
+  summary.textContent=`Siste ${latest.length} partier: ${Math.round(recentRate)} forbedringspunkter per 100 undersøkte trekk. ${earlierRate===null?'Analyser minst seks partier for å få en sammenligning.':`Foregående ${previous.length}: ${Math.round(earlierRate)}. ${recentRate<earlierRate?'Færre funn i den nyeste gruppen.':recentRate>earlierRate?'Flere funn i den nyeste gruppen.':'Omtrent samme nivå.'}`} Dette er en indikasjon basert på utvalgte trekk, ikke en full partivurdering.`;
+  root.appendChild(summary);
+  const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
+  for(const record of tracked){
+    const rate=Math.min(100,record.count/record.checked*100);
+    const item=document.createElement('div');item.className='game-trend-item';item.setAttribute('role','listitem');
+    const bar=document.createElement('div');bar.className='game-trend-bar';bar.style.height=`${Math.max(5,rate)}%`;
+    const date=document.createElement('small');date.textContent=(record.date||'').slice(-5);
+    const name=document.createElement('span');name.textContent=`${record.date}: ${record.count} funn i ${record.checked} undersøkte trekk (${Math.round(rate)} %). ${record.white} – ${record.black}`;
+    name.className='sr-only';item.setAttribute('aria-label',name.textContent);item.append(bar,date);chart.appendChild(item);
+  }
+  root.appendChild(chart);
+  const disclaimer=document.createElement('small');disclaimer.className='muted';disclaimer.textContent='Søylene viser andelen undersøkte trekk der motoren fant et tydelig bedre alternativ. Kortere søyler er bedre. Partier med forskjellig motstand og vanskelighetsgrad er ikke direkte sammenlignbare.';root.appendChild(disclaimer);
+}
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
@@ -74,6 +105,7 @@ function updateAllGamesPlan(){
   const practiced=positions.filter(p=>stats.puzzles[puzzleKey(p)]?.right).length;
   const mastered=positions.filter(p=>(stats.puzzles[puzzleKey(p)]?.streak||0)>=2).length;
   $('allGamesSummary').textContent=`${analyzed.length} analyserte partier · ${positions.length} unike treningsstillinger.`;
+  updateGameTrend(analyzed);
   $('ownLearningStats').replaceChildren();
   for(const [label,count] of [['Trent minst én gang',practiced],['Klare for repetisjon',review.length],['Mestret to ganger på rad',mastered]]){
     const item=document.createElement('div');item.className='own-learning-stat';const b=document.createElement('b');b.textContent=count;const span=document.createElement('span');span.textContent=label;item.append(b,span);$('ownLearningStats').appendChild(item);
@@ -334,7 +366,7 @@ const skipPuzzle=document.createElement('button');skipPuzzle.id='skipPuzzle';ski
 skipPuzzle.onclick=()=>{if(trainingOrigin==='analysis'){if(!puzzleSolved){recordPuzzleAttempt(false);stats.attempts++;stats.streak=0;persist()}if(analysisPracticeIndex+1<analysisPractice.length){analysisPracticeIndex++;loadPuzzle()}else completeOwnQueue();return}if(!puzzleSolved){recordPuzzleAttempt(false);stats.attempts++;stats.streak=0;const skill=stats.skills[puzzle.skill]||{attempts:0,correct:0};skill.attempts++;stats.skills[puzzle.skill]=skill;if(!queue.includes(puzzleData.indexOf(puzzle)))queue.push(puzzleData.indexOf(puzzle));persist()}loadPuzzle()};
 const lessons=[{title:'Kontroller sentrum',tag:'ÅPNING',body:'Feltene e4, d4, e5 og d5 er sjakkbrettets knutepunkt.',points:['Flytt én eller to sentrumsbønder tidlig.','Utvikle springere og løpere mot sentrum.','Unngå å flytte samme brikke mange ganger i åpningen.']},{title:'Sikre kongen',tag:'KONGESIKKERHET',body:'Selv en sterk stilling kan rakne hvis kongen står utsatt.',points:['Gjør rokade relativt tidlig.','Unngå unødvendige bondetrekk foran kongen.','Se etter motstanderens sjakker før hvert trekk.']},{title:'Se etter taktikk',tag:'MØNSTRE',body:'Gaffel, binding og spidd er mønstre som vinner materiell.',points:['Se først etter sjakker, deretter slag og trusler.','Undersøk alle ubeskyttede brikker.','Spør: Hva truer motstanderen etter mitt trekk?']},{title:'Tenk som en trener',tag:'BESLUTNINGER',body:'En enkel sjekkliste gir færre unødvendige feil.',points:['Hva var hensikten med motstanderens trekk?','Hvilke to eller tre kandidattrekk har jeg?','Kan en av mine brikker slås gratis etterpå?']},{title:'Lær sluttspill',tag:'SLUTTSPILL',body:'Når få brikker er igjen blir kongen sterkere og bondene avgjør.',points:['Aktiver kongen.','Lag fribønder som kan forvandles.','Øv på matt med dronning og tårn.']},{title:'Bygg gode vaner',tag:'SMART TRENING',body:'Hyppig, fokusert trening med repetisjon slår ofte lange tilfeldige økter.',points:['Ta 10 minutter med taktikk daglig.','Gå gjennom partier og finn én lærdom.','Gjenta vanskelige mønstre til de sitter.']}];
 $('lessons').innerHTML=lessons.map((l,i)=>`<article class="lesson"><span class="num">LEKSJON ${String(i+1).padStart(2,'0')} · ${l.tag}</span><h3>${l.title}</h3><p>${l.body}</p><ul>${l.points.map(p=>`<li>${p}</li>`).join('')}</ul><button data-lesson="${i}">${i===2||i===4?'Øv på temaet →':'Prøv i et parti →'}</button></article>`).join('');document.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{if(['2','4'].includes(b.dataset.lesson)){setTab('train')}else{setTab('play')}});
-setupAnalysis(engine,(positions,index)=>{analysisScrollY=window.scrollY;analysisReturnTab='analysis';trainingOrigin='analysis';analysisPractice=positions;analysisPracticeIndex=index;loadPuzzle();setTab('train')},summary=>{stats.analyzedGames[summary.gameId]={topics:summary.topics,count:summary.count,positions:summary.positions};const keys=Object.keys(stats.analyzedGames);if(keys.length>100)delete stats.analyzedGames[keys[0]];persist()});
+setupAnalysis(engine,(positions,index)=>{analysisScrollY=window.scrollY;analysisReturnTab='analysis';trainingOrigin='analysis';analysisPractice=positions;analysisPracticeIndex=index;loadPuzzle();setTab('train')},summary=>{stats.analyzedGames[summary.gameId]={topics:summary.topics,count:summary.count,positions:summary.positions,date:summary.date,white:summary.white,black:summary.black,checked:summary.checked,analysisVersion:summary.analysisVersion};const keys=Object.keys(stats.analyzedGames);if(keys.length>100)delete stats.analyzedGames[keys[0]];persist()});
 $('coachAnalyze').onclick=()=>setTab('analysis');
 function startOwnPractice(positions,resumeIndex=0){
   if(!positions.length){setTab('analysis');return}
