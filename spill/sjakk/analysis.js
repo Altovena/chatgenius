@@ -81,7 +81,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>b.loss-a.loss);
     const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:'Finn et bedre trekk i stillingen.',explain:`Motoren foretrekker ${f.best}. Undersøk hvorfor motstanderens svar gjør dette bedre.`}));
-    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions});
+    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:2});
     return {findings,practicePositions,skipped};
   }
   function showFindings(result){
