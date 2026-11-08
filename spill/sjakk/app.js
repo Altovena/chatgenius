@@ -52,6 +52,20 @@ function allOwnPositions(){
   }
   return [...unique.values()];
 }
+function topicLearningSnapshot(positions){
+  const result=new Map();
+  for(const p of positions){
+    const topic=p.topic||'Andre forbedringspunkter';
+    if(!result.has(topic))result.set(topic,{topic,total:0,trained:0,mastered:0,wrong:0,due:0});
+    const row=result.get(topic),attempt=stats.puzzles[puzzleKey(p)];
+    row.total++;
+    if(attempt?.right||attempt?.wrong)row.trained++;
+    if((attempt?.streak||0)>=2)row.mastered++;
+    row.wrong+=attempt?.wrong||0;
+    if(!attempt?.right||attempt.nextReview<=Date.now()||attempt.wrong>attempt.right)row.due++;
+  }
+  return [...result.values()].sort((a,b)=>b.due-a.due||b.total-a.total);
+}
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
@@ -67,6 +81,27 @@ function updateAllGamesPlan(){
   $('chessThemes').replaceChildren();
   for(const [topic,count] of Object.entries(byTopic).sort((a,b)=>b[1]-a[1])){
     const chip=document.createElement('span');chip.className='chess-theme';chip.textContent=`${topic}: ${count}`;$('chessThemes').appendChild(chip);
+  }
+  let guidance=$('ownTopicGuidance');
+  if(!guidance){
+    guidance=document.createElement('section');guidance.id='ownTopicGuidance';guidance.className='own-topic-guidance';guidance.setAttribute('aria-live','polite');
+    $('chessThemes').after(guidance);
+  }
+  guidance.replaceChildren();
+  const topics=topicLearningSnapshot(positions);
+  if(topics.length){
+    const title=document.createElement('h3');title.textContent='Dine viktigste treningsområder';guidance.appendChild(title);
+    for(const item of topics.slice(0,3)){
+      const card=document.createElement('div');card.className='own-topic-row';
+      const header=document.createElement('div');const strong=document.createElement('strong');strong.textContent=item.topic;
+      const count=document.createElement('span');count.textContent=`${item.due} til repetisjon av ${item.total}`;
+      header.append(strong,count);
+      const track=document.createElement('div');track.className='own-topic-track';
+      const fill=document.createElement('i');fill.style.width=`${Math.round(item.mastered/item.total*100)}%`;track.appendChild(fill);
+      const detail=document.createElement('small');detail.textContent=`${item.trained} øvd på · ${item.mastered} mestret to ganger · ${item.wrong} feilforsøk`;
+      card.append(header,track,detail);guidance.appendChild(card);
+    }
+    const note=document.createElement('p');note.className='muted';note.textContent=`Anbefalt nå: ${topics[0].topic.toLowerCase()}. Start med «Tren 10 anbefalte», eller velg tema nedenfor. Et punkt regnes som mestret etter to riktige løsninger på rad.`;guidance.appendChild(note);
   }
   const filter=$('chessThemeFilter'),selected=filter.value;
   filter.replaceChildren(new Option('Alle forbedringspunkter','alle'));
