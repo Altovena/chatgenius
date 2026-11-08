@@ -316,6 +316,41 @@ function explainThreats(position=training){
 const showThreats=document.createElement('button');showThreats.id='showThreats';showThreats.className='secondary';showThreats.type='button';showThreats.textContent='♛ Hva er truet i stillingen?';
 $('puzzleHint').after(showThreats);
 showThreats.onclick=()=>{if(checkingAlternative)return;const result=explainThreats();trainHint=result.square;$('puzzleFeedback').textContent=result.text;$('puzzleFeedback').style.color='#e2d39f';renderPuzzle()};
+const compareMoves=document.createElement('button');compareMoves.id='compareMoves';compareMoves.className='secondary';compareMoves.type='button';compareMoves.textContent='⚖ Sammenlign tre trekk med Stockfish';
+showThreats.after(compareMoves);
+compareMoves.onclick=async()=>{
+  if(checkingAlternative||puzzleSolved||trainingStage!==0)return;
+  if(!engine.ready){$('puzzleFeedback').textContent='Stockfish starter fortsatt. Prøv sammenligningen igjen om litt.';return}
+  const legal=training.moves({verbose:true}),threat=threatenedPieces(training,training.turn())[0];
+  const attackers=threat?training.attackers(threat.square,training.turn()==='w'?'b':'w'):[];
+  const candidates=[];
+  const add=(move,reason)=>{if(move&&!candidates.some(c=>c.move.from===move.from&&c.move.to===move.to))candidates.push({move,reason})};
+  add(legal.find(m=>attackers.includes(m.to)),'slår en angripende brikke');
+  add(legal.find(m=>m.from===threat?.square&&(()=>{const next=new Chess(training.fen());next.move(m);return !next.isAttacked(m.to,next.turn())})()),'flytter en truet brikke');
+  add(legal.find(m=>m.from===puzzle.from&&m.to===puzzle.to),'treningsforslaget');
+  add(legal.find(m=>['n','b'].includes(m.piece)&&!candidates.some(c=>c.move.from===m.from&&c.move.to===m.to)),'utvikler en lett offiser');
+  for(const move of legal){if(candidates.length>=3)break;add(move,move.captured?'slår en brikke':'et annet lovlig valg')}
+  if(!candidates.length)return;
+  const round=trainingRound,fen=training.fen();checkingAlternative=true;compareMoves.disabled=true;
+  $('puzzleFeedback').textContent='Stockfish sammenligner trekkene. Dette kan ta noen sekunder …';
+  try{
+    const results=[];
+    for(const candidate of candidates.slice(0,3)){
+      const next=new Chess(fen);next.move(candidate.move);
+      // After our candidate move Stockfish evaluates from the opponent's point of view.
+      const evaluation=await engine.search(next.fen(),{ms:650,skill:20});
+      if(round!==trainingRound||training.fen()!==fen)return;
+      if(!Number.isFinite(evaluation.score))throw new Error('Ingen gyldig motorevaluering');
+      results.push({...candidate,score:-evaluation.score});
+    }
+    results.sort((a,b)=>b.score-a.score);
+    const best=results[0].score;
+    const lines=results.map((r,i)=>`${i+1}. ${r.move.san} (${r.reason})${i===0?' – beste av disse':' – ca. '+Math.max(0,Math.round((best-r.score)/10)/10)+' bondepoeng svakere'}`);
+    $('puzzleFeedback').textContent=`Stockfish sammenlignet ${results.length} kandidater: ${lines.join(' · ')}. Dette er en kort motoranalyse, ikke en garanti mot taktiske overraskelser.`;
+    $('puzzleFeedback').style.color='#e2d39f';
+  }catch{$('puzzleFeedback').textContent='Stockfish klarte ikke å fullføre sammenligningen. Prøv igjen om litt.'}
+  finally{checkingAlternative=false;compareMoves.disabled=false}
+};
 function loadPuzzle(){
   if(trainingOrigin==='analysis'){
     puzzle=analysisPractice[analysisPracticeIndex];
@@ -324,6 +359,7 @@ function loadPuzzle(){
     if(!queue.length)newQueue();const idx=queue.shift();puzzle=puzzleData[idx];
   }
   training=new Chess(puzzle.fen);puzzleColor=training.turn();puzzleSelected=null;puzzleSolved=false;puzzleMissed=false;checkingAlternative=false;trainHint=null;trainingStage=0;hintCount=0;trainingRound++;
+  compareMoves.disabled=false;
   if(trainingOrigin==='analysis'&&analysisReturnTab==='progress'&&stats.ownQueue){stats.ownQueue.index=analysisPracticeIndex;persist()}
   $('puzzleTitle').textContent=trainingOrigin==='analysis'?puzzle.title:`Utfordring ${trainingRound}`;$('puzzleLevel').textContent=trainingOrigin==='analysis'?'Fra Chess.com-analysen din':'Tenk selv – se etter sjakker, slag og trusler';
   $('puzzleIndex').textContent=trainingOrigin==='analysis'?`Forbedringspunkt ${analysisPracticeIndex+1} av ${analysisPractice.length}`:`${puzzleData.length} varianter`;$('skillBadge').hidden=true;
