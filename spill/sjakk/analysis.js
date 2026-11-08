@@ -24,7 +24,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
   trainingButton.style.cssText='width:100%;min-height:52px;font-weight:700;background:#bdd9b0;color:#18302b;border-radius:10px';
   trainingBox.append(trainingSummary,trainingButton);
   el('analysisStatus').after(progressBox,trainingBox);
-  function resetFinishedExtras(){progressBox.hidden=true;trainingBox.hidden=true;trainingButton.onclick=null}
+  const analysisLayout=el('analysisStatus').closest('.analysis-layout');
+  function resetFinishedExtras(){progressBox.hidden=true;trainingBox.hidden=true;trainingButton.onclick=null;analysisLayout?.classList.remove('recent-game-active')}
+  function showRecentAnalysis(){
+    if(window.matchMedia('(max-width: 800px)').matches&&!el('analysisPanel').classList.contains('hidden')){
+      el('analysisMeta').scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  }
   function saveArchive(){
     try{sessionStorage.setItem(ARCHIVE_KEY,JSON.stringify({games,batchCursor,username:el('chessUser').value.trim(),savedAt:Date.now()}))}catch{/* Analysis remains usable if browser storage is unavailable */}
   }
@@ -153,8 +159,9 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
     if(!engine.ready){resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
     selected=local;el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
-    resetFinishedExtras();progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
+    resetFinishedExtras();analysisLayout?.classList.add('recent-game-active');progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
     el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
+    showRecentAnalysis();
     try{
       const result=await analyzeOne(local,(k,total)=>{
         const percent=Math.min(99,Math.round((k-1)/total*100));
@@ -165,10 +172,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
       showFindings(result);
       el('analysisStatus').textContent=result.findings.length?`Fant ${result.findings.length} forbedringspunkter. Trykk «Tren på denne stillingen» under et av funnene for å øve.`:'Analysen er ferdig. Ingen tydelige forbedringspunkter ble funnet i de undersøkte trekkene.';
       if(result.findings.length){
-        trainingSummary.textContent=`♟ ${result.findings.length} forbedringspunkter funnet. Øv på stillingene fra partiet du nettopp spilte, med de viktigste feilene først.`;
+        const topics=Object.entries(result.findings.reduce((counts,f)=>{counts[f.topic]=(counts[f.topic]||0)+1;return counts},{})).sort((a,b)=>b[1]-a[1]);
+        const focus=topics.slice(0,2).map(([topic,count])=>`${topic.toLowerCase()} (${count})`).join(' og ');
+        trainingSummary.textContent=`♟ ${result.findings.length} forbedringspunkter funnet. Ditt viktigste treningsområde er ${focus}. Øv på de viktigste stillingene først.`;
         trainingButton.onclick=()=>onPractice(result.practicePositions,0);
         trainingBox.hidden=false;
       }
+      showRecentAnalysis();
     }catch(e){progressBox.hidden=true;el('analysisStatus').textContent='Kunne ikke analysere partiet: '+e.message}
     finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
     return true;
