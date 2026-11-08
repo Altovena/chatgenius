@@ -44,7 +44,7 @@ if(b.routeCd<=0&&Math.hypot(b.x-208,b.y-157)<33){dragonStrike(b);b.routeCd=1.2}
 for(let i=0;i<ringLights.length;i++){let x=108+i*50;if(b.y<145&&Math.abs(b.x-x)<12&&!ringLights[i]){ringLights[i]=true;scoreHit(250,x,125,'RUNEBONUS');tone(1000,.07,'triangle');if(ringLights.every(Boolean)){scoreHit(2000,210,135,'KONGEBONUS');ringLights.fill(false);fanfare()}}}
 const speed=Math.hypot(b.vx,b.vy);if(speed>1400){b.vx*=1400/speed;b.vy*=1400/speed}}
 function update(dt){frame+=dt;flash=Math.max(0,flash-dt);modeTime=Math.max(0,modeTime-dt);for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.t-=dt}particles=particles.filter(p=>p.t>0);if(state!=='playing')return;
-tiltDecay=Math.max(0,tiltDecay-dt);if(!tiltDecay&&!tilted&&tiltHeat>0)tiltHeat=Math.max(0,tiltHeat-dt*.8);if(keys.launch)charge=Math.min(25,charge+dt*15);
+tiltDecay=Math.max(0,tiltDecay-dt);if(!tiltDecay&&!tilted&&tiltHeat>0)tiltHeat=Math.max(0,tiltHeat-dt*.8);if(key.launch)charge=Math.min(25,charge+dt*15);
 const steps=Math.max(1,Math.ceil(dt/.007));for(let i=0;i<steps;i++){for(const b of balls)updateBall(b,dt/steps);balls=balls.filter(b=>b.inLane||b.y<H+15);if(!balls.length){stock--;if(stock>0){readyBall();setMode('NY BALL',1.5);tone(210,.15)}else gameOver();break}}
 canvas.dataset.ballCount=String(balls.length);canvas.dataset.ballZone=balls[0]?.inLane?'shooter':balls[0]?.route?'ramp':'field';canvas.dataset.ballX=String(Math.round(balls[0]?.x||0));canvas.dataset.ballY=String(Math.round(balls[0]?.y||0));canvas.dataset.mode=mode;}
 function neonText(s,x,y,size,color){ctx.font=`900 ${size}px system-ui`;ctx.textAlign='center';ctx.shadowColor=color;ctx.shadowBlur=12;ctx.fillStyle=color;ctx.fillText(s,x,y);ctx.shadowBlur=0}
