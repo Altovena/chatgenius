@@ -186,11 +186,11 @@ $('accountImportProgressFile').addEventListener('change',async event=>{
   if(file.size>2*1024*1024){$('accountImportProgressStatus').textContent='Filen er for stor. Maksimal størrelse er 2 MB.';return;}
   try{
     const payload=JSON.parse(await file.text());
-    if(payload?.format!=='chatgenius-chess-progress-backup'||payload.schema_version!==1||!payload.state||typeof payload.state!=='object'||Array.isArray(payload.state))throw new Error('Ukjent eller ugyldig sikkerhetskopiformat.');
+    if(payload?.format!=='chatgenius-chess-progress-backup'||payload.schema_version!==1||!validProgressState(payload.state))throw new Error('Ukjent eller ugyldig sikkerhetskopiformat.');
     pendingProgressImport=payload;
     const date=new Date(payload.exported_at);
     const when=Number.isNaN(date.getTime())?'ukjent dato':date.toLocaleString('nb-NO');
-    $('accountImportProgressStatus').textContent='Valgt: '+file.name+' · Kilde: '+(payload.source==='sky'?'skykopi':'lokal kopi')+' · Eksportert: '+when+'. Dette vil bare erstatte lokal treningsfremgang, ikke skyarkivet eller partiene.';
+    $('accountImportProgressStatus').textContent='Valgt: '+file.name+' · Kilde: '+(payload.source==='sky'?'skykopi':'lokal kopi')+' · Eksportert: '+when+'. XP: '+payload.state.xp+' · Løste oppgaver: '+payload.state.solved+' · Partier: '+payload.state.games+'. Dette vil bare erstatte lokal treningsfremgang, ikke skyarkivet eller partiene.';
     $('accountConfirmImportProgress').hidden=false;
   }catch(error){$('accountImportProgressStatus').textContent='Kunne ikke lese sikkerhetskopien: '+(error.message||'ugyldig JSON');}
 });
@@ -211,6 +211,16 @@ $('accountConfirmImportProgress').addEventListener('click',()=>{
     window.location.reload();
   }catch(error){$('accountImportProgressStatus').textContent='Kunne ikke gjenopprette filen: '+(error.message||'ukjent feil');}
 });
+function validProgressState(state){
+  if(!state||typeof state!=='object'||Array.isArray(state))return false;
+  for(const key of ['xp','solved','attempts','streak','games','wins']){
+    if(!Number.isSafeInteger(state[key])||state[key]<0)return false;
+  }
+  for(const key of ['skills','puzzles','analyzedGames']){
+    if(state[key]!==undefined&&(!state[key]||typeof state[key]!=='object'||Array.isArray(state[key])))return false;
+  }
+  return true;
+}
 function downloadProgressBackup(source,state,version){
   const payload={format:'chatgenius-chess-progress-backup',schema_version:1,source,exported_at:new Date().toISOString(),cloud_version:version??null,state};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
