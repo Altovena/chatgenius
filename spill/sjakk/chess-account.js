@@ -159,6 +159,7 @@ async function loadCloud(){
 }
 async function withSync(task){
   if(syncing)return;
+  if(progressBackupInFlight){setSyncStatus('En automatisk sikkerhetskopi pågår. Vent til den er ferdig, og prøv igjen.');return;}
   syncing=true;renderSession();
   try{await task();}catch(error){setSyncStatus(error.message||'Synkroniseringen mislyktes. Lokale data er beholdt.');}
   finally{syncing=false;renderSession();}
@@ -340,9 +341,11 @@ async function backupProgressSafely(){
     return;
   }
   progressBackupInFlight=true;
+  const backupUserId=session.user.id;
   try{
     const state=JSON.parse(raw);
     const result=await api('POST',{type:'progress',state,expected_version:cloudProgress?.state_version??null});
+    if(session?.user?.id!==backupUserId)return;
     cloudProgress={state,state_version:result.state_version};
     progressBaselineVersion=result.state_version;
     localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
