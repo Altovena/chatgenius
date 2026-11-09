@@ -69,7 +69,7 @@ async function getSupabase(){
   // Hentes først når kontofunksjonen brukes. Resten av sjakkspillet fungerer uten nett.
   const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2.57.0');
   authClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-  authClient.auth.onAuthStateChange((_event,nextSession)=>{
+  authClient.auth.onAuthStateChange((event,nextSession)=>{
     const previousUser=session?.user?.id;
     session=nextSession;
     if(previousUser!==nextSession?.user?.id){
@@ -80,14 +80,14 @@ async function getSupabase(){
       lastProgressFingerprint='';
     }
     renderSession();
-    if(nextSession)queueMicrotask(()=>loadCloud().catch(err=>setSyncStatus(err.message)));
+    if(nextSession && (previousUser!==nextSession.user.id || event==='SIGNED_IN'))queueMicrotask(()=>loadCloud().then(()=>{if(autoProgress.checked)scheduleProgressBackup();}).catch(err=>setSyncStatus(err.message)));
   });
   const {data,error}=await authClient.auth.getSession();
   if(error)throw error;
   session=data.session;
   renderSession();
   if(session)await loadCloud();
-  if(session&&autoProgress.checked)scheduleProgressBackup();
+  if(session&&autoProgress.checked&&cloudLoadedForUser===session.user.id)scheduleProgressBackup();
   return authClient;
 }
 function renderSession(){
