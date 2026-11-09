@@ -14,6 +14,9 @@ let progressBaselineVersion = null;
 let progressBackupInFlight = false;
 const AUTO_PROGRESS_KEY = 'freddyChessAutoProgressBackup';
 const SYNC_FINGERPRINT_KEY = 'freddyChessProgressSyncedFingerprint';
+const SYNC_USER_KEY = 'freddyChessProgressSyncedUser';
+function rememberProgressOwner(){localStorage.setItem(SYNC_USER_KEY,session.user.id);}
+function ownsProgressBaseline(){return Boolean(session?.user?.id)&&localStorage.getItem(SYNC_USER_KEY)===session.user.id;}
 const autoProgress = $('accountAutoProgress');
 autoProgress.checked = localStorage.getItem(AUTO_PROGRESS_KEY) === 'true';
 function progressInfo(message){$('accountProgressStatus').textContent=message;}
@@ -104,10 +107,10 @@ async function loadCloud(){
     $('accountChessUsername').value=localStorage.getItem('freddyChessComUsername')||'';
     $('accountChessUsernameStatus').textContent='Du kan lagre Chess.com-brukernavnet på kontoen din.';
   }
-  if(cloudProgress?.state && Number(localStorage.getItem('freddyChessProgressCloudVersion'))===cloudProgress.state_version){
+  if(cloudProgress?.state && ownsProgressBaseline() && Number(localStorage.getItem('freddyChessProgressCloudVersion'))===cloudProgress.state_version){
     progressBaselineVersion=cloudProgress.state_version;
     lastProgressFingerprint=localStorage.getItem(SYNC_FINGERPRINT_KEY)||'';
-  }else if(cloudProgress?.state){
+  }else{
     progressBaselineVersion=null;
     lastProgressFingerprint='';
   }
@@ -145,7 +148,7 @@ $('accountSaveChessUsername').addEventListener('click',()=>withSync(async()=>{
   $('accountChessUsernameStatus').textContent=username?'Chess.com-brukernavnet er lagret på kontoen og tilgjengelig på andre enheter.':'Chess.com-brukernavnet er fjernet fra kontoen.';
 }));
 $('accountSignOut').addEventListener('click',async()=>{
-  try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;renderSession();renderGames();}
+  try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;progressBaselineVersion=null;lastProgressFingerprint='';renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
 });
 $('accountSyncGames').addEventListener('click',()=>withSync(async()=>{
@@ -172,6 +175,7 @@ $('accountSyncProgress').addEventListener('click',()=>withSync(async()=>{
   cloudProgress={state,state_version:result.state_version};
   lastProgressFingerprint=JSON.stringify(state);
   localStorage.setItem(SYNC_FINGERPRINT_KEY,lastProgressFingerprint);
+  rememberProgressOwner();
   progressBaselineVersion=result.state_version;
   localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
   progressInfo('Automatisk oppdatering er nå aktiv for denne enheten når valget er slått på.');
@@ -189,6 +193,7 @@ $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
   localStorage.setItem('freddyChessProgress',JSON.stringify(cloudProgress.state));
   localStorage.setItem('freddyChessProgressCloudVersion',String(cloudProgress.state_version));
   localStorage.setItem(SYNC_FINGERPRINT_KEY,JSON.stringify(cloudProgress.state));
+  rememberProgressOwner();
   setSyncStatus('Fremgangen ble hentet. Laster sjakkakademiet på nytt …');
   window.location.reload();
 }));
@@ -217,6 +222,7 @@ async function backupProgressSafely(){
     localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
     lastProgressFingerprint=raw;
     localStorage.setItem(SYNC_FINGERPRINT_KEY,raw);
+    rememberProgressOwner();
     progressInfo('Treningsfremgangen er oppdatert i skyen.');
   }catch(error){
     if(String(error.message).includes('409')){
