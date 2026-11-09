@@ -6,7 +6,7 @@ const json = (res,status,body) => {res.setHeader('Cache-Control','no-store');ret
 async function database(path,{method='GET',body,query=''}={}){
   const response=await fetch(URL+'/rest/v1/'+path+query,{method,headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json','Accept':'application/json','Accept-Profile':'chatgenius','Content-Profile':'chatgenius',Prefer:'return=representation,resolution=merge-duplicates'},...(body?{body:JSON.stringify(body)}:{})});
   const result=await response.json().catch(()=>null);
-  if(!response.ok)throw new Error('Database request failed: '+response.status);
+  if(!response.ok)throw new Error('Database request failed: '+response.status+' '+String(result?.code||'')+' '+String(result?.message||'').slice(0,240));
   return result;
 }
 export default async function handler(req,res){
