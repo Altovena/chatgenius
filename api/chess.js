@@ -21,14 +21,21 @@ export default async function handler(req,res){
     if(!user?.id||user.is_anonymous)return json(res,401,{error:'Invalid user session'});
     const id=encodeURIComponent(user.id);
     if(req.method==='GET'){
-      const [games,progress]=await Promise.all([
+      const [games,progress,preferences]=await Promise.all([
         database('chess_games',{query:'?select=id,source,client_game_id,pgn,result,opponent,difficulty,played_at&user_id=eq.'+id+'&order=played_at.desc&limit=50'}),
-        database('chess_progress',{query:'?select=state,state_version,updated_at&user_id=eq.'+id+'&limit=1'})
+        database('chess_progress',{query:'?select=state,state_version,updated_at&user_id=eq.'+id+'&limit=1'}),
+        database('chess_preferences',{query:'?select=chess_com_username&user_id=eq.'+id+'&limit=1'})
       ]);
-      return json(res,200,{games,progress:progress[0]||null});
+      return json(res,200,{games,progress:progress[0]||null,preferences:preferences[0]||null});
     }
     const body=req.body;
     if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body),'utf8')>MAX_BODY_BYTES)return json(res,400,{error:'Invalid payload'});
+    if(body.type==='preferences'){
+      const username=body.chess_com_username;
+      if(typeof username!=='string'||(username!==''&&!/^[A-Za-z0-9_-]{2,30}$/.test(username)))return json(res,400,{error:'Invalid Chess.com username'});
+      await database('chess_preferences',{method:'POST',query:'?on_conflict=user_id',body:{user_id:user.id,chess_com_username:username||null,updated_at:new Date().toISOString()}});
+      return json(res,200,{saved:true,chess_com_username:username||null});
+    }
     if(body.type==='game'){
       const g=body.game;
       if(!g||!['academy','chess_com','import'].includes(g.source)||typeof g.client_game_id!=='string'||!/^[\w:-]{1,100}$/.test(g.client_game_id)||typeof g.pgn!=='string'||!g.pgn.trim()||Buffer.byteLength(g.pgn,'utf8')>90000||!['1-0','0-1','1/2-1/2','*'].includes(g.result))return json(res,400,{error:'Invalid chess game fields'});
