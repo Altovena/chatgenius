@@ -11,6 +11,7 @@ let syncing = false;
 let progressTimer = null;
 let lastProgressFingerprint = '';
 let progressBaselineVersion = null;
+let progressBackupInFlight = false;
 const AUTO_PROGRESS_KEY = 'freddyChessAutoProgressBackup';
 const SYNC_FINGERPRINT_KEY = 'freddyChessProgressSyncedFingerprint';
 const autoProgress = $('accountAutoProgress');
@@ -197,7 +198,8 @@ autoProgress.addEventListener('change',()=>{
   else{if(progressTimer)clearTimeout(progressTimer);progressInfo('Automatisk sikkerhetskopiering er slått av.');}
 });
 async function backupProgressSafely(){
-  if(!autoProgress.checked||!session?.access_token||syncing)return;
+  if(!autoProgress.checked||!session?.access_token)return;
+  if(syncing||progressBackupInFlight){scheduleProgressBackup();return;}
   const raw=localStorage.getItem('freddyChessProgress');
   if(!raw||raw===lastProgressFingerprint)return;
   // Første automatiske kopi tillates bare når skyen er tom. Ellers må brukeren
@@ -206,6 +208,7 @@ async function backupProgressSafely(){
     progressInfo('Skyen inneholder fremgang fra før. Velg «Hent fremgang fra skyen» eller bekreft en sikkerhetskopi før automatisk oppdatering.');
     return;
   }
+  progressBackupInFlight=true;
   try{
     const state=JSON.parse(raw);
     const result=await api('POST',{type:'progress',state,expected_version:cloudProgress?.state_version??null});
@@ -215,7 +218,15 @@ async function backupProgressSafely(){
     lastProgressFingerprint=raw;
     localStorage.setItem(SYNC_FINGERPRINT_KEY,raw);
     progressInfo('Treningsfremgangen er oppdatert i skyen.');
-  }catch(error){progressInfo('Automatisk sikkerhetskopi ble ikke fullført: '+(error.message||'ukjent feil')+'. Lokal fremgang er beholdt.');}
+  }catch(error){
+    if(String(error.message).includes('409')){
+      progressBaselineVersion=null;
+      progressInfo('Fremgangen ble endret på en annen enhet. Ingen data ble overskrevet. Velg hvilken versjon du vil beholde.');
+    }else progressInfo('Automatisk sikkerhetskopi ble ikke fullført: '+(error.message||'ukjent feil')+'. Lokal fremgang er beholdt.');
+  }finally{
+    progressBackupInFlight=false;
+    if(localStorage.getItem('freddyChessProgress')!==raw && progressBaselineVersion!==null)scheduleProgressBackup();
+  }
 }
 function scheduleProgressBackup(){
   if(!autoProgress.checked)return;
