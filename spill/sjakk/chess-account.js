@@ -20,6 +20,20 @@ function ownsProgressBaseline(){return Boolean(session?.user?.id)&&localStorage.
 const autoProgress = $('accountAutoProgress');
 autoProgress.checked = localStorage.getItem(AUTO_PROGRESS_KEY) === 'true';
 function progressInfo(message){$('accountProgressStatus').textContent=message;}
+function updateProgressComparison(){
+  const local=$('accountLocalProgressSummary'),remote=$('accountCloudProgressSummary');
+  const raw=localStorage.getItem('freddyChessProgress');
+  let parsed=null;
+  try{if(raw)parsed=JSON.parse(raw);}catch{}
+  local.textContent=parsed?'Treningsfremgang finnes på denne enheten.':'Ingen lokal treningsfremgang lagret.';
+  if(!session?.user){remote.textContent='Logg inn for å se skyarkivet.';return;}
+  if(!cloudProgress?.state){remote.textContent='Ingen sikkerhetskopi i skyen.';return;}
+  const version=cloudProgress.state_version;
+  const same=raw&&JSON.stringify(parsed)===JSON.stringify(cloudProgress.state);
+  const baseline=ownsProgressBaseline()&&progressBaselineVersion===version;
+  remote.textContent='Versjon '+version+(same?' · Samme fremgang som på denne enheten':baseline?' · Lokal fremgang kan være nyere':' · Sammenlign før du erstatter');
+}
+
 
 
 function localGames(){
@@ -77,6 +91,7 @@ function renderSession(){
   $('accountIdentity').textContent=signed?`Innlogget som ${session.user.email||'sjakkspiller'}`:'';
   setStatus(signed?'Du er innlogget. Nå kan du lagre ferdige partier på kontoen din.':'Du spiller uten innlogging. De lokale partiene dine er fortsatt tilgjengelige.');
   if(!signed)setSyncStatus('Innlogging kreves for skylagring.');
+  updateProgressComparison();
 }
 async function api(method,body){
   if(!session?.access_token)throw new Error('Logg inn før synkronisering.');
@@ -116,6 +131,7 @@ async function loadCloud(){
   }
   progressInfo(cloudProgress?.state ? `Skykopi tilgjengelig (versjon ${cloudProgress.state_version}).` : 'Ingen treningsfremgang lagret i skyen ennå.');
   renderGames();
+  updateProgressComparison();
   setSyncStatus(`${cloudGames.length} partier funnet i skyen. ${localGames().length} lokale partier på denne enheten.`);
 }
 async function withSync(task){
@@ -180,6 +196,7 @@ $('accountSyncProgress').addEventListener('click',()=>withSync(async()=>{
   localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
   progressInfo('Automatisk oppdatering er nå aktiv for denne enheten når valget er slått på.');
   setSyncStatus('Fremgangen er sikkerhetskopiert. Lokale data er beholdt.');
+  updateProgressComparison();
 }));
 $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
   await loadCloud();
@@ -224,6 +241,7 @@ async function backupProgressSafely(){
     localStorage.setItem(SYNC_FINGERPRINT_KEY,raw);
     rememberProgressOwner();
     progressInfo('Treningsfremgangen er oppdatert i skyen.');
+    updateProgressComparison();
   }catch(error){
     if(String(error.message).includes('409')){
       progressBaselineVersion=null;
@@ -239,7 +257,7 @@ function scheduleProgressBackup(){
   if(progressTimer)clearTimeout(progressTimer);
   progressTimer=setTimeout(()=>{progressTimer=null;backupProgressSafely();},1800);
 }
-window.addEventListener('chess:progress-saved',scheduleProgressBackup);
+window.addEventListener('chess:progress-saved',()=>{updateProgressComparison();scheduleProgressBackup();});
 window.addEventListener('chess:game-saved',event=>{
   renderGames();
   // Skyarkivering er ekstra sikring: lokalt arkiv er allerede skrevet til disk.
@@ -249,5 +267,6 @@ window.addEventListener('chess:game-saved',event=>{
     .catch(()=>setSyncStatus('Partiet er lagret lokalt. Kunne ikke synkronisere automatisk; prøv «Synkroniser lokale partier».'));
 });
 renderGames();
+updateProgressComparison();
 // Start sesjonskontroll først etter at hele sjakkspillet er klart.
 getSupabase().catch(error=>setSyncStatus('Konto eller skyarkiv kan ikke kobles til nå: '+(error.message||'ukjent feil')+'. Partier lagres fortsatt lokalt.'));
