@@ -20,3 +20,8 @@
 .account-game button{flex-shrink:0}
 @media(max-width:980px){.account-layout{grid-template-columns:1fr}}
 @media(max-width:520px){.account-game{align-items:flex-start;flex-direction:column}.account-game button{width:100%}}
+
+/* Hold PGN-handlinger innenfor hvert partikort, også på brede skjermer. */
+.account-game>div{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.account-game button{width:auto;max-width:100%;flex:0 0 auto;margin:0}
+@media(max-width:520px){.account-game button{width:100%}}
