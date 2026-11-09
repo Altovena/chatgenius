@@ -88,6 +88,7 @@ function renderSession(){
   $('accountSyncProgress').disabled=!signed||syncing;
   $('accountRestoreProgress').disabled=!signed||syncing;
   $('accountRefreshCloud').disabled=!signed||syncing;
+  $('accountExportCloudProgress').disabled=!signed||syncing||!cloudProgress?.state;
   $('accountSaveChessUsername').disabled=!signed;
   $('accountIdentity').textContent=signed?`Innlogget som ${session.user.email||'sjakkspiller'}`:'';
   setStatus(signed?'Du er innlogget. Nå kan du lagre ferdige partier på kontoen din.':'Du spiller uten innlogging. De lokale partiene dine er fortsatt tilgjengelige.');
@@ -133,6 +134,7 @@ async function loadCloud(){
   progressInfo(cloudProgress?.state ? `Skykopi tilgjengelig (versjon ${cloudProgress.state_version}).` : 'Ingen treningsfremgang lagret i skyen ennå.');
   renderGames();
   updateProgressComparison();
+  renderSession();
   setSyncStatus(`${cloudGames.length} partier funnet i skyen. ${localGames().length} lokale partier på denne enheten.`);
 }
 async function withSync(task){
@@ -174,6 +176,28 @@ $('accountSaveChessUsername').addEventListener('click',()=>withSync(async()=>{
 $('accountSignOut').addEventListener('click',async()=>{
   try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;progressBaselineVersion=null;lastProgressFingerprint='';renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
+});
+function downloadProgressBackup(source,state,version){
+  const payload={format:'chatgenius-chess-progress-backup',schema_version:1,source,exported_at:new Date().toISOString(),cloud_version:version??null,state};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download='sjakk-fremgang-'+source+'-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+$('accountExportLocalProgress').addEventListener('click',()=>{
+  try{
+    const raw=localStorage.getItem('freddyChessProgress');
+    if(!raw){setSyncStatus('Ingen lokal treningsfremgang å laste ned.');return;}
+    downloadProgressBackup('lokal',JSON.parse(raw),null);
+    setSyncStatus('Lokal treningsfremgang er klargjort for nedlasting.');
+  }catch{setSyncStatus('Lokal fremgang kunne ikke eksporteres. Ingen data ble endret.');}
+});
+$('accountExportCloudProgress').addEventListener('click',()=>{
+  if(!session?.user||!cloudProgress?.state){setSyncStatus('Oppdater status fra skyen før du laster ned skykopien.');return;}
+  downloadProgressBackup('sky',cloudProgress.state,cloudProgress.state_version);
+  setSyncStatus('Skykopien er klargjort for nedlasting. Ingen data ble endret.');
 });
 $('accountRefreshCloud').addEventListener('click',()=>withSync(async()=>{
   setSyncStatus('Kontrollerer siste status fra skyarkivet …');
