@@ -87,6 +87,7 @@ function renderSession(){
   $('accountSyncGames').disabled=!signed||syncing;
   $('accountSyncProgress').disabled=!signed||syncing;
   $('accountRestoreProgress').disabled=!signed||syncing;
+  $('accountRefreshCloud').disabled=!signed||syncing;
   $('accountSaveChessUsername').disabled=!signed;
   $('accountIdentity').textContent=signed?`Innlogget som ${session.user.email||'sjakkspiller'}`:'';
   setStatus(signed?'Du er innlogget. Nå kan du lagre ferdige partier på kontoen din.':'Du spiller uten innlogging. De lokale partiene dine er fortsatt tilgjengelige.');
@@ -174,6 +175,11 @@ $('accountSignOut').addEventListener('click',async()=>{
   try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;progressBaselineVersion=null;lastProgressFingerprint='';renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
 });
+$('accountRefreshCloud').addEventListener('click',()=>withSync(async()=>{
+  setSyncStatus('Kontrollerer siste status fra skyarkivet …');
+  await loadCloud();
+  setSyncStatus('Status oppdatert fra skyarkivet. Ingen lokale data ble endret.');
+}));
 $('accountSyncGames').addEventListener('click',()=>withSync(async()=>{
   const games=localGames();let count=0;
   for(const game of games){
