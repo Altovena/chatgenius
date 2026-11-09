@@ -68,6 +68,7 @@ function renderSession(){
   $('accountSyncGames').disabled=!signed||syncing;
   $('accountSyncProgress').disabled=!signed||syncing;
   $('accountRestoreProgress').disabled=!signed||syncing;
+  $('accountSaveChessUsername').disabled=!signed;
   $('accountIdentity').textContent=signed?`Innlogget som ${session.user.email||'sjakkspiller'}`:'';
   setStatus(signed?'Du er innlogget. Nå kan du lagre ferdige partier på kontoen din.':'Du spiller uten innlogging. De lokale partiene dine er fortsatt tilgjengelige.');
   if(!signed)setSyncStatus('Innlogging kreves for skylagring.');
@@ -91,6 +92,16 @@ async function loadCloud(){
   const remote=await api('GET');
   cloudGames=remote.games||[];
   cloudProgress=remote.progress||null;
+  const remoteName=remote.preferences?.chess_com_username;
+  if(typeof remoteName==='string'&&remoteName){
+    $('accountChessUsername').value=remoteName;
+    localStorage.setItem('freddyChessComUsername',remoteName);
+    const field=$('chessUser');if(field)field.value=remoteName;
+    $('accountChessUsernameStatus').textContent='Chess.com-brukernavnet er hentet fra kontoen din.';
+  }else{
+    $('accountChessUsername').value=localStorage.getItem('freddyChessComUsername')||'';
+    $('accountChessUsernameStatus').textContent='Du kan lagre Chess.com-brukernavnet på kontoen din.';
+  }
   if(cloudProgress?.state && Number(localStorage.getItem('freddyChessProgressCloudVersion'))===cloudProgress.state_version){
     progressBaselineVersion=cloudProgress.state_version;
     lastProgressFingerprint=localStorage.getItem('freddyChessProgress')||'';
@@ -117,6 +128,17 @@ $('accountLoginForm').addEventListener('submit',async event=>{
     setStatus('Sjekk e-posten din og åpne innloggingslenken på denne eller en annen enhet.');
   }catch(error){setStatus(`Innlogging er ikke tilgjengelig nå: ${error.message}`);}
 });
+$('accountSaveChessUsername').addEventListener('click',()=>withSync(async()=>{
+  const username=$('accountChessUsername').value.trim();
+  if(username&&!/^[A-Za-z0-9_-]{2,30}$/.test(username)){
+    $('accountChessUsernameStatus').textContent='Bruk 2–30 bokstaver, tall, bindestrek eller understrek.';return;
+  }
+  await api('POST',{type:'preferences',chess_com_username:username});
+  if(username)localStorage.setItem('freddyChessComUsername',username);
+  else localStorage.removeItem('freddyChessComUsername');
+  const field=$('chessUser');if(field)field.value=username;
+  $('accountChessUsernameStatus').textContent=username?'Chess.com-brukernavnet er lagret på kontoen og tilgjengelig på andre enheter.':'Chess.com-brukernavnet er fjernet fra kontoen.';
+}));
 $('accountSignOut').addEventListener('click',async()=>{
   try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
