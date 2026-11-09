@@ -65,10 +65,16 @@ function renderSession(){
 }
 async function api(method,body){
   if(!session?.access_token)throw new Error('Logg inn før synkronisering.');
-  const response=await fetch(API,{method,headers:{'Authorization':`Bearer ${session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+  let response;
+  try {
+    response=await fetch(API,{method,headers:{'Authorization':`Bearer ${session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+  } catch(error) {
+    // A rejected fetch has no HTTP response: DNS, TLS, connectivity or CORS may be responsible.
+    throw new Error('Ingen forbindelse til skyarkivet ('+new URL(API).hostname+'). Nettverk, DNS eller CORS kan blokkere forespørselen. Partiet er fortsatt lagret på denne enheten.');
+  }
   let data={};
   try{data=await response.json();}catch{}
-  if(!response.ok)throw new Error(response.status===404?'Skyarkivet er ikke publisert ennå. Lokale partier er trygge.':data.error||'Kunne ikke kontakte sjakkarkivet.');
+  if(!response.ok)throw new Error(response.status===404?'Skyarkivet svarer med HTTP 404. Lokale partier er trygge.':response.status===401?'Skyarkivet avviste innloggingen (HTTP 401). Prøv å logge ut og inn igjen.':`Skyarkivet svarte HTTP ${response.status}: ${data.error||'ukjent feil'}`);
   return data;
 }
 async function loadCloud(){
@@ -148,4 +154,4 @@ window.addEventListener('chess:game-saved',event=>{
 });
 renderGames();
 // Start sesjonskontroll først etter at hele sjakkspillet er klart.
-getSupabase().catch(error=>setSyncStatus('Konto kan ikke kobles til nå. Partier lagres fortsatt lokalt.'));
+getSupabase().catch(error=>setSyncStatus('Konto eller skyarkiv kan ikke kobles til nå: '+(error.message||'ukjent feil')+'. Partier lagres fortsatt lokalt.'));
