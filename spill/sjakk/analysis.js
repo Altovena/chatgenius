@@ -191,6 +191,15 @@ export function setupAnalysis(engine,onPractice,onFindings){
       if(games.length){choose(0);status(`${games.length} lagrede partier gjenopprettet. Fortsett analysen der du slapp.`)}
     }
   }catch{/* Corrupt or disabled session storage must not prevent loading */}
+  // Husk Chess.com-brukernavnet på enheten mellom besøk.
+  const chessName=el('chessUser');
+  const storedName=localStorage.getItem('freddyChessComUsername')||'';
+  if(!chessName.value&&/^[\\w-]{2,30}$/.test(storedName))chessName.value=storedName;
+  chessName.addEventListener('change',()=>{
+    const value=chessName.value.trim();
+    if(/^[\\w-]{2,30}$/.test(value))localStorage.setItem('freddyChessComUsername',value);
+    else if(!value)localStorage.removeItem('freddyChessComUsername');
+  });
   updateBatchControls();
   return {analyzeFinishedGame};
 }
