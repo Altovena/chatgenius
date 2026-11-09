@@ -55,3 +55,11 @@
 .account-history .account-game{gap:14px}
 @media(max-width:1100px){.account-layout{grid-template-columns:1fr}.account-history{align-self:stretch}}
 @media(max-width:520px){.account-section{padding:17px}.account-section-heading{gap:10px;margin-bottom:16px}.account-section-icon{width:36px;height:36px;flex-basis:36px;font-size:20px}.account-section-heading h2{font-size:16px}.account-layout{gap:16px}.account-settings{gap:14px}}
+
+/* Sammenlign fremgang på enheten med skyarkivet før gjenoppretting. */
+.account-progress-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 18px}
+.account-progress-comparison>div{min-width:0;padding:13px 14px;border:1px solid #47645c;border-radius:10px;background:#203735}
+.account-progress-comparison strong,.account-progress-comparison span{display:block}
+.account-progress-comparison strong{color:#e6f4e1;font-size:13px;margin-bottom:7px}
+.account-progress-comparison span{color:#bfd0c8;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:520px){.account-progress-comparison{grid-template-columns:1fr}}
