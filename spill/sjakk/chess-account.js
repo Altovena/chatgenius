@@ -2,7 +2,7 @@
 const $ = id => document.getElementById(id);
 const SUPABASE_URL = 'https://ereapsfcsqtdmzosgnnn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_KTywNu5kx3HfcOLInKOUjA_5Py79jZm';
-const API = 'https://realtyflow.chatgenius.pro/api/public/chess';
+const API = '/api/chess';
 let authClient = null;
 let session = null;
 let cloudGames = [];
@@ -70,7 +70,7 @@ async function api(method,body){
     response=await fetch(API,{method,headers:{'Authorization':`Bearer ${session.access_token}`,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
   } catch(error) {
     // A rejected fetch has no HTTP response: DNS, TLS, connectivity or CORS may be responsible.
-    throw new Error('Ingen forbindelse til skyarkivet ('+new URL(API).hostname+'). Nettverk, DNS eller CORS kan blokkere forespørselen. Partiet er fortsatt lagret på denne enheten.');
+    throw new Error('Ingen forbindelse til skyarkivet ('+new URL(API,location.origin).hostname+'). Nettverk, DNS eller CORS kan blokkere forespørselen. Partiet er fortsatt lagret på denne enheten.');
   }
   let data={};
   try{data=await response.json();}catch{}
