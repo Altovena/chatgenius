@@ -38,3 +38,13 @@ Hent originale Sites-kilder, sammenlign baner, kjør hele spillforløp og bonuss
 - SSO for **kun dette nye testprosjektet** er slått av slik at Safari kan åpne adressen uten Vercel-pålogging.
 - Fem øvrige Beta 8-spill er **ikke** deployet; bare staging-Clockwork er publisert. Den originale Flipperhallen og ChatGenius produksjon er uendret.
 - Ekstern HTTP-/Safari-åpning og end-to-end spilltest er ikke verifisert.
+
+## Beta 9 – V19.5-motor overført til seks lokale maskiner (9. november 2026)
+- Beholder seks temabilder og fem maskinspesifikke bonusfunksjoner fra Beta 8.
+- Felles rettelser: 55-enheters flippere med åpen midtpassasje, slagkraft ved aktivt trykk, registrering av korte trykk, kuleutløp ved y>752, øvre ballretur og maks én heistur per ball.
+- Node.js-syntakkkontroll bestått for 6/6 spillfiler.
+- Automatisert Chromium-test uten flippertrykk: 6/6 fullførte tre-ball-spill og gikk til game over, 0 JavaScript-feil.
+- Korte flippertrykk i simulert kollisjonstest: 24/24 oppoverrettede slag over seks maskiner, 0 JavaScript-feil.
+- V19.5-baseline: 60/60 fullførte automatiske spill uten brukerinput. Dette er ikke 60 uavhengige manuelle spilltester.
+- Beta 9 finnes som ZIP-artefakt i samtalen. **Ikke** lagt inn som kodefiler i GitHub, ikke publisert på Vercel. Tidligere Clockwork V19.5-staging er uendret.
+- Gjenstår fysisk iPhone Safari, full mission-/multiball-testing og publisering på en separat previewadresse før merge.
