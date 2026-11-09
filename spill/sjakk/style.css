@@ -30,3 +30,10 @@
 @media(max-width:520px){.sidebar .nav[data-tab="account"]{display:flex;align-items:center;gap:5px;font-size:13px;flex:0 0 auto;padding:10px 12px}.sidebar .nav[data-tab="account"] span{display:inline;font-size:11px;font-weight:700}}
 
 .account-auto-option{display:flex;align-items:flex-start;gap:10px;color:#d2e6d4;font-size:12px;line-height:1.5;cursor:pointer}.account-auto-option input{flex:0 0 auto;width:18px;height:18px;accent-color:#b9d6ad;margin:0}.account-sync #accountProgressStatus{margin:0}
+
+/* Sjakkonto: bruk samme skjemabredde og visuelle rytme som resten av kontopanelet. */
+.account-layout #accountChessUsername{display:block;box-sizing:border-box;width:100%;max-width:none;min-width:0;margin:10px 0 12px;padding:14px 16px;border:1px solid #49645e;border-radius:10px;background:#223a39;color:#eff7ed;font:inherit;font-size:15px;line-height:1.5;min-height:50px;outline-offset:2px}
+.account-layout #accountChessUsername:focus{border-color:#b9d6ad;outline:2px solid rgba(185,214,173,.22)}
+.account-layout #accountSaveChessUsername{display:block;width:100%;margin:0 0 14px;min-height:48px}
+.account-layout #accountChessUsernameStatus{margin:0 0 18px;line-height:1.5}
+@media(max-width:520px){.account-layout #accountChessUsername{font-size:16px}}
