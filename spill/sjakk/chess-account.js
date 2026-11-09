@@ -8,6 +8,7 @@ let session = null;
 let cloudGames = [];
 let cloudProgress = null;
 let cloudLoadedForUser = null;
+let cloudLoadRequestId = 0;
 let syncing = false;
 let progressTimer = null;
 let lastProgressFingerprint = '';
@@ -79,6 +80,7 @@ async function getSupabase(){
     const previousUser=session?.user?.id;
     session=nextSession;
     if(previousUser!==nextSession?.user?.id){
+      cloudLoadRequestId++;
       cloudLoadedForUser=null;
       cloudProgress=null;
       cloudGames=[];
@@ -128,9 +130,10 @@ async function api(method,body){
 async function loadCloud(){
   if(!session)return;
   const requestedUser=session.user.id;
+  const requestId=++cloudLoadRequestId;
   cloudLoadedForUser=null;
   const remote=await api('GET');
-  if(session?.user?.id!==requestedUser)return;
+  if(session?.user?.id!==requestedUser||requestId!==cloudLoadRequestId)return;
   cloudLoadedForUser=requestedUser;
   cloudGames=remote.games||[];
   cloudProgress=remote.progress||null;
