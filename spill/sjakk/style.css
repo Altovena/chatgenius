@@ -63,3 +63,5 @@
 .account-progress-comparison strong{color:#e6f4e1;font-size:13px;margin-bottom:7px}
 .account-progress-comparison span{color:#bfd0c8;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 @media(max-width:520px){.account-progress-comparison{grid-template-columns:1fr}}
+
+.account-refresh-progress{display:block;width:100%;min-height:44px;margin:0 0 14px}
