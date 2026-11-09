@@ -326,6 +326,7 @@ autoProgress.addEventListener('change',()=>{
 });
 async function backupProgressSafely(){
   if(!autoProgress.checked||!session?.access_token)return;
+  if(navigator.onLine===false){progressInfo('Ingen nettforbindelse. Treningsfremgangen er beholdt lokalt og kan synkroniseres når nettet er tilbake.');return;}
   if(localStorage.getItem(IMPORT_REVIEW_KEY)==='true'){
     progressInfo('Importert treningsfremgang venter på ditt valg. Velg «Sikkerhetskopier fremgang» for å lagre den i skyen, eller «Hent fremgang fra skyen» for å beholde skyversjonen.');
     return;
@@ -370,6 +371,16 @@ function scheduleProgressBackup(){
   progressTimer=setTimeout(()=>{progressTimer=null;backupProgressSafely();},1800);
 }
 window.addEventListener('chess:progress-saved',()=>{updateProgressComparison();scheduleProgressBackup();});
+window.addEventListener('online',()=>{
+  if(!session?.user)return;
+  setSyncStatus('Nettverket er tilbake. Kontrollerer skyarkivet før eventuell sikkerhetskopiering …');
+  loadCloud().then(()=>{
+    if(autoProgress.checked)scheduleProgressBackup();
+  }).catch(error=>setSyncStatus('Kunne ikke hente skyarkivet etter nettverksbrudd: '+(error.message||'ukjent feil')+'. Lokale data er beholdt.'));
+});
+window.addEventListener('offline',()=>{
+  if(session?.user)setSyncStatus('Enheten er frakoblet. Treningen lagres fortsatt lokalt. Skyarkivet oppdateres når forbindelsen er tilbake.');
+});
 window.addEventListener('chess:game-saved',event=>{
   renderGames();
   // Skyarkivering er ekstra sikring: lokalt arkiv er allerede skrevet til disk.
