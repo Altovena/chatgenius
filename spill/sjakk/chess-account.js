@@ -16,6 +16,7 @@ let progressBackupInFlight = false;
 const AUTO_PROGRESS_KEY = 'freddyChessAutoProgressBackup';
 const SYNC_FINGERPRINT_KEY = 'freddyChessProgressSyncedFingerprint';
 const SYNC_USER_KEY = 'freddyChessProgressSyncedUser';
+const IMPORT_REVIEW_KEY = 'freddyChessProgressImportNeedsReview';
 function rememberProgressOwner(){localStorage.setItem(SYNC_USER_KEY,session.user.id);}
 function ownsProgressBaseline(){return Boolean(session?.user?.id)&&localStorage.getItem(SYNC_USER_KEY)===session.user.id;}
 const autoProgress = $('accountAutoProgress');
@@ -226,6 +227,7 @@ $('accountConfirmImportProgress').addEventListener('click',()=>{
     localStorage.removeItem('freddyChessProgressCloudVersion');
     localStorage.removeItem(SYNC_FINGERPRINT_KEY);
     localStorage.removeItem(SYNC_USER_KEY);
+    localStorage.setItem(IMPORT_REVIEW_KEY,'true');
     $('accountImportProgressStatus').textContent='Fremgangen er gjenopprettet lokalt. Laster siden på nytt …';
     window.location.reload();
   }catch(error){$('accountImportProgressStatus').textContent='Kunne ikke gjenopprette filen: '+(error.message||'ukjent feil');}
@@ -294,6 +296,7 @@ $('accountSyncProgress').addEventListener('click',()=>withSync(async()=>{
   rememberProgressOwner();
   progressBaselineVersion=result.state_version;
   localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
+  localStorage.removeItem(IMPORT_REVIEW_KEY);
   progressInfo('Automatisk oppdatering er nå aktiv for denne enheten når valget er slått på.');
   setSyncStatus('Fremgangen er sikkerhetskopiert. Lokale data er beholdt.');
   updateProgressComparison();
@@ -311,6 +314,7 @@ $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
   localStorage.setItem('freddyChessProgressCloudVersion',String(cloudProgress.state_version));
   localStorage.setItem(SYNC_FINGERPRINT_KEY,JSON.stringify(cloudProgress.state));
   rememberProgressOwner();
+  localStorage.removeItem(IMPORT_REVIEW_KEY);
   setSyncStatus('Fremgangen ble hentet. Laster sjakkakademiet på nytt …');
   window.location.reload();
 }));
@@ -321,6 +325,10 @@ autoProgress.addEventListener('change',()=>{
 });
 async function backupProgressSafely(){
   if(!autoProgress.checked||!session?.access_token)return;
+  if(localStorage.getItem(IMPORT_REVIEW_KEY)==='true'){
+    progressInfo('Importert treningsfremgang venter på ditt valg. Velg «Sikkerhetskopier fremgang» for å lagre den i skyen, eller «Hent fremgang fra skyen» for å beholde skyversjonen.');
+    return;
+  }
   if(cloudLoadedForUser!==session.user.id){progressInfo('Venter på bekreftet status fra skyarkivet før automatisk sikkerhetskopi.');return;}
   if(syncing||progressBackupInFlight){scheduleProgressBackup();return;}
   const raw=localStorage.getItem('freddyChessProgress');
