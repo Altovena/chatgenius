@@ -12,7 +12,7 @@ async function database(path,{method='GET',body,query=''}={}){
 export default async function handler(req,res){
   if(!['GET','POST'].includes(req.method))return json(res,405,{error:'Method not allowed'});
   if(!KEY)return json(res,503,{error:'Chess storage is not configured'});
-  const token=/^Bearer\s+(.+)$/i.exec(req.headers.authorization||'')?.[1];
+  const token=/^Bearer\s+([^\s]+)$/i.exec(req.headers.authorization||'')?.[1];
   if(!token)return json(res,401,{error:'Sign in required'});
   try{
     const auth=await fetch(URL+'/auth/v1/user',{headers:{apikey:KEY,Authorization:'Bearer '+token}});
@@ -28,7 +28,7 @@ export default async function handler(req,res){
       return json(res,200,{games,progress:progress[0]||null});
     }
     const body=req.body;
-    if(!body||typeof body!=='object'||Buffer.byteLength(JSON.stringify(body),'utf8')>MAX_BODY_BYTES)return json(res,400,{error:'Invalid payload'});
+    if(!body||typeof body!=='object'||Array.isArray(body)||Buffer.byteLength(JSON.stringify(body),'utf8')>MAX_BODY_BYTES)return json(res,400,{error:'Invalid payload'});
     if(body.type==='game'){
       const g=body.game;
       if(!g||!['academy','chess_com','import'].includes(g.source)||typeof g.client_game_id!=='string'||!/^[\w:-]{1,100}$/.test(g.client_game_id)||typeof g.pgn!=='string'||!g.pgn.trim()||Buffer.byteLength(g.pgn,'utf8')>90000||!['1-0','0-1','1/2-1/2','*'].includes(g.result))return json(res,400,{error:'Invalid chess game fields'});
@@ -41,7 +41,8 @@ export default async function handler(req,res){
       const current=old[0]?.state_version??null;
       if(current!==body.expected_version)return json(res,409,{error:'Progress changed on another device. Reload before saving.'});
       if(current===null){
-        await database('chess_progress',{method:'POST',body:{user_id:user.id,state:body.state,state_version:1}});
+        try {await database('chess_progress',{method:'POST',body:{user_id:user.id,state:body.state,state_version:1}});}
+        catch(error){return json(res,409,{error:'Progress may have changed on another device. Reload before saving.'});}
         return json(res,200,{saved:true,state_version:1});
       }
       const response=await database('chess_progress',{method:'PATCH',query:'?user_id=eq.'+id+'&state_version=eq.'+current,body:{state:body.state,state_version:current+1,updated_at:new Date().toISOString()}});
