@@ -65,3 +65,7 @@
 @media(max-width:520px){.account-progress-comparison{grid-template-columns:1fr}}
 
 .account-refresh-progress{display:block;width:100%;min-height:44px;margin:0 0 14px}
+
+.account-export-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.account-export-actions button{min-width:0;min-height:44px;white-space:normal;line-height:1.35}
+@media(max-width:520px){.account-export-actions{grid-template-columns:1fr}}
