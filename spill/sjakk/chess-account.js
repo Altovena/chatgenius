@@ -21,19 +21,24 @@ function ownsProgressBaseline(){return Boolean(session?.user?.id)&&localStorage.
 const autoProgress = $('accountAutoProgress');
 autoProgress.checked = localStorage.getItem(AUTO_PROGRESS_KEY) === 'true';
 function progressInfo(message){$('accountProgressStatus').textContent=message;}
+function progressSummary(state){
+  if(!state||typeof state!=='object')return 'Ingen treningsfremgang lagret.';
+  const value=key=>Number.isSafeInteger(state[key])&&state[key]>=0?state[key]:0;
+  return value('xp')+' XP · '+value('solved')+' løste oppgaver · '+value('games')+' partier · '+value('wins')+' seire';
+}
 function updateProgressComparison(){
   const local=$('accountLocalProgressSummary'),remote=$('accountCloudProgressSummary');
   const raw=localStorage.getItem('freddyChessProgress');
   let parsed=null;
   try{if(raw)parsed=JSON.parse(raw);}catch{}
-  local.textContent=parsed?'Treningsfremgang finnes på denne enheten.':'Ingen lokal treningsfremgang lagret.';
+  local.textContent=progressSummary(parsed);
   if(!session?.user){remote.textContent='Logg inn for å se skyarkivet.';return;}
   if(cloudLoadedForUser!==session.user.id){remote.textContent='Kontrollerer skyarkivet …';return;}
   if(!cloudProgress?.state){remote.textContent='Ingen sikkerhetskopi i skyen.';return;}
   const version=cloudProgress.state_version;
   const same=raw&&JSON.stringify(parsed)===JSON.stringify(cloudProgress.state);
   const baseline=ownsProgressBaseline()&&progressBaselineVersion===version;
-  remote.textContent='Versjon '+version+(same?' · Samme fremgang som på denne enheten':baseline?' · Lokal fremgang kan være nyere':' · Sammenlign før du erstatter');
+  remote.textContent=progressSummary(cloudProgress.state)+' · Skyversjon '+version+(same?' · Identisk med lokal kopi':baseline?' · Lokal kopi kan inneholde nyere endringer':' · Ulike versjoner – velg før du erstatter');
 }
 
 
