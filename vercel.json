@@ -2,7 +2,7 @@
   "routes": [
     {
       "src": "/api/chess/?",
-      "dest": "https://realtyflow.chatgenius.pro/api/public/chess"
+      "dest": "/api/chess"
     },
     {
       "src": "/privacy-policy/?",
