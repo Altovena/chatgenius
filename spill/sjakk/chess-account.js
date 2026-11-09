@@ -10,6 +10,7 @@ let cloudProgress = null;
 let syncing = false;
 let progressTimer = null;
 let lastProgressFingerprint = '';
+let progressBaselineVersion = null;
 const AUTO_PROGRESS_KEY = 'freddyChessAutoProgressBackup';
 const autoProgress = $('accountAutoProgress');
 autoProgress.checked = localStorage.getItem(AUTO_PROGRESS_KEY) === 'true';
@@ -90,6 +91,10 @@ async function loadCloud(){
   const remote=await api('GET');
   cloudGames=remote.games||[];
   cloudProgress=remote.progress||null;
+  if(cloudProgress?.state && Number(localStorage.getItem('freddyChessProgressCloudVersion'))===cloudProgress.state_version){
+    progressBaselineVersion=cloudProgress.state_version;
+    lastProgressFingerprint=localStorage.getItem('freddyChessProgress')||'';
+  }
   progressInfo(cloudProgress?.state ? `Skykopi tilgjengelig (versjon ${cloudProgress.state_version}).` : 'Ingen treningsfremgang lagret i skyen ennå.');
   renderGames();
   setSyncStatus(`${cloudGames.length} partier funnet i skyen. ${localGames().length} lokale partier på denne enheten.`);
@@ -139,6 +144,9 @@ $('accountSyncProgress').addEventListener('click',()=>withSync(async()=>{
   const result=await api('POST',{type:'progress',state,expected_version:cloudProgress?.state_version??null});
   cloudProgress={state,state_version:result.state_version};
   lastProgressFingerprint=JSON.stringify(state);
+  progressBaselineVersion=result.state_version;
+  localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
+  progressInfo('Automatisk oppdatering er nå aktiv for denne enheten når valget er slått på.');
   setSyncStatus('Fremgangen er sikkerhetskopiert. Lokale data er beholdt.');
 }));
 $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
@@ -151,6 +159,7 @@ $('accountRestoreProgress').addEventListener('click',()=>withSync(async()=>{
   // En separat sikkerhetskopi lar brukeren gjenopprette den lokale tilstanden ved behov.
   if(existing)localStorage.setItem('freddyChessProgressBeforeRestore',existing);
   localStorage.setItem('freddyChessProgress',JSON.stringify(cloudProgress.state));
+  localStorage.setItem('freddyChessProgressCloudVersion',String(cloudProgress.state_version));
   setSyncStatus('Fremgangen ble hentet. Laster sjakkakademiet på nytt …');
   window.location.reload();
 }));
@@ -165,16 +174,18 @@ async function backupProgressSafely(){
   if(!raw||raw===lastProgressFingerprint)return;
   // Første automatiske kopi tillates bare når skyen er tom. Ellers må brukeren
   // eksplisitt velge enhetens fremgang via knappen for sikkerhetskopi.
-  if(cloudProgress?.state){
-    progressInfo('Det finnes allerede fremgang i skyen. Velg «Ta sikkerhetskopi av fremgangen» for å bekrefte eventuell erstatning.');
+  if(cloudProgress?.state && progressBaselineVersion !== cloudProgress.state_version){
+    progressInfo('Skyen inneholder fremgang fra før. Velg «Hent fremgang fra skyen» eller bekreft en sikkerhetskopi før automatisk oppdatering.');
     return;
   }
   try{
     const state=JSON.parse(raw);
-    const result=await api('POST',{type:'progress',state,expected_version:null});
+    const result=await api('POST',{type:'progress',state,expected_version:cloudProgress?.state_version??null});
     cloudProgress={state,state_version:result.state_version};
+    progressBaselineVersion=result.state_version;
+    localStorage.setItem('freddyChessProgressCloudVersion',String(result.state_version));
     lastProgressFingerprint=raw;
-    progressInfo('Første treningskopi lagret i skyen. Videre erstatning krever bekreftelse.');
+    progressInfo('Treningsfremgangen er oppdatert i skyen.');
   }catch(error){progressInfo('Automatisk sikkerhetskopi ble ikke fullført: '+(error.message||'ukjent feil')+'. Lokal fremgang er beholdt.');}
 }
 function scheduleProgressBackup(){
