@@ -3,7 +3,7 @@ const URL = process.env.CHESS_SUPABASE_URL || 'https://ereapsfcsqtdmzosgnnn.supa
 const KEY = process.env.CHESS_SUPABASE_SERVICE_ROLE_KEY;
 const json = (res,status,body) => {res.setHeader('Cache-Control','no-store');return res.status(status).json(body)};
 async function database(path,{method='GET',body,query=''}={}){
-  const response=await fetch(URL+'/rest/v1/'+path+query,{method,headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json','Accept':'application/json','Accept-Profile':'chatgenius','Content-Profile':'chatgenius',Prefer:'return=representation'},...(body?{body:JSON.stringify(body)}:{})});
+  const response=await fetch(URL+'/rest/v1/'+path+query,{method,headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json','Accept':'application/json','Accept-Profile':'chatgenius','Content-Profile':'chatgenius',Prefer:'return=representation,resolution=merge-duplicates'},...(body?{body:JSON.stringify(body)}:{})});
   const result=await response.json().catch(()=>null);
   if(!response.ok)throw new Error('Database request failed: '+response.status);
   return result;
