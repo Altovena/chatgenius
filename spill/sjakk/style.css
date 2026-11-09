@@ -28,3 +28,5 @@
 
 /* Kontoen skal være lett å finne på små skjermer, også i horisontal navigasjon. */
 @media(max-width:520px){.sidebar .nav[data-tab="account"]{display:flex;align-items:center;gap:5px;font-size:13px;flex:0 0 auto;padding:10px 12px}.sidebar .nav[data-tab="account"] span{display:inline;font-size:11px;font-weight:700}}
+
+.account-auto-option{display:flex;align-items:flex-start;gap:10px;color:#d2e6d4;font-size:12px;line-height:1.5;cursor:pointer}.account-auto-option input{flex:0 0 auto;width:18px;height:18px;accent-color:#b9d6ad;margin:0}.account-sync #accountProgressStatus{margin:0}
