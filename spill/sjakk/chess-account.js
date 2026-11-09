@@ -7,6 +7,7 @@ let authClient = null;
 let session = null;
 let cloudGames = [];
 let cloudProgress = null;
+let cloudLoadedForUser = null;
 let syncing = false;
 let progressTimer = null;
 let lastProgressFingerprint = '';
@@ -27,6 +28,7 @@ function updateProgressComparison(){
   try{if(raw)parsed=JSON.parse(raw);}catch{}
   local.textContent=parsed?'Treningsfremgang finnes på denne enheten.':'Ingen lokal treningsfremgang lagret.';
   if(!session?.user){remote.textContent='Logg inn for å se skyarkivet.';return;}
+  if(cloudLoadedForUser!==session.user.id){remote.textContent='Kontrollerer skyarkivet …';return;}
   if(!cloudProgress?.state){remote.textContent='Ingen sikkerhetskopi i skyen.';return;}
   const version=cloudProgress.state_version;
   const same=raw&&JSON.stringify(parsed)===JSON.stringify(cloudProgress.state);
@@ -68,7 +70,15 @@ async function getSupabase(){
   const {createClient}=await import('https://esm.sh/@supabase/supabase-js@2.57.0');
   authClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   authClient.auth.onAuthStateChange((_event,nextSession)=>{
+    const previousUser=session?.user?.id;
     session=nextSession;
+    if(previousUser!==nextSession?.user?.id){
+      cloudLoadedForUser=null;
+      cloudProgress=null;
+      cloudGames=[];
+      progressBaselineVersion=null;
+      lastProgressFingerprint='';
+    }
     renderSession();
     if(nextSession)queueMicrotask(()=>loadCloud().catch(err=>setSyncStatus(err.message)));
   });
@@ -111,7 +121,11 @@ async function api(method,body){
 }
 async function loadCloud(){
   if(!session)return;
+  const requestedUser=session.user.id;
+  cloudLoadedForUser=null;
   const remote=await api('GET');
+  if(session?.user?.id!==requestedUser)return;
+  cloudLoadedForUser=requestedUser;
   cloudGames=remote.games||[];
   cloudProgress=remote.progress||null;
   const remoteName=remote.preferences?.chess_com_username;
@@ -302,6 +316,7 @@ autoProgress.addEventListener('change',()=>{
 });
 async function backupProgressSafely(){
   if(!autoProgress.checked||!session?.access_token)return;
+  if(cloudLoadedForUser!==session.user.id){progressInfo('Venter på bekreftet status fra skyarkivet før automatisk sikkerhetskopi.');return;}
   if(syncing||progressBackupInFlight){scheduleProgressBackup();return;}
   const raw=localStorage.getItem('freddyChessProgress');
   if(!raw||raw===lastProgressFingerprint)return;
