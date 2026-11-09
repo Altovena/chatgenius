@@ -177,6 +177,40 @@ $('accountSignOut').addEventListener('click',async()=>{
   try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;progressBaselineVersion=null;lastProgressFingerprint='';renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
 });
+let pendingProgressImport=null;
+$('accountImportProgressFile').addEventListener('change',async event=>{
+  pendingProgressImport=null;
+  $('accountConfirmImportProgress').hidden=true;
+  const file=event.target.files?.[0];
+  if(!file){$('accountImportProgressStatus').textContent='Ingen sikkerhetskopi valgt.';return;}
+  if(file.size>2*1024*1024){$('accountImportProgressStatus').textContent='Filen er for stor. Maksimal størrelse er 2 MB.';return;}
+  try{
+    const payload=JSON.parse(await file.text());
+    if(payload?.format!=='chatgenius-chess-progress-backup'||payload.schema_version!==1||!payload.state||typeof payload.state!=='object'||Array.isArray(payload.state))throw new Error('Ukjent eller ugyldig sikkerhetskopiformat.');
+    pendingProgressImport=payload;
+    const date=new Date(payload.exported_at);
+    const when=Number.isNaN(date.getTime())?'ukjent dato':date.toLocaleString('nb-NO');
+    $('accountImportProgressStatus').textContent='Valgt: '+file.name+' · Kilde: '+(payload.source==='sky'?'skykopi':'lokal kopi')+' · Eksportert: '+when+'. Dette vil bare erstatte lokal treningsfremgang, ikke skyarkivet eller partiene.';
+    $('accountConfirmImportProgress').hidden=false;
+  }catch(error){$('accountImportProgressStatus').textContent='Kunne ikke lese sikkerhetskopien: '+(error.message||'ugyldig JSON');}
+});
+$('accountConfirmImportProgress').addEventListener('click',()=>{
+  if(!pendingProgressImport)return;
+  const current=localStorage.getItem('freddyChessProgress');
+  if(!window.confirm('Gjenopprette treningsfremgang fra valgt fil på denne enheten? Nåværende lokal fremgang tas vare på som en separat kopi. Skyarkivet endres ikke.'))return;
+  try{
+    if(current)localStorage.setItem('freddyChessProgressBeforeRestore',current);
+    localStorage.setItem('freddyChessProgress',JSON.stringify(pendingProgressImport.state));
+    // En importert fil må ikke automatisk overskrive en nyere skykopi.
+    progressBaselineVersion=null;
+    lastProgressFingerprint='';
+    localStorage.removeItem('freddyChessProgressCloudVersion');
+    localStorage.removeItem(SYNC_FINGERPRINT_KEY);
+    localStorage.removeItem(SYNC_USER_KEY);
+    $('accountImportProgressStatus').textContent='Fremgangen er gjenopprettet lokalt. Laster siden på nytt …';
+    window.location.reload();
+  }catch(error){$('accountImportProgressStatus').textContent='Kunne ikke gjenopprette filen: '+(error.message||'ukjent feil');}
+});
 function downloadProgressBackup(source,state,version){
   const payload={format:'chatgenius-chess-progress-backup',schema_version:1,source,exported_at:new Date().toISOString(),cloud_version:version??null,state};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
