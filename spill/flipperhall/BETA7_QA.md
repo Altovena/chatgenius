@@ -23,3 +23,11 @@ Dato: 2026-11-09. Denne filen dokumenterer selvstendig **Beta 7**, ikke eksister
 
 ## Før produksjon
 Hent originale Sites-kilder, sammenlign baner, kjør hele spillforløp og bonussekvens på hver maskin i Safari og Chromium, test alle baller/pauser/multiball, og verifiser preview før merge.
+
+## Beta 8 – 9. november 2026
+- Oppdragstekster gjennomgått og endret slik at Castle, Neon, Cosmic, Jungle, Abyss og Clockwork beskriver sine egne spesialmål i UI.
+- Gamle Clockwork-spesifikke oppdragsetiketter ryddet bort fra de andre banene.
+- Seks av seks innebygde JavaScript-blokker bestod `node --check`.
+- Chromium-test av lokal HTTP feilet for alle ved navigering med `ERR_BLOCKED_BY_ADMINISTRATOR`; dette er en testmiljøblokkering, ikke et bekreftet spillutfall.
+- Beta 8 foreligger som samtalens ZIP-artefakt, **ikke** kopiert til GitHub, Vercel eller produksjon.
+- Gjenstår: faktisk funksjonell spilltest, prøveutsending på Vercel, fysisk Safari-test, og verifisering av at fem originale Sites-spill er fullt migrert.
