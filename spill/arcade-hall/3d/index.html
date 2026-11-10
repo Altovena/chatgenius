@@ -25,6 +25,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .arcade-cabinet .screen{display:flex;flex:1;align-items:center;justify-content:center;width:85%;background:radial-gradient(circle at 50% 38%,#335b8d,#070d1e 74%);border:2px solid var(--glow);font-size:clamp(24px,4vw,56px);box-shadow:inset 0 0 18px #000}
 .arcade-cabinet .panel{width:78%;height:10%;background:linear-gradient(90deg,#161a26,var(--glow),#11192a);border-radius:3px}
 .arcade-cabinet.pinball{border-radius:7px 7px 14px 14px;transform-origin:center bottom}
+.arcade-cabinet[hidden]{display:none!important}
 .arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
 <script src="../machines.js"></script></head><body>
@@ -85,13 +86,13 @@ function boxFront(g){
 }
 const cabinets=games.map(g=>{const el=document.createElement('button');el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
 function renderCabinets(){
- const h=canvas.height,w=canvas.width;
+ const h=canvas.height,w=canvas.width,scaleX=canvas.clientWidth/w,scaleY=canvas.clientHeight/h;
  for(const {g,el} of cabinets){
   const p=project({x:g.side*1.93,y:1.12,z:g.z});
   if(!p||p.d<.26){el.hidden=true;continue}
   const height=clamp(h*1.22/p.d,42,260),width=height*.52;
   if(p.x+width<0||p.x-width>w){el.hidden=true;continue}
-  el.hidden=false;el.style.width=width+'px';el.style.height=height+'px';el.style.left=(p.x-width/2)+'px';el.style.top=(p.y-height*.55)+'px';
+  el.hidden=false;el.style.width=(width*scaleX)+'px';el.style.height=(height*scaleY)+'px';el.style.left=((p.x-width/2)*scaleX)+'px';el.style.top=((p.y-height*.55)*scaleY)+'px';
   el.style.zIndex=String(Math.floor(1000-p.d*20));
  }
 }
