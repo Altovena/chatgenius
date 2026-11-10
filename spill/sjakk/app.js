@@ -84,28 +84,40 @@ function updateGameTrend(analyzed){
   }
   root.replaceChildren();
   const heading=document.createElement('h3');heading.textContent='Utvikling fra parti til parti';root.appendChild(heading);
-  const tracked=analyzed.filter(g=>g.source==='imported'&&g.analysisVersion>=4&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
-    .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
-  if(!tracked.length){
-    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se utviklingen. Partier mot datamaskinen og eldre analyser med annen metode holdes utenfor denne sammenligningen.';root.appendChild(empty);return;
+  const cohorts=[
+    {source:'academy',label:'Mot datamaskinen'},
+    {source:'imported',label:'Chess.com'}
+  ];
+  for(const cohort of cohorts){
+    const section=document.createElement('section');section.className='game-trend-cohort';
+    const title=document.createElement('h4');title.textContent=cohort.label;section.appendChild(title);
+    const tracked=analyzed.filter(g=>g.source===cohort.source&&g.analysisVersion>=4&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
+      .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
+    if(!tracked.length){
+      const empty=document.createElement('p');empty.className='muted';
+      empty.textContent='Ingen sammenlignbare analyser ennå. Analyser flere partier for å se utviklingen.';
+      section.appendChild(empty);root.appendChild(section);continue;
+    }
+    const latest=tracked.slice(-5),previous=tracked.slice(-10,-5);
+    const mean=arr=>arr.reduce((sum,g)=>sum+g.count/g.checked*100,0)/arr.length;
+    const recentRate=mean(latest),earlierRate=previous.length?mean(previous):null;
+    const summary=document.createElement('p');summary.className='muted';
+    summary.textContent=`Siste ${latest.length} partier: ${Math.round(recentRate)} forbedringspunkter per 100 undersøkte trekk. ${earlierRate===null?'Analyser minst seks partier for sammenligning.':`Foregående ${previous.length}: ${Math.round(earlierRate)}. ${recentRate<earlierRate?'Færre funn i den nyeste gruppen.':recentRate>earlierRate?'Flere funn i den nyeste gruppen.':'Omtrent samme nivå.'}`}`;
+    section.appendChild(summary);
+    const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
+    for(const record of tracked){
+      const rate=Math.min(100,record.count/record.checked*100);
+      const item=document.createElement('div');item.className='game-trend-item';item.setAttribute('role','listitem');
+      const bar=document.createElement('div');bar.className='game-trend-bar';bar.style.height=`${Math.max(5,rate)}%`;
+      const date=document.createElement('small');date.textContent=(record.date||'').slice(-5);
+      item.setAttribute('aria-label',`${record.date}: ${record.count} funn i ${record.checked} undersøkte trekk (${Math.round(rate)} %). ${record.white} – ${record.black}`);
+      item.append(bar,date);chart.appendChild(item);
+    }
+    section.appendChild(chart);root.appendChild(section);
   }
-  const latest=tracked.slice(-5),previous=tracked.slice(-10,-5);
-  const mean=arr=>arr.reduce((s,g)=>s+g.count/g.checked*100,0)/arr.length;
-  const summary=document.createElement('p');summary.className='muted';
-  const recentRate=mean(latest),earlierRate=previous.length?mean(previous):null;
-  summary.textContent=`Siste ${latest.length} partier: ${Math.round(recentRate)} forbedringspunkter per 100 undersøkte trekk. ${earlierRate===null?'Analyser minst seks partier for å få en sammenligning.':`Foregående ${previous.length}: ${Math.round(earlierRate)}. ${recentRate<earlierRate?'Færre funn i den nyeste gruppen.':recentRate>earlierRate?'Flere funn i den nyeste gruppen.':'Omtrent samme nivå.'}`} Dette er en indikasjon basert på utvalgte trekk, ikke en full partivurdering.`;
-  root.appendChild(summary);
-  const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
-  for(const record of tracked){
-    const rate=Math.min(100,record.count/record.checked*100);
-    const item=document.createElement('div');item.className='game-trend-item';item.setAttribute('role','listitem');
-    const bar=document.createElement('div');bar.className='game-trend-bar';bar.style.height=`${Math.max(5,rate)}%`;
-    const date=document.createElement('small');date.textContent=(record.date||'').slice(-5);
-    const name=document.createElement('span');name.textContent=`${record.date}: ${record.count} funn i ${record.checked} undersøkte trekk (${Math.round(rate)} %). ${record.white} – ${record.black}`;
-    name.className='sr-only';item.setAttribute('aria-label',name.textContent);item.append(bar,date);chart.appendChild(item);
-  }
-  root.appendChild(chart);
-  const disclaimer=document.createElement('small');disclaimer.className='muted';disclaimer.textContent='Søylene viser andelen undersøkte trekk der motoren fant et tydelig bedre alternativ. Kortere søyler er bedre. Partier med forskjellig motstand og vanskelighetsgrad er ikke direkte sammenlignbare.';root.appendChild(disclaimer);
+  const disclaimer=document.createElement('small');disclaimer.className='muted';
+  disclaimer.textContent='Kortere søyler betyr færre funn per undersøkte trekk. Grafene viser bare analyser med samme metode; motstandere, vanskelighetsgrad og utvalgte stillinger kan variere. Ikke sammenlign søylene direkte mellom de to spilltypene.';
+  root.appendChild(disclaimer);
 }
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
