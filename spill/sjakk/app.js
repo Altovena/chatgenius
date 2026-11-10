@@ -885,11 +885,11 @@ function showPracticeSessionSummary(){
     updateSessionHistory();
   }
 }
-function startOwnPractice(positions,resumeIndex=0){
+function startOwnPractice(positions,resumeIndex=0,resuming=false){
   if(!positions.length){setTab('analysis');return}
   const keys=positions.map(puzzleKey);
   const saved=stats.ownQueue;
-  const continuing=resumeIndex>0&&saved?.keys?.length===keys.length&&saved.keys.every((key,i)=>key===keys[i]);
+  const continuing=resuming&&saved?.keys?.length===keys.length&&saved.keys.every((key,i)=>key===keys[i]);
   const started=continuing&&Number.isFinite(saved.started)?saved.started:Date.now();
   practiceSessionStart={started,keys:[...new Set(keys)]};
   analysisPractice=positions;analysisPracticeIndex=resumeIndex;analysisReturnTab='progress';trainingOrigin='analysis';
@@ -926,7 +926,7 @@ $('resumeOwnTraining').onclick=()=>{
   const map=new Map(allOwnPositions().map(p=>[puzzleKey(p),p]));
   const positions=saved.keys.map(k=>map.get(k)).filter(Boolean);
   if(!positions.length){stats.ownQueue=null;persist();return}
-  startOwnPractice(positions,Math.min(saved.index,positions.length-1));
+  startOwnPractice(positions,Math.min(saved.index,positions.length-1),true);
 };
 $('chessThemeFilter').onchange=()=>{
   const topic=$('chessThemeFilter').value,count=allOwnPositions().filter(p=>topic==='alle'||p.topic===topic).length;
