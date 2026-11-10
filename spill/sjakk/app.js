@@ -190,6 +190,34 @@ function updateSessionHistory(){
   const summary=document.createElement('p');summary.className='muted';
   summary.textContent=`${sessions.length} fullførte økter · ${days.size} treningsdager · ${totals.correct+totals.wrong?Math.round(100*totals.correct/(totals.correct+totals.wrong)):0} % riktige totalt.`;
   root.appendChild(summary);
+  const allSessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at));
+  const dayKeys=[...new Set(allSessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')))].sort();
+  const dayNumber=key=>Math.floor(new Date(key+'T12:00:00').getTime()/86400000);
+  let longest=0,run=0;
+  for(let i=0;i<dayKeys.length;i++){
+    run=i>0&&dayNumber(dayKeys[i])-dayNumber(dayKeys[i-1])===1?run+1:1;
+    longest=Math.max(longest,run);
+  }
+  const todayKey=today(),yesterday=new Date(Date.now()-86400000).toLocaleDateString('sv-SE');
+  let streak=0;
+  if(dayKeys.length&&(dayKeys.at(-1)===todayKey||dayKeys.at(-1)===yesterday)){
+    streak=1;
+    for(let i=dayKeys.length-1;i>0&&dayNumber(dayKeys[i])-dayNumber(dayKeys[i-1])===1;i--)streak++;
+  }
+  const goal=Number.isInteger(stats.weeklyPracticeGoal)&&stats.weeklyPracticeGoal>=1&&stats.weeklyPracticeGoal<=7?stats.weeklyPracticeGoal:3;
+  const weekStart=new Date();weekStart.setHours(0,0,0,0);
+  const weekday=(weekStart.getDay()+6)%7;weekStart.setDate(weekStart.getDate()-weekday);
+  const weeklyDays=dayKeys.filter(key=>new Date(key+'T12:00:00')>=weekStart).length;
+  const progress=document.createElement('p');progress.className='muted';
+  progress.textContent=`Treningsserie: ${streak} dager · lengste serie: ${longest} dager · denne uken: ${weeklyDays} av ${goal} treningsdager.`;
+  root.appendChild(progress);
+  const goalRow=document.createElement('div');goalRow.className='own-topic-row';
+  const goalLabel=document.createElement('label');goalLabel.textContent='Mitt ukentlige treningsmål: ';
+  const goalSelect=document.createElement('select');goalSelect.setAttribute('aria-label','Treningsdager per uke');
+  for(let n=1;n<=7;n++){const option=new Option(`${n} ${n===1?'dag':'dager'}`,String(n));goalSelect.add(option);}
+  goalSelect.value=String(goal);
+  goalSelect.onchange=()=>{stats.weeklyPracticeGoal=Number(goalSelect.value);persist();updateSessionHistory();};
+  goalLabel.appendChild(goalSelect);goalRow.appendChild(goalLabel);root.appendChild(goalRow);
   const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
   for(const session of sessions){
     const total=session.correct+session.wrong,percent=total?Math.round(100*session.correct/total):0;
