@@ -19,10 +19,17 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .dialog .buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:19px}.dialog a,.dialog button{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:11px 18px;border-radius:11px;text-decoration:none;font-weight:850;border:1px solid #6594ad}.dialog a{background:#a0ffe7;color:#092333}.dialog button{background:#1e3551;color:white}
 @media(max-width:700px){header{padding:8px}header strong{font-size:12px}header a{font-size:10px;padding:7px}.hud{top:50px;min-width:65vw;max-width:65vw;padding:6px}.hud b{font-size:10px}.hud p{font-size:10px}.compass{top:107px;right:6px;padding:3px}.compass canvas{width:70px;height:104px}.controls{bottom:10px;gap:4px;padding:5px}.controls button{min-width:45px;min-height:48px}.controls .action{min-width:91px;padding:0 6px}.note{bottom:73px;font-size:10px;max-width:90%;white-space:normal}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+.cabinet-layer{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.arcade-cabinet{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:5px 4px;background:linear-gradient(160deg,#263154,#090d1a 55%,#1f2851);border:3px solid var(--glow);border-radius:9px 9px 4px 4px;box-shadow:0 0 18px var(--glow),inset 0 0 14px #000;pointer-events:auto;cursor:pointer;color:white;text-shadow:0 2px 5px #000;font-family:inherit;overflow:hidden}
+.arcade-cabinet .marquee{background:var(--glow);color:#091425;text-shadow:none;font-weight:900;font-size:clamp(8px,1.2vw,14px);text-align:center;width:100%;padding:5px 2px;line-height:1.05}
+.arcade-cabinet .screen{display:flex;flex:1;align-items:center;justify-content:center;width:85%;background:radial-gradient(circle at 50% 38%,#335b8d,#070d1e 74%);border:2px solid var(--glow);font-size:clamp(24px,4vw,56px);box-shadow:inset 0 0 18px #000}
+.arcade-cabinet .panel{width:78%;height:10%;background:linear-gradient(90deg,#161a26,var(--glow),#11192a);border-radius:3px}
+.arcade-cabinet.pinball{border-radius:7px 7px 14px 14px;transform-origin:center bottom}
+.arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
 <script src="../machines.js"></script></head><body>
 <header><a href="../">← Til vanlig hall</a><strong>✦ FREDDYS ARCADE <span style="color:#93fff0">3D TEST</span></strong><a href="/spill/">Alle spill</a></header>
-<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p></div>
+<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="cabinet-layer" id="cabinet-layer" aria-label="Spillmaskiner i hallen"></div><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p></div>
 <div class="compass"><span>HALLKART</span><canvas id="map" width="115" height="155"></canvas></div>
 <div class="note">360° fri sving · faktisk dybde · trykk på maskinen for å gå bort</div>
 <div class="controls"><button data-move="left" aria-label="Snu venstre">⟲</button><button class="step" data-move="forward" aria-label="Gå frem">▲</button><button class="step" data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu høyre">⟳</button><button class="action" id="play" disabled>▶ Spill</button></div>
@@ -76,6 +83,18 @@ function boxFront(g){
  pick.push({g,bounds,dist,diff});
  if(dist<1.6&&diff<.72){ctx.font='900 '+clamp(size*.1,11,18)+'px system-ui';ctx.fillStyle='#b5ffec';ctx.fillText('▶ SPILL',p.x,top-12)}
 }
+const cabinets=games.map(g=>{const el=document.createElement('button');el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
+function renderCabinets(){
+ const h=canvas.height,w=canvas.width;
+ for(const {g,el} of cabinets){
+  const p=project({x:g.side*1.93,y:1.12,z:g.z});
+  if(!p||p.d<.26){el.hidden=true;continue}
+  const height=clamp(h*1.22/p.d,42,260),width=height*.52;
+  if(p.x+width<0||p.x-width>w){el.hidden=true;continue}
+  el.hidden=false;el.style.width=width+'px';el.style.height=height+'px';el.style.left=(p.x-width/2)+'px';el.style.top=(p.y-height*.55)+'px';
+  el.style.zIndex=String(Math.floor(1000-p.d*20));
+ }
+}
 function render(){
  const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#07071c');sky.addColorStop(.53,'#211443');sky.addColorStop(1,'#030a15');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
@@ -107,7 +126,7 @@ function render(){
  nearest=null;let best=Infinity;
  for(const it of pick)if(it.dist<1.6&&it.diff<.72&&it.dist<best){nearest=it.g;best=it.dist}
  $('play').disabled=!nearest;$('play').textContent=nearest?'▶ '+nearest.name:'▶ Spill';
- drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
+ renderCabinets(); drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
 }
 function drawMap(){
  const w=mini.width,h=mini.height;mc.clearRect(0,0,w,h);mc.fillStyle='#101a34';mc.fillRect(0,0,w,h);
