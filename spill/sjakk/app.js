@@ -574,12 +574,17 @@ $('coachFive').onclick=()=>{
 function rankedOwnPositions(){
   const topic=$('chessThemeFilter').value;
   const positions=allOwnPositions().filter(p=>topic==='alle'||p.topic===topic);
-  // Prioritize incorrectly solved positions, then older attempts, then new positions.
-  positions.sort((a,b)=>{
-    const x=stats.puzzles[puzzleKey(a)]||{},y=stats.puzzles[puzzleKey(b)]||{};
-    const priority=p=>(p.wrong||0)*3-(p.streak||0)*2+(p.last?Math.min(4,(Date.now()-p.last)/86400000):5);
-    return priority(y)-priority(x);
-  });
+  // Review due and repeatedly missed positions first; engine loss breaks ties.
+  // Solved positions still appear in "all", but not ahead of unfinished practice.
+  const now=Date.now();
+  const priority=p=>{
+    const a=stats.puzzles[puzzleKey(p)]||{};
+    const due=!a.right||!Number.isFinite(a.nextReview)||a.nextReview<=now||a.wrong>a.right;
+    const severity=Number.isFinite(p.loss)?Math.min(Math.max(p.loss,0),1000)/200:0;
+    const mistakes=Math.min(a.wrong||0,10);
+    return (due?100:0)+mistakes*8+severity*3-Math.min(a.streak||0,5)*6+(a.last?Math.min(5,(now-a.last)/86400000):6);
+  };
+  positions.sort((a,b)=>priority(b)-priority(a));
   return positions;
 }
 $('coachAll').onclick=()=>{
