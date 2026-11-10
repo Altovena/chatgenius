@@ -138,7 +138,25 @@ function render(){
   line({x,y:0,z:0},{x,y:0,z:end},'#d078fd77',4);
  }
  for(let z=0;z<end;z+=1.8){
+  // Illuminated transverse ceiling beams and central fluorescent fixtures.
   line({x:-3,y:2.89,z},{x:3,y:2.89,z},'#ffb3f8',4);
+  line({x:-.95,y:2.86,z:z+.05},{x:.95,y:2.86,z:z+.05},'#42d7f1',10);
+  line({x:-.9,y:2.855,z:z+.05},{x:.9,y:2.855,z:z+.05},'#e2ffff',3);
+ }
+ // Narrow checker-style tiled floor in the walking aisle.
+ for(let z=0;z<end;z+=.9){
+  for(let x=-1.15;x<1.15;x+=.575){
+   const even=(Math.round(z/.9)+Math.round((x+1.15)/.575))%2===0;
+   polygon([{x,y:.008,z:z+.02},{x:x+.56,y:.008,z:z+.02},{x:x+.56,y:.008,z:z+.86},{x,y:.008,z:z+.86}],even?'#26304c55':'#080d2055');
+  }
+ }
+ // Wall trims and vertical neon uprights spaced between the cabinets.
+ for(const side of [-1,1]){
+  const x=side*2.985;
+  for(let z=.2;z<end;z+=3.6){
+   line({x,y:.32,z},{x,y:2.58,z},side<0?'#f064dc':'#59dcfb',3);
+   line({x,y:1.46,z:z+.03},{x,y:1.46,z:z+.65},'#d3b1ff66',2);
+  }
  }
  // Render cabinets back-to-front; each one is a solid plane facing the central aisle.
  pick=[];
