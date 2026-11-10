@@ -41,6 +41,10 @@
       "dest": "/spill/flipperhall/index.html"
     },
     {
+      "src": "/spill/arcade-hall/?",
+      "dest": "/spill/arcade-hall/index.html"
+    },
+    {
       "src": "/spill/neon-rift-2026/?",
       "dest": "/spill/neon-rift-2026/index.html"
     },

@@ -352,4 +352,8 @@ if(ball){ctx.beginPath();ctx.arc(ball.x+3,ball.y+4,ball.r+1,0,7);ctx.fillStyle='
 function frame(t){const dt=Math.min(40,t-last||16);last=t;if(playing&&!paused){updateArms();const steps=Math.max(1,Math.min(3,Math.round(dt/16)));for(let i=0;i<steps;i++)simulate()}draw();if(ticks%12===0&&playing)updateFeaturePanel();const event=document.getElementById('scoreEvent');const message=toastTime>0?toast:'';if(event.textContent!==message)event.textContent=message;if(toastTime>0)toastTime--;requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const originalStartMode=startMode;
 startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];bridgeHits=0;bridgePhase=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
+
+// Allow the walkable arcade hall to open one selected pinball machine directly.
+const requestedMachine=new URLSearchParams(window.location.search).get('machine');
+if(requestedMachine!==null&&/^[0-5]$/.test(requestedMachine))showIntro(Number(requestedMachine));
 </script></body></html>
