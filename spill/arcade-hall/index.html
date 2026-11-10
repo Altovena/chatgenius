@@ -8,7 +8,7 @@
 .map-floor{height:148px;position:relative;border:1px solid #53608d;background:linear-gradient(90deg,#1d2040 0 22%,#243d59 22% 78%,#1d2040 78%);border-radius:8px;overflow:hidden}
 .map-floor:before{content:'';position:absolute;top:0;bottom:0;left:50%;border-left:1px dashed #78c8dd65}
 .map-dot{position:absolute;width:8px;height:8px;border-radius:3px;transform:translate(-50%,-50%);background:var(--dot);box-shadow:0 0 8px var(--dot)}
-.map-player{position:absolute;width:13px;height:13px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);background:#4fffd7;box-shadow:0 0 12px #4fffd7;z-index:2;transition:left .1s,top .1s}
+.map-player{position:absolute;width:13px;height:13px;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);background:#4fffd7;box-shadow:0 0 12px #4fffd7;z-index:2;transition:left .1s,top .1s}.map-player:after{content:'▲';position:absolute;left:50%;top:-13px;transform:translateX(-50%);font-size:10px;color:#fff;text-shadow:0 0 7px #4fffd7}
 .interact{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);border:1px solid #96fff0;background:linear-gradient(100deg,#7effe2,#e5e2ff);color:#0e1f34;border-radius:12px;min-height:43px;padding:9px 18px;font-weight:900;box-shadow:0 0 23px #67ffe266;z-index:9;white-space:nowrap}
 .interact[hidden]{display:none}
 .station .icon{display:grid;place-items:center;width:45px;height:40px;background:radial-gradient(ellipse,#384c7e,#0b0e26);border:2px solid var(--glow);box-shadow:inset 0 0 10px #7da7e83c,0 0 8px var(--glow);border-radius:6px 6px 2px 2px}
@@ -16,7 +16,7 @@
 @keyframes machinePulse{to{box-shadow:0 0 37px #70ffedaa;filter:brightness(1.14)}}
 @media(max-width:700px){.mini-map{top:47px;right:8px;width:90px;padding:5px}.mini-map strong{font-size:8px}.map-floor{height:108px}.map-dot{width:6px;height:6px}.interact{bottom:108px;font-size:12px;padding:7px 13px}.station .icon{width:33px;height:29px}}
 @media(prefers-reduced-motion:reduce){.station.near{animation:none}}
-</style></head><body><div class="shell"><header><a href="/spill/">← ChatGenius Spill</a><b>✦ FREDDYS ARCADE <span>THE WALKABLE HALL · 2026</span></b><a href="/spill/flipperhall/">Flipperhall ↗</a></header><div class="hero"><h1>Velkommen til <em>arkadehallen.</em></h1><p>Gå mellom maskinene, kom nærmere og start spillet du vil prøve.</p></div><main class="scene" id="scene" aria-label="Utforskbar virtuell arkadehall"><div class="view"><div class="photo" id="photo"></div><div class="lights"></div></div><div class="hint" id="hint">Bruk WASD / piltaster · eller knappene nederst</div><div class="mini-map" aria-label="Kart over hallen"><strong>HALLKART</strong><div class="map-floor" id="mapFloor"><div class="map-player" id="mapPlayer" title="Du er her"></div></div></div><div id="stations"></div><div class="progress" id="progress">Inngangen · 0 m</div><button class="interact" id="interact" hidden>▶ Spill på nærmeste maskin</button><div class="dock" aria-label="Bevegelseskontroller"><button data-move="left" aria-label="Gå venstre">◀</button><button class="walk" data-move="forward" aria-label="Gå fremover">▲</button><button data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Gå høyre">▶</button><span class="label">Gå bort til en lysende maskin og velg spill</span></div><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="machineTitle"><div class="machine"><div class="big" id="machineIcon"></div><h2 id="machineTitle"></h2><p id="machineDesc"></p><div class="buttons"><a id="playLink" href="#">▶ SPILL NÅ</a><button id="close">← Fortsett å utforske</button></div></div></div></main><div class="footer">ChatGenius Arcade · PC: WASD / piltaster · Mobil: piltaster eller trykk på en maskin <button id="reset">Til inngangen</button></div></div>
+</style></head><body><div class="shell"><header><a href="/spill/">← ChatGenius Spill</a><b>✦ FREDDYS ARCADE <span>THE WALKABLE HALL · 2026</span></b><a href="/spill/flipperhall/">Flipperhall ↗</a></header><div class="hero"><h1>Velkommen til <em>arkadehallen.</em></h1><p>Gå mellom maskinene, kom nærmere og start spillet du vil prøve.</p></div><main class="scene" id="scene" aria-label="Utforskbar virtuell arkadehall"><div class="view"><div class="photo" id="photo"></div><div class="lights"></div></div><div class="hint" id="hint">← / → snur blikket · ↑ / ↓ går i synsretningen</div><div class="mini-map" aria-label="Kart over hallen"><strong>HALLKART</strong><div class="map-floor" id="mapFloor"><div class="map-player" id="mapPlayer" title="Du er her"></div></div></div><div id="stations"></div><div class="progress" id="progress">Inngangen · 0 m</div><button class="interact" id="interact" hidden>▶ Spill på nærmeste maskin</button><div class="dock" aria-label="Bevegelseskontroller"><button data-move="left" aria-label="Snu mot venstre">⟲</button><button class="walk" data-move="forward" aria-label="Gå fremover">▲</button><button data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu mot høyre">⟳</button><span class="label">Gå bort til en lysende maskin og velg spill</span></div><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="machineTitle"><div class="machine"><div class="big" id="machineIcon"></div><h2 id="machineTitle"></h2><p id="machineDesc"></p><div class="buttons"><a id="playLink" href="#">▶ SPILL NÅ</a><button id="close">← Fortsett å utforske</button></div></div></div></main><div class="footer">ChatGenius Arcade · PC: A/D snu · W/S gå · Mobil: snu/gå eller trykk på en maskin <button id="reset">Til inngangen</button></div></div>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),scene=$('scene'),list=$('stations'),photo=$('photo'),modal=$('modal');
 const games=[
@@ -32,15 +32,88 @@ const games=[
 {name:'Donkey Kong',icon:'🦍',desc:'Hopp mellom plattformene i et klassisk arkadeeventyr.',url:'/spill/donkey-kong/mobil/',side:1,z:4.35,color:'#ffa66f'},
 {name:'Clockwork Carnival',icon:'🎡',desc:'Mekanisk tivoliflipper med tannhjul og bonusoppdrag.',url:'/spill/flipperhall/?machine=5',side:-1,z:5.2,color:'#ffca85'},
 {name:'Sjakkakademiet',icon:'♟️',desc:'Ta en pause fra action og tren sjakk mot motor og tidligere partier.',url:'/spill/sjakk/',side:1,z:5.2,color:'#f3f4fd'}];
-let cam={x:0,z:0},goal=null,active=null,key=new Set(),held=new Set(),prev=performance.now(),nearest=null;
+let cam={x:0,z:0,yaw:0},goal=null,active=null,key=new Set(),held=new Set(),prev=performance.now(),nearest=null;
 for(const [i,g] of games.entries()){const b=document.createElement('button');b.className='station';b.type='button';b.style.setProperty('--glow',g.color+'88');b.innerHTML=`<span class="icon">${g.icon}</span><b>${g.name}</b><small>Gå bort hit →</small>`;b.addEventListener('click',()=>select(i));list.append(b);g.element=b;const dot=document.createElement('span');dot.className='map-dot';dot.style.setProperty('--dot',g.color);dot.style.left=(50+g.side*31)+'%';dot.style.top=(91-g.z*15.5)+'%';dot.title=g.name;$('mapFloor').append(dot)}
-const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));function select(i){const g=games[i];if(Math.abs(cam.z-g.z)<.54&&Math.abs(cam.x-g.side*.65)<.65){open(g);return}goal={x:g.side*.65,z:g.z,i};$('hint').textContent=`Går mot ${g.name} …`;}
+const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
+const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+const machineBearing=g=>Math.atan2(g.side*1.08-cam.x,g.z-cam.z);
+function select(i){
+ const g=games[i],distance=Math.hypot((cam.x-g.side*.55),cam.z-g.z);
+ if(distance<.72&&Math.abs(angleDiff(machineBearing(g),cam.yaw))<.35){open(g);return}
+ goal={x:g.side*.55,z:g.z,i};
+ $('hint').textContent=`Går mot ${g.name} og snur blikket mot maskinen …`;
+}
 function open(g){active=g;$('machineIcon').textContent=g.icon;$('machineTitle').textContent=g.name;$('machineDesc').textContent=g.desc;$('playLink').href=g.url;modal.classList.add('show');$('hint').textContent='Velg «Spill nå» eller fortsett å utforske';}
 function close(){modal.classList.remove('show');active=null;$('hint').textContent='Gå videre til neste maskin · Trykk på en maskin for å gå dit'}$('interact').onclick=()=>{if(nearest!==null)select(nearest)};$('close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});$('reset').onclick=()=>{goal={x:0,z:0,i:null};close()};
 document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowleft','arrowright','arrowup','arrowdown',' '].includes(k))e.preventDefault();if(k==='escape')close();if(k==='enter'&&!active&&nearest!==null){e.preventDefault();select(nearest)}key.add(k)});document.addEventListener('keyup',e=>key.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{key.clear();held.clear()});
 document.querySelectorAll('[data-move]').forEach(btn=>{const action=btn.dataset.move;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);held.add(action);goal=null});for(const type of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(type,()=>held.delete(action))});
-function draw(){const rect=scene.getBoundingClientRect(),w=rect.width,h=rect.height;photo.style.transform=`translate(${(-cam.x*6).toFixed(2)}%,${(cam.z*1.5).toFixed(2)}%) scale(${(1+cam.z*.16).toFixed(3)})`;
-nearest=null;let nearestDistance=Infinity;for(let i=0;i<games.length;i++){const g=games[i],dd=Math.hypot((cam.x-g.side*.65)*.85,cam.z-g.z);if(dd<nearestDistance&&dd<.7){nearest=i;nearestDistance=dd}}$('interact').hidden=nearest===null||!!active||!!goal; if(nearest!==null&&!active&&!goal)$('interact').textContent='▶ Spill '+games[nearest].name;$('mapPlayer').style.left=(50+cam.x*38)+'%';$('mapPlayer').style.top=(91-cam.z*15.5)+'%';for(const g of games){const d=g.z-cam.z;const visible=d>-.45&&d<3.9;g.element.hidden=!visible;if(!visible)continue;const perspective=1/(d+1.6),px=.5+((g.side*1.03-cam.x)*.48*perspective),py=.47+(1.3-d)*.165;g.element.style.left=`${clamp(px*100,8,92)}%`;g.element.style.top=`${clamp(py*100,21,77)}%`;const scale=clamp(.58+1.13*perspective,.57,1.28);g.element.style.transform=`translate(-50%,-50%) scale(${scale})`;g.element.style.opacity=clamp((4.1-d)*.55,.3,1);g.element.classList.toggle('near',Math.abs(d)<.52&&Math.abs(cam.x-g.side*.65)<.67);g.element.querySelector('small').textContent=g.element.classList.contains('near')?'▶ SPILL HER':'Gå bort hit →'}$('progress').textContent=`${cam.z<.12?'Inngangen':'I arkadehallen'} · ${Math.round(cam.z*8)} m`}
-function tick(now){const dt=Math.min(.05,(now-prev)/1000||0);prev=now;if(!active){let dx=0,dz=0;if(key.has('a')||key.has('arrowleft')||held.has('left'))dx-=1;if(key.has('d')||key.has('arrowright')||held.has('right'))dx+=1;if(key.has('w')||key.has('arrowup')||held.has('forward'))dz+=1;if(key.has('s')||key.has('arrowdown')||held.has('back'))dz-=1;if(dx||dz)goal=null;if(goal){const mx=goal.x-cam.x,mz=goal.z-cam.z,d=Math.hypot(mx,mz);if(d<.07){cam.x=goal.x;cam.z=goal.z;const i=goal.i;goal=null;if(i!==null)open(games[i])}else{cam.x+=mx/d*Math.min(d,dt*1.25);cam.z+=mz/d*Math.min(d,dt*1.25)}}else{cam.x=clamp(cam.x+dx*dt*.95,-.88,.88);cam.z=clamp(cam.z+dz*dt*1.1,0,5.35)}}draw();requestAnimationFrame(tick)}requestAnimationFrame(tick);
+function draw(){
+ // The single hall photograph is a 2.5D backdrop; horizontal panning suggests turning.
+ // Cabinet positions are projected independently from the actual viewing angle.
+ const backdropScale=1.12+cam.z*.13+Math.abs(cam.yaw)*.18;
+ photo.style.transform=`translate(${(-cam.yaw*17-cam.x*4).toFixed(2)}%,${(cam.z*1.1).toFixed(2)}%) scale(${backdropScale.toFixed(3)})`;
+ nearest=null;let nearestDistance=Infinity;
+ $('mapPlayer').style.left=(50+cam.x*38)+'%';
+ $('mapPlayer').style.top=(91-cam.z*15.5)+'%';
+ $('mapPlayer').style.transform=`translate(-50%,-50%) rotate(${cam.yaw.toFixed(3)}rad)`;
+ for(let i=0;i<games.length;i++){
+  const g=games[i],dx=g.side*1.08-cam.x,dz=g.z-cam.z;
+  const distance=Math.hypot(dx,dz),relative=angleDiff(Math.atan2(dx,dz),cam.yaw);
+  const visible=distance>.17&&distance<4.8&&Math.abs(relative)<1.08;
+  g.element.hidden=!visible;
+  if(!visible)continue;
+  const px=.5+Math.tan(relative)*.36,py=.53+(1.3-distance)*.115;
+  g.element.style.left=`${clamp(px*100,7,93)}%`;
+  g.element.style.top=`${clamp(py*100,21,78)}%`;
+  const scale=clamp(1.85/(distance+1),.54,1.42);
+  g.element.style.transform=`translate(-50%,-50%) scale(${scale})`;
+  g.element.style.opacity=clamp((5.1-distance)*.45,.35,1);
+  const near=distance<1.35&&Math.abs(relative)<.5;
+  g.element.classList.toggle('near',near);
+  g.element.querySelector('small').textContent=near?'▶ SPILL HER':'Gå bort hit →';
+  if(near&&distance<nearestDistance){nearest=i;nearestDistance=distance}
+ }
+ $('interact').hidden=nearest===null||!!active||!!goal;
+ if(nearest!==null&&!active&&!goal)$('interact').textContent='▶ Spill '+games[nearest].name;
+ $('progress').textContent=`${cam.z<.12?'Inngangen':'I arkadehallen'} · ${Math.round(cam.z*8)} m · ${Math.round(cam.yaw*180/Math.PI)}°`;
+}
+function tick(now){
+ const dt=Math.min(.05,(now-prev)/1000||0);prev=now;
+ if(!active){
+  let turn=0,move=0;
+  if(key.has('a')||key.has('arrowleft')||held.has('left'))turn-=1;
+  if(key.has('d')||key.has('arrowright')||held.has('right'))turn+=1;
+  if(key.has('w')||key.has('arrowup')||held.has('forward'))move+=1;
+  if(key.has('s')||key.has('arrowdown')||held.has('back'))move-=1;
+  if(turn||move)goal=null;
+  if(goal){
+   const mx=goal.x-cam.x,mz=goal.z-cam.z,d=Math.hypot(mx,mz);
+   if(d>=.07){
+    // Face along the approach while walking.
+    const travelYaw=Math.atan2(mx,mz);
+    cam.yaw+=clamp(angleDiff(travelYaw,cam.yaw),-dt*2.8,dt*2.8);
+    const step=Math.min(d,dt*1.25);
+    cam.x=clamp(cam.x+mx/d*step,-.88,.88);
+    cam.z=clamp(cam.z+mz/d*step,0,5.35);
+   }else{
+    cam.x=goal.x;cam.z=goal.z;
+    const face=goal.i===null?0:machineBearing(games[goal.i]);
+    const diff=angleDiff(face,cam.yaw);
+    if(Math.abs(diff)<.04){
+     cam.yaw=face;
+     const i=goal.i;goal=null;
+     if(i!==null)open(games[i]);
+     else $('hint').textContent='← / → snur blikket · ↑ / ↓ går i synsretningen';
+    }else cam.yaw+=clamp(diff,-dt*2.8,dt*2.8);
+   }
+  }else{
+   cam.yaw=clamp(cam.yaw+turn*dt*1.75,-1.5,1.5);
+   cam.x=clamp(cam.x+Math.sin(cam.yaw)*move*dt*1.12,-.88,.88);
+   cam.z=clamp(cam.z+Math.cos(cam.yaw)*move*dt*1.12,0,5.35);
+  }
+ }
+ draw();requestAnimationFrame(tick)
+}
+requestAnimationFrame(tick);
 })();
 </script></body></html>
