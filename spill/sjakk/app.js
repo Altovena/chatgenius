@@ -29,7 +29,7 @@ function recordPuzzleAttempt(success){
   old.last=Date.now();
   old.history ||= [];
   old.history.push({at:old.last,correct:Boolean(success),...(trainingOrigin==='analysis'&&practiceSessionStart?{sessionStarted:practiceSessionStart.started}:{})});
-  if(old.history.length>30)old.history=old.history.slice(-30);
+  if(old.history.length>200)old.history=old.history.slice(-200);
   stats.puzzles[key]=old;
   if(trainingOrigin==='analysis'){
     // Spaced repetition: difficult positions return sooner; repeated successes extend the interval.
