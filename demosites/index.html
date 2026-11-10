@@ -220,7 +220,7 @@
           </fieldset>
           <fieldset class="builder-step">
             <legend>4. Visuell profil</legend>
-            <p class="muted">Har bedriften en profilmanual? Registrer farger, fonter og stil nå. Sikker filopplasting og automatisk analyse kommer i neste backend-fase.</p>
+            <p class="muted">Registrer farger, fonter og stil. Logo kan lastes opp nå; analyse av PDF-profilmanualer kommer i en senere fase.</p>
             <label style="display:block;margin-bottom:12px"><input type="checkbox" name="brand_profile_enabled"> Bruk fargene og profilreglene jeg oppgir nedenfor</label>
             <div class="order-grid">
               <label>Primærfarge<input type="color" name="brand_primary" value="#164e63" style="padding:5px;height:46px"></label>
@@ -228,8 +228,10 @@
               <label>Font overskrifter<input name="brand_heading_font" placeholder="F.eks. Montserrat"></label>
               <label>Font brødtekst<input name="brand_body_font" placeholder="F.eks. Inter"></label>
               <label>Logoens nettadresse (valgfritt)<input name="brand_logo_url" type="url" placeholder="https://bedrift.no/logo.svg"></label>
+              <label>Last opp logo (PNG, JPG eller WEBP, maks 950 KB)<input name="brand_logo_file" id="builder-logo-file" type="file" accept="image/png,image/jpeg,image/webp" style="padding:9px;height:auto"></label>
               <label>Designuttrykk<select name="brand_style"><option value="auto">La AI velge</option><option value="minimal">Minimalistisk og eksklusiv</option><option value="tech">Moderne og teknologisk</option><option value="scandinavian">Skandinavisk</option><option value="mediterranean">Middelhavsinspirert</option><option value="creative">Kreativ og leken</option><option value="luxury">Elegant og luksuriøs</option><option value="professional">Profesjonell</option><option value="organic">Naturlig og organisk</option><option value="bold">Dristig og fargerik</option></select></label>
             </div>
+            <p id="builder-logo-status" class="muted" aria-live="polite">Bruk logo-URL eller last opp en bildefil. Opplastet fil prioriteres.</p>
             <label style="display:block;margin-top:12px">Merkevareregler og profilmanual som tekst<textarea name="brand_guidelines" rows="3" placeholder="Beskriv logo, farger, fonter, bildestil og eventuelle regler som alltid skal følges."></textarea></label>
             <div class="builder-profile-preview" aria-label="Forhåndsvisning av registrerte profilfarger">
               <div class="builder-profile-swatches"><span id="builder-primary-swatch"></span><span id="builder-accent-swatch"></span></div>
@@ -341,6 +343,35 @@
       var successBox = document.getElementById("order-success");
       var previewLink = document.getElementById("order-preview-link");
       var chosenPackage = "standard";
+      var uploadedLogoDataUrl = null;
+      var logoUploadPending = false;
+      var logoStatus = document.getElementById("builder-logo-status");
+      document.getElementById("builder-logo-file").addEventListener("change", function (event) {
+        uploadedLogoDataUrl = null;
+        logoUploadPending = false;
+        var file = event.target.files && event.target.files[0];
+        if (!file) { logoStatus.textContent = "Ingen logofil valgt."; return; }
+        if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 950000) {
+          event.target.value = "";
+          logoStatus.textContent = "Velg en PNG-, JPG- eller WEBP-fil under 950 KB.";
+          return;
+        }
+        logoUploadPending = true;
+        logoStatus.textContent = "Leser logofilen…";
+        var reader = new FileReader();
+        reader.onload = function () {
+          logoUploadPending = false;
+          var value = String(reader.result || "");
+          if (!/^data:image\/(png|jpeg|webp);base64,/.test(value) || value.length > 1400000) {
+            logoStatus.textContent = "Logoen kunne ikke klargjøres. Bruk en mindre bildefil.";
+            return;
+          }
+          uploadedLogoDataUrl = value;
+          logoStatus.textContent = "Logo klar: " + file.name;
+        };
+        reader.onerror = function () { logoUploadPending = false; logoStatus.textContent = "Kunne ikke lese logofilen."; };
+        reader.readAsDataURL(file);
+      });
       function updateProfilePreview() {
         var data = new FormData(form);
         var primary = String(data.get("brand_primary") || "#164e63");
@@ -414,6 +445,7 @@
         var parsed = parseSiteOrName(data.get("site_or_name"));
         var email = String(data.get("customer_email") || "").trim();
         if (!parsed.companyName || !email || email.indexOf("@") < 0) { showError("Fyll inn nettadresse eller bedriftsnavn, og en gyldig e-postadresse."); return; }
+        if (logoUploadPending) { showError("Vent til logoen er ferdig lest før du fortsetter."); return; }
         var websitePlan = approvedPlan || buildPlan(data);
         var originalDescription = String(data.get("business_description") || "").trim();
         var brandProfile = ["Primærfarge: " + data.get("brand_primary"), "Aksentfarge: " + data.get("brand_accent"), "Overskriftsfont: " + String(data.get("brand_heading_font") || ""), "Brødtekstfont: " + String(data.get("brand_body_font") || ""), "Logoadresse: " + String(data.get("brand_logo_url") || ""), "Visuell stil: " + String(data.get("brand_style") || "auto"), "Profilregler: " + String(data.get("brand_guidelines") || "")];
@@ -428,6 +460,7 @@
             customer_phone: String(data.get("customer_phone") || "").trim() || undefined,
             website_url: parsed.websiteUrl || undefined,
             logo_url: data.has("brand_profile_enabled") ? String(data.get("brand_logo_url") || "").trim() || undefined : undefined,
+            logo_data_url: uploadedLogoDataUrl || undefined,
             brand_color: data.has("brand_profile_enabled") ? String(data.get("brand_primary") || "").trim() : undefined,
             accent_color: data.has("brand_profile_enabled") ? String(data.get("brand_accent") || "").trim() : undefined,
             layout_variant: String(data.get("design_layout") || "auto") !== "auto" ? String(data.get("design_layout")) : undefined,
