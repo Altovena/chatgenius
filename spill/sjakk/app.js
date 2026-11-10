@@ -119,6 +119,39 @@ function updateGameTrend(analyzed){
   disclaimer.textContent='Kortere søyler betyr færre funn per undersøkte trekk. Grafene viser bare analyser med samme metode; motstandere, vanskelighetsgrad og utvalgte stillinger kan variere. Ikke sammenlign søylene direkte mellom de to spilltypene.';
   root.appendChild(disclaimer);
 }
+function updateTopicTrends(analyzed){
+  let root=$('topicTrends');
+  if(!root){
+    root=document.createElement('section');root.id='topicTrends';root.className='own-topic-guidance';
+    $('gameTrend').after(root);
+  }
+  root.replaceChildren();
+  const title=document.createElement('h3');title.textContent='Hvilke feil gjør du sjeldnere?';root.appendChild(title);
+  const records=analyzed.filter(g=>g.source==='imported'&&g.analysisVersion>=4&&g.checked>0&&g.date&&Array.isArray(g.topics))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  if(records.length<6){
+    const note=document.createElement('p');note.className='muted';note.textContent='Analyser minst seks Chess.com-partier med den nye metoden for å sammenligne feiltypene. Partier mot datamaskinen vurderes separat.';root.appendChild(note);return;
+  }
+  const latest=records.slice(-5),previous=records.slice(-10,-5);
+  const totals=new Map();
+  for(const game of [...latest,...previous])for(const topic of game.topics)totals.set(topic,(totals.get(topic)||0)+1);
+  const top=[...totals].sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const rate=(games,topic)=>{
+    const checked=games.reduce((sum,g)=>sum+g.checked,0);
+    const count=games.reduce((sum,g)=>sum+g.topics.filter(t=>t===topic).length,0);
+    return checked?100*count/checked:0;
+  };
+  for(const [topic] of top){
+    const before=rate(previous,topic),after=rate(latest,topic);
+    const row=document.createElement('div');row.className='own-topic-row';
+    const header=document.createElement('div');const name=document.createElement('strong');name.textContent=topic;
+    const change=document.createElement('span');change.textContent=after<before?'Færre funn':after>before?'Flere funn':'Uendret';
+    header.append(name,change);
+    const detail=document.createElement('small');detail.textContent=`Per 100 undersøkte trekk: tidligere ${before.toFixed(1)} → siste fem ${after.toFixed(1)}`;
+    row.append(header,detail);root.appendChild(row);
+  }
+  const caveat=document.createElement('p');caveat.className='muted';caveat.textContent='Dette er en indikasjon, ikke en presis ferdighetsmåling. Motoren undersøker et utvalg trekk, og feiltypene er automatiske kategorier. Sammenlign bare innenfor Chess.com-gruppen.';root.appendChild(caveat);
+}
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
@@ -128,6 +161,7 @@ function updateAllGamesPlan(){
   const mastered=positions.filter(p=>(stats.puzzles[puzzleKey(p)]?.streak||0)>=2).length;
   $('allGamesSummary').textContent=`${analyzed.length} analyserte partier · ${positions.length} unike treningsstillinger.`;
   updateGameTrend(analyzed);
+  updateTopicTrends(analyzed);
   $('ownLearningStats').replaceChildren();
   for(const [label,count] of [['Trent minst én gang',practiced],['Klare for repetisjon',review.length],['Mestret to ganger på rad',mastered]]){
     const item=document.createElement('div');item.className='own-learning-stat';const b=document.createElement('b');b.textContent=count;const span=document.createElement('span');span.textContent=label;item.append(b,span);$('ownLearningStats').appendChild(item);
