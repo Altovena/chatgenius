@@ -5,17 +5,17 @@
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),scene=$('scene'),list=$('stations'),photo=$('photo'),modal=$('modal');
 const games=[
-{name:'Castle Chaos',icon:'🏰',desc:'Middelalderflipper med borg, ramper og drageoppdrag.',url:'/spill/flipperhall/',side:-1,z:.75,color:'#ffb36c'},
+{name:'Castle Chaos',icon:'🏰',desc:'Middelalderflipper med borg, ramper og drageoppdrag.',url:'/spill/flipperhall/?machine=0',side:-1,z:.75,color:'#ffb36c'},
 {name:'Space Invaders',icon:'👾',desc:'Klassisk invasjon av romvesener, oppdatert for mobil og PC.',url:'/spill/mobil/',side:1,z:.75,color:'#64f5dc'},
-{name:'Neon Velocity',icon:'🏎️',desc:'Futuristisk racingflipper med lysende sløyfer og turbobonus.',url:'/spill/flipperhall/',side:-1,z:1.65,color:'#54ecff'},
+{name:'Neon Velocity',icon:'🏎️',desc:'Futuristisk racingflipper med lysende sløyfer og turbobonus.',url:'/spill/flipperhall/?machine=1',side:-1,z:1.65,color:'#54ecff'},
 {name:'Neon Rift 2026',icon:'⚡',desc:'Overlev fiendebølger i den futuristiske neonarenaen.',url:'/spill/neon-rift-2026/',side:1,z:1.65,color:'#d598ff'},
-{name:'Cosmic Odyssey',icon:'🚀',desc:'Kosmisk flipper med portaler, planeter og bonusbaner.',url:'/spill/flipperhall/',side:-1,z:2.55,color:'#d69aff'},
+{name:'Cosmic Odyssey',icon:'🚀',desc:'Kosmisk flipper med portaler, planeter og bonusbaner.',url:'/spill/flipperhall/?machine=2',side:-1,z:2.55,color:'#d69aff'},
 {name:'Galaga',icon:'🛸',desc:'Luftkamp med retrofølelse, bølger og rask arkadeaction.',url:'/spill/galaga/mobil/',side:1,z:2.55,color:'#9cf9fc'},
-{name:'Jungle Temple',icon:'🌿',desc:'Flipper mellom jungelruiner, tunneler og skjulte mål.',url:'/spill/flipperhall/',side:-1,z:3.45,color:'#cbf08b'},
+{name:'Jungle Temple',icon:'🌿',desc:'Flipper mellom jungelruiner, tunneler og skjulte mål.',url:'/spill/flipperhall/?machine=3',side:-1,z:3.45,color:'#cbf08b'},
 {name:'Tank Battle',icon:'🛡️',desc:'Naviger, sikt og bekjemp fiendtlige stridsvogner.',url:'/spill/tank-battle/mobil/',side:1,z:3.45,color:'#ffcd70'},
-{name:'Abyssal Depths',icon:'🐙',desc:'Dyphavsflipper med glødende koraller og undervannsramper.',url:'/spill/flipperhall/',side:-1,z:4.35,color:'#66eaff'},
+{name:'Abyssal Depths',icon:'🐙',desc:'Dyphavsflipper med glødende koraller og undervannsramper.',url:'/spill/flipperhall/?machine=4',side:-1,z:4.35,color:'#66eaff'},
 {name:'Donkey Kong',icon:'🦍',desc:'Hopp mellom plattformene i et klassisk arkadeeventyr.',url:'/spill/donkey-kong/mobil/',side:1,z:4.35,color:'#ffa66f'},
-{name:'Clockwork Carnival',icon:'🎡',desc:'Mekanisk tivoliflipper med tannhjul og bonusoppdrag.',url:'/spill/flipperhall/',side:-1,z:5.2,color:'#ffca85'},
+{name:'Clockwork Carnival',icon:'🎡',desc:'Mekanisk tivoliflipper med tannhjul og bonusoppdrag.',url:'/spill/flipperhall/?machine=5',side:-1,z:5.2,color:'#ffca85'},
 {name:'Sjakkakademiet',icon:'♟️',desc:'Ta en pause fra action og tren sjakk mot motor og tidligere partier.',url:'/spill/sjakk/',side:1,z:5.2,color:'#f3f4fd'}];
 let cam={x:0,z:0},goal=null,active=null,key=new Set(),held=new Set(),prev=performance.now();
 for(const [i,g] of games.entries()){const b=document.createElement('button');b.className='station';b.type='button';b.style.setProperty('--glow',g.color+'88');b.innerHTML=`<span class="icon">${g.icon}</span><b>${g.name}</b><small>Gå bort hit →</small>`;b.addEventListener('click',()=>select(i));list.append(b);g.element=b}
