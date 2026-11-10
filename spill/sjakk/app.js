@@ -173,6 +173,84 @@ function updateTopicTrends(analyzed){
   }
   const caveat=document.createElement('p');caveat.className='muted';caveat.textContent='Dette er en indikasjon, ikke en presis ferdighetsmåling. Motoren undersøker et utvalg trekk, og feiltypene er automatiske kategorier. Sammenlign bare innenfor Chess.com-gruppen.';root.appendChild(caveat);
 }
+function updateSessionHistory(){
+  let root=$('sessionHistory');
+  if(!root){
+    root=document.createElement('section');root.id='sessionHistory';root.className='own-topic-guidance';
+    $('practiceProgress').after(root);
+  }
+  root.replaceChildren();
+  const heading=document.createElement('h3');heading.textContent='Treningshistorikk';root.appendChild(heading);
+  const sessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at)&&Number.isFinite(s.correct)&&Number.isFinite(s.wrong)).slice(-14);
+
+  const days=new Set(sessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')));
+  const totals=sessions.reduce((a,s)=>({correct:a.correct+s.correct,wrong:a.wrong+s.wrong}),{correct:0,wrong:0});
+  const summary=document.createElement('p');summary.className='muted';
+  summary.textContent=`${sessions.length} fullførte økter · ${days.size} treningsdager · ${totals.correct+totals.wrong?Math.round(100*totals.correct/(totals.correct+totals.wrong)):0} % riktige totalt.`;
+  root.appendChild(summary);
+  const allSessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at));
+  const dayKeys=[...new Set(allSessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')))].sort();
+  const dayNumber=key=>Math.floor(Date.parse(key+'T00:00:00Z')/86400000);
+  let longest=0,run=0;
+  for(let i=0;i<dayKeys.length;i++){
+    run=i>0&&dayNumber(dayKeys[i])-dayNumber(dayKeys[i-1])===1?run+1:1;
+    longest=Math.max(longest,run);
+  }
+  const todayKey=today(),yesterday=new Date(Date.now()-86400000).toLocaleDateString('sv-SE');
+  let streak=0;
+  if(dayKeys.length&&(dayKeys.at(-1)===todayKey||dayKeys.at(-1)===yesterday)){
+    streak=1;
+    for(let i=dayKeys.length-1;i>0&&dayNumber(dayKeys[i])-dayNumber(dayKeys[i-1])===1;i--)streak++;
+  }
+  const goal=Number.isInteger(stats.weeklyPracticeGoal)&&stats.weeklyPracticeGoal>=1&&stats.weeklyPracticeGoal<=7?stats.weeklyPracticeGoal:3;
+  const weekStart=new Date();weekStart.setHours(0,0,0,0);
+  const weekday=(weekStart.getDay()+6)%7;weekStart.setDate(weekStart.getDate()-weekday);
+  const weeklyDays=dayKeys.filter(key=>new Date(key+'T12:00:00')>=weekStart).length;
+  const progress=document.createElement('p');progress.className='muted';
+  progress.textContent=`Treningsserie: ${streak} dager · lengste serie: ${longest} dager · denne uken: ${weeklyDays} av ${goal} treningsdager.`;
+  root.appendChild(progress);
+  const goalRow=document.createElement('div');goalRow.className='own-topic-row';
+  const goalLabel=document.createElement('label');goalLabel.textContent='Mitt ukentlige treningsmål: ';
+  const goalSelect=document.createElement('select');goalSelect.setAttribute('aria-label','Treningsdager per uke');
+  for(let n=1;n<=7;n++){const option=new Option(`${n} ${n===1?'dag':'dager'}`,String(n));goalSelect.add(option);}
+  goalSelect.value=String(goal);
+  goalSelect.onchange=()=>{stats.weeklyPracticeGoal=Number(goalSelect.value);persist();updateSessionHistory();};
+  goalLabel.appendChild(goalSelect);goalRow.appendChild(goalLabel);root.appendChild(goalRow);
+  const week=document.createElement('div');week.className='own-topic-row';
+  const weekHeading=document.createElement('strong');weekHeading.textContent='Denne uken (mandag–søndag)';week.appendChild(weekHeading);
+  const dayRow=document.createElement('div');dayRow.style.display='grid';dayRow.style.gridTemplateColumns='repeat(7,minmax(0,1fr))';dayRow.style.gap='6px';dayRow.style.marginTop='10px';
+  for(let offset=0;offset<7;offset++){
+    const date=new Date(weekStart);date.setDate(weekStart.getDate()+offset);
+    const key=date.toLocaleDateString('sv-SE');
+    const completed=dayKeys.includes(key),future=date.getTime()>Date.now();
+    const cell=document.createElement('div');cell.style.textAlign='center';cell.style.padding='8px 2px';cell.style.borderRadius='8px';
+    cell.style.background=completed?'var(--accent, #587d68)':'rgba(128,128,128,.12)';
+    cell.style.color=completed?'white':'inherit';
+    cell.style.opacity=future?'.55':'1';
+    cell.textContent=['Man','Tir','Ons','Tor','Fre','Lør','Søn'][offset]+(completed?' ✓':'');
+    cell.setAttribute('aria-label',`${date.toLocaleDateString('nb-NO',{weekday:'long',day:'numeric',month:'long'})}: ${completed?'trening gjennomført':future?'kommende dag':'ingen fullført økt'}`);
+    dayRow.appendChild(cell);
+  }
+  week.appendChild(dayRow);
+  const remaining=document.createElement('small');remaining.className='muted';
+  remaining.textContent=weeklyDays>=goal?'Ukens mål er nådd!':`${goal-weeklyDays} treningsdag${goal-weeklyDays===1?'':'er'} igjen til ukesmålet.`;
+  week.appendChild(remaining);root.appendChild(week);
+  if(!sessions.length){
+    const empty=document.createElement('p');empty.className='muted';
+    empty.textContent='Fullfør en treningsøkt for å se utviklingen i riktigprosent.';root.appendChild(empty);return;
+  }
+  const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
+  for(const session of sessions){
+    const total=session.correct+session.wrong,percent=total?Math.round(100*session.correct/total):0;
+    const item=document.createElement('div');item.className='game-trend-item';item.setAttribute('role','listitem');
+    item.setAttribute('aria-label',`${new Date(session.at).toLocaleDateString('nb-NO')}: ${session.correct} riktige av ${total} forsøk, ${percent} prosent.`);
+    const bar=document.createElement('div');bar.className='game-trend-bar';bar.style.height=`${Math.max(5,percent)}%`;
+    const label=document.createElement('small');label.textContent=new Date(session.at).toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit'});
+    item.append(bar,label);chart.appendChild(item);
+  }
+  root.appendChild(chart);
+  const note=document.createElement('small');note.className='muted';note.textContent='Høyere søyler betyr større andel riktige forsøk. Grafen viser de siste 14 lagrede øktene, ikke partier.';root.appendChild(note);
+}
 function updatePracticeProgress(positions){
   let root=$('practiceProgress');
   if(!root){
@@ -276,6 +354,7 @@ function updateAllGamesPlan(){
     const item=document.createElement('div');item.className='own-learning-stat';const b=document.createElement('b');b.textContent=count;const span=document.createElement('span');span.textContent=label;item.append(b,span);$('ownLearningStats').appendChild(item);
   }
   updatePracticeProgress(positions);
+  updateSessionHistory();
   $('chessThemes').replaceChildren();
   for(const [topic,count] of Object.entries(byTopic).sort((a,b)=>b[1]-a[1])){
     const chip=document.createElement('span');chip.className='chess-theme';chip.textContent=`${topic}: ${count}`;$('chessThemes').appendChild(chip);
@@ -761,6 +840,7 @@ function showPracticeSessionSummary(){
     stats.practiceSessions.push({at:Date.now(),correct,wrong,positions:session.keys.length});
     stats.practiceSessions=stats.practiceSessions.slice(-40);
     persist();
+    updateSessionHistory();
   }
 }
 function startOwnPractice(positions,resumeIndex=0){

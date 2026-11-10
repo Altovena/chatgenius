@@ -24,7 +24,10 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .arcade-cabinet .marquee{background:var(--glow);color:#091425;text-shadow:none;font-weight:900;font-size:clamp(8px,1.2vw,14px);text-align:center;width:100%;padding:5px 2px;line-height:1.05}
 .arcade-cabinet .screen{display:flex;flex:1;align-items:center;justify-content:center;width:85%;background:radial-gradient(circle at 50% 38%,#335b8d,#070d1e 74%);border:2px solid var(--glow);font-size:clamp(24px,4vw,56px);box-shadow:inset 0 0 18px #000}
 .arcade-cabinet .panel{width:78%;height:10%;background:linear-gradient(90deg,#161a26,var(--glow),#11192a);border-radius:3px}
-.arcade-cabinet.pinball{border-radius:7px 7px 14px 14px;transform-origin:center bottom}
+.arcade-cabinet.pinball{border-radius:8px 8px 5px 5px;transform-origin:center bottom;background:linear-gradient(145deg,#35274c,#0a1025 60%,#273650)}
+.arcade-cabinet.pinball .screen{flex:.8;background:radial-gradient(circle at 50% 20%,#493c7e,#080e25 80%);border-radius:5px 5px 2px 2px}
+.arcade-cabinet.pinball .panel{height:24%;width:95%;margin-bottom:6%;background:linear-gradient(160deg,var(--glow),#172444 56%,#080e22);border:2px solid var(--glow);clip-path:polygon(13% 0,87% 0,100% 100%,0 100%);box-shadow:inset 0 0 15px #0008}
+.arcade-cabinet:not(.pinball) .panel::before{content:"●　●";display:block;font-size:clamp(7px,1vw,12px);text-align:center;color:white;text-shadow:0 0 5px #fff}
 .arcade-cabinet[hidden]{display:none!important}
 .arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
@@ -39,7 +42,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext('2d'),mini=$('map'),mc=mini.getContext('2d');
 const raw=window.CHATGENIUS_ARCADE_MACHINES||[];
-const games=raw.filter(g=>g&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9}));
+const games=raw.filter(g=>g&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:(Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9)*1.8}));
 const end=Math.max(6.25,...games.map(g=>g.z+.7)),cam={x:0,z:0,yaw:0,y:1.6};
 const keys=new Set(),held=new Set(),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 let previous=performance.now(),selected=null,target=null,modal=false,pick=[],nearest=null;
@@ -163,7 +166,7 @@ function tick(now){
   if(turn||move)target=null;
   if(target){
    const dx=target.x-cam.x,dz=target.z-cam.z,d=Math.hypot(dx,dz);
-   if(d>.05){const desired=Math.atan2(dx,dz);cam.yaw+=clamp(angleDiff(desired,cam.yaw),-dt*2.6,dt*2.6);const step=Math.min(d,dt*1.8);cam.x+=dx/d*step;cam.z+=dz/d*step}
+   if(d>.05){const desired=Math.atan2(dx,dz);cam.yaw+=clamp(angleDiff(desired,cam.yaw),-dt*2.6,dt*2.6);const step=Math.min(d,dt*2.25);cam.x+=dx/d*step;cam.z+=dz/d*step}
    else{const desired=Math.atan2(target.g.side*1.9-cam.x,target.g.z-cam.z);const diff=angleDiff(desired,cam.yaw);if(Math.abs(diff)<.045){const g=target.g;target=null;open(g)}else cam.yaw+=clamp(diff,-dt*2.6,dt*2.6)}
   }else{
    cam.yaw+=turn*dt*1.65;
