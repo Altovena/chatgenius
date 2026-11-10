@@ -154,8 +154,8 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>(b.forcedMate?100000:b.loss)-(a.forcedMate?100000:a.loss));
-    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
-    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
+    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',source,topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`${source==='academy'?'Mot datamaskinen':'Chess.com'} · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
+    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,source,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
     return {findings,practicePositions,skipped};
   }
   function showFindings(result){
