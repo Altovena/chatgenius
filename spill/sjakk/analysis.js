@@ -51,7 +51,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     return result;
   }
-  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
+  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];const own=el('chessUser').value.trim().toLowerCase();const side=selected.white.trim().toLowerCase()===own?'hvit':selected.black.trim().toLowerCase()===own?'svart':'ikke identifisert';el('analysisMeta').textContent=`Chess.com · ${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · Dine trekk: ${side}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
   function renderGames(){
     const root=el('importedGames');root.replaceChildren();
     const start=page*PAGE_SIZE;
@@ -195,8 +195,8 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(busy)return false;
     const [local]=parsePgn(pgn);
     if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
-    if(!engine.ready){selectedSource='academy';resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
-    selected=local;selectedSource='academy';el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
+    if(!engine.ready){selectedSource='academy';resetFinishedExtras();el('analysisMeta').textContent=`♟ Sjakkakademiet · Du spilte hvit mot datamaskinen · ${local.moves} halvtrekk`;el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
+    selected=local;selectedSource='academy';el('analysisMeta').textContent=`♟ Sjakkakademiet · Du spilte hvit mot datamaskinen · ${local.moves} halvtrekk · analyserer dine trekk`;
     resetFinishedExtras();analysisLayout?.classList.add('recent-game-active');progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
     el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     showRecentAnalysis();
