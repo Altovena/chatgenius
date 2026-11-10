@@ -360,6 +360,16 @@ function updateChessDashboard(positions){
   const track=document.createElement('div');track.className='own-topic-track';track.style.margin='10px 0';
   const fill=document.createElement('div');fill.style.width=`${Math.min(100,Math.round(thisWeek.size/goal*100))}%`;fill.style.height='100%';fill.style.background='var(--accent, #587d68)';fill.style.borderRadius='inherit';
   track.appendChild(fill);track.setAttribute('role','progressbar');track.setAttribute('aria-valuenow',String(Math.min(thisWeek.size,goal)));track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(goal));track.setAttribute('aria-label','Ukentlig treningsmål');root.appendChild(track);
+  const saved=stats.ownQueue;
+  if(saved?.keys?.length&&Number.isInteger(saved.index)&&saved.index>=0&&saved.index<saved.keys.length){
+    const completed=saved.index,total=saved.keys.length;
+    const resume=document.createElement('div');resume.className='chess-resume-card';
+    const status=document.createElement('strong');status.textContent=`Forrige økt: oppgave ${completed+1} av ${total}`;
+    const hint=document.createElement('p');hint.className='muted';hint.textContent=`${completed} av ${total} oppgaver passert. Fortsett der du slapp.`;
+    const resumeButton=document.createElement('button');resumeButton.className='secondary';resumeButton.textContent='Fortsett forrige økt →';
+    resumeButton.onclick=()=>$('resumeOwnTraining').click();
+    resume.append(status,hint,resumeButton);root.appendChild(resume);
+  }
   const start=document.createElement('button');start.className='secondary';
   start.textContent='Start dagens økt →';start.disabled=!positions.length;
   start.onclick=()=>{const daily=$('practiceProgress')?.querySelector('button');if(daily)daily.click();};
