@@ -84,10 +84,10 @@ function updateGameTrend(analyzed){
   }
   root.replaceChildren();
   const heading=document.createElement('h3');heading.textContent='Utvikling fra parti til parti';root.appendChild(heading);
-  const tracked=analyzed.filter(g=>g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
+  const tracked=analyzed.filter(g=>g.analysisVersion===3&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
     .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
   if(!tracked.length){
-    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se en sammenlignbar utvikling. Eldre analyser uten registrert antall undersøkte trekk vises ikke i denne rapporten.';root.appendChild(empty);return;
+    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se en sammenlignbar utvikling. Eldre analyser med en annen metode for utvalg av trekk holdes utenfor for å unngå misvisende sammenligninger.';root.appendChild(empty);return;
   }
   const latest=tracked.slice(-5),previous=tracked.slice(-10,-5);
   const mean=arr=>arr.reduce((s,g)=>s+g.count/g.checked*100,0)/arr.length;
