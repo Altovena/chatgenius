@@ -42,7 +42,7 @@ function project(v){
  const dx=v.x-cam.x,dz=v.z-cam.z,depth=dx*Math.sin(cam.yaw)+dz*Math.cos(cam.y);
  const sideways=dx*Math.cos(cam.yaw)-dz*Math.sin(cam.y);
  if(depth<.11)return null;
- const focal=Math.min(canvas.width*1.06,canvas.height*1.37);
+ const focal=Math.min(canvas.width*.78,canvas.height*.83);
  return {x:canvas.width*.5+sideways*focal/depth,y:canvas.height*.5-(v.y-cam.y)*focal/depth,d:depth};
 }
 function polygon(vertices,fill,stroke,width=1){
@@ -76,10 +76,16 @@ function render(){
  const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
  const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#07071c');sky.addColorStop(.53,'#211443');sky.addColorStop(1,'#030a15');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
  // Fixed world geometry; unlike a photograph, it responds correctly to yaw.
+ // Glowing back wall establishes depth from the entrance.
+ polygon([{x:-3,y:0,z:end},{x:3,y:0,z:end},{x:3,y:2.9,z:end},{x:-3,y:2.9,z:end}],'#172342','#7056c8',3);
+ polygon([{x:-2.05,y:.45,z:end-.02},{x:2.05,y:.45,z:end-.02},{x:2.05,y:2.45,z:end-.02},{x:-2.05,y:2.45,z:end-.02}],'#0a1936','#70e9ff',4);
+ for(let i=0;i<7;i++)line({x:-1.9+i*.63,y:.55,z:end-.03},{x:-1.9+i*.63,y:2.33,z:end-.03},'#674cff66',2);
  for(let z=Math.ceil(end);z>=0;z--){
   polygon([{x:-3,y:0,z},{x:3,y:0,z},{x:3,y:0,z:z+1},{x:-3,y:0,z:z+1}],z%2?'#11182c':'#17223a','#33476c55');
   line({x:-3,y:0,z},{x:3,y:0,z},'#53b5d434');
  }
+ // Floor runway lights keep the perspective legible.
+ for(let z=0;z<end;z+=.7){line({x:-1.23,y:.02,z},{x:-1.23,y:.02,z:z+.3},'#78fcff',4);line({x:1.23,y:.02,z},{x:1.23,y:.02,z:z+.3},'#ff77ed',4)}
  for(const side of [-1,1]){
   const x=side*3;
   for(let z=0;z<end;z++){
