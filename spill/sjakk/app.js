@@ -32,8 +32,7 @@ function recordPuzzleAttempt(success){
   }
 }
 function archiveFinishedGame(){
-  if(!gameRecorded&&!game.isGameOver())return;
-  if(!game.isGameOver()&&!currentGameOutcome().mate)return;
+  if(!gameRecorded||(!game.isGameOver()&&!currentGameOutcome().mate))return;
   const pgn=game.pgn({maxWidth:0,newline:'\n'});
   if(!pgn||game._archivedToHistory)return;
   const result=currentGameOutcome().mate?(game.turn()==='b'?'1-0':'0-1'):'1/2-1/2';
