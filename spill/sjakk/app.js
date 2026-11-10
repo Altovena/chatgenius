@@ -182,9 +182,7 @@ function updateSessionHistory(){
   root.replaceChildren();
   const heading=document.createElement('h3');heading.textContent='Treningshistorikk';root.appendChild(heading);
   const sessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at)&&Number.isFinite(s.correct)&&Number.isFinite(s.wrong)).slice(-14);
-  if(!sessions.length){
-    const empty=document.createElement('p');empty.className='muted';empty.textContent='Fullfør en treningsøkt for å se treningsdager og utviklingen i riktigprosent.';root.appendChild(empty);return;
-  }
+
   const days=new Set(sessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')));
   const totals=sessions.reduce((a,s)=>({correct:a.correct+s.correct,wrong:a.wrong+s.wrong}),{correct:0,wrong:0});
   const summary=document.createElement('p');summary.className='muted';
@@ -192,7 +190,7 @@ function updateSessionHistory(){
   root.appendChild(summary);
   const allSessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at));
   const dayKeys=[...new Set(allSessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')))].sort();
-  const dayNumber=key=>Math.floor(new Date(key+'T12:00:00').getTime()/86400000);
+  const dayNumber=key=>Math.floor(Date.parse(key+'T00:00:00Z')/86400000);
   let longest=0,run=0;
   for(let i=0;i<dayKeys.length;i++){
     run=i>0&&dayNumber(dayKeys[i])-dayNumber(dayKeys[i-1])===1?run+1:1;
@@ -218,6 +216,29 @@ function updateSessionHistory(){
   goalSelect.value=String(goal);
   goalSelect.onchange=()=>{stats.weeklyPracticeGoal=Number(goalSelect.value);persist();updateSessionHistory();};
   goalLabel.appendChild(goalSelect);goalRow.appendChild(goalLabel);root.appendChild(goalRow);
+  const week=document.createElement('div');week.className='own-topic-row';
+  const weekHeading=document.createElement('strong');weekHeading.textContent='Denne uken (mandag–søndag)';week.appendChild(weekHeading);
+  const dayRow=document.createElement('div');dayRow.style.display='grid';dayRow.style.gridTemplateColumns='repeat(7,minmax(0,1fr))';dayRow.style.gap='6px';dayRow.style.marginTop='10px';
+  for(let offset=0;offset<7;offset++){
+    const date=new Date(weekStart);date.setDate(weekStart.getDate()+offset);
+    const key=date.toLocaleDateString('sv-SE');
+    const completed=dayKeys.includes(key),future=date.getTime()>Date.now();
+    const cell=document.createElement('div');cell.style.textAlign='center';cell.style.padding='8px 2px';cell.style.borderRadius='8px';
+    cell.style.background=completed?'var(--accent, #587d68)':'rgba(128,128,128,.12)';
+    cell.style.color=completed?'white':'inherit';
+    cell.style.opacity=future?'.55':'1';
+    cell.textContent=['Man','Tir','Ons','Tor','Fre','Lør','Søn'][offset]+(completed?' ✓':'');
+    cell.setAttribute('aria-label',`${date.toLocaleDateString('nb-NO',{weekday:'long',day:'numeric',month:'long'})}: ${completed?'trening gjennomført':future?'kommende dag':'ingen fullført økt'}`);
+    dayRow.appendChild(cell);
+  }
+  week.appendChild(dayRow);
+  const remaining=document.createElement('small');remaining.className='muted';
+  remaining.textContent=weeklyDays>=goal?'Ukens mål er nådd!':`${goal-weeklyDays} treningsdag${goal-weeklyDays===1?'':'er'} igjen til ukesmålet.`;
+  week.appendChild(remaining);root.appendChild(week);
+  if(!sessions.length){
+    const empty=document.createElement('p');empty.className='muted';
+    empty.textContent='Fullfør en treningsøkt for å se utviklingen i riktigprosent.';root.appendChild(empty);return;
+  }
   const chart=document.createElement('div');chart.className='game-trend-chart';chart.setAttribute('role','list');
   for(const session of sessions){
     const total=session.correct+session.wrong,percent=total?Math.round(100*session.correct/total):0;
