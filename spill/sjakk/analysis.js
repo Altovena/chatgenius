@@ -87,13 +87,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
       showGames(parsed);status(`${parsed.length} partier hentet fra Chess.com. Velg ett for analyse.`);
     }catch(e){status(`${e.message} Hvis nettleseren blokkerer Chess.com, kan du lime inn PGN fra Analyse → Del → PGN.`)}finally{button.disabled=false}
   };
-  async function analyzeOne(game,progress,maxMoves=8){
+  async function analyzeOne(game,progress,maxMoves=8,source='imported'){
     const replay=new Chess();replay.loadPgn(game.pgn,{strict:false});const allMoves=replay.history({verbose:true});
     const name=el('chessUser').value.trim().toLowerCase();
     const white=game.white.trim().toLowerCase(),black=game.black.trim().toLowerCase();
     // Never attribute another player's mistakes to the account being coached.
-    if(name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
-    const color=name?(white===name?'w':'b'):'w';
+    if(source!=='academy'&&name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
+    const color=source==='academy'?'w':name?(white===name?'w':'b'):'w';
     // Sample the entire game, not only the final moves: opening, middlegame and endgame.
     const ownMoves=allMoves.map((_,i)=>i).filter(i=>i%2===(color==='w'?0:1));
     const indices=ownMoves.length<=maxMoves?ownMoves:Array.from({length:maxMoves},(_,k)=>ownMoves[Math.round(k*(ownMoves.length-1)/(maxMoves-1))]);
@@ -205,7 +205,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
         const percent=Math.min(99,Math.round((k-1)/total*100));
         progressBar.value=percent;progressPercent.textContent=`${percent} %`;
         el('analysisStatus').textContent=`Analyserer ditt siste parti · trekk ${k} av ${total} …`;
-      },100);
+      },100,'academy');
       progressBar.value=100;progressPercent.textContent='100 %';progressText.textContent='Analysen er ferdig';
       showFindings(result);
       el('analysisStatus').textContent=result.findings.length?`Fant ${result.findings.length} forbedringspunkter. Trykk «Tren på denne stillingen» under et av funnene for å øve.`:'Analysen er ferdig. Ingen tydelige forbedringspunkter ble funnet i de undersøkte trekkene.';
