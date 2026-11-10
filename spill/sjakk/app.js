@@ -186,7 +186,7 @@ function updateSessionHistory(){
   const days=new Set(sessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')));
   const totals=sessions.reduce((a,s)=>({correct:a.correct+s.correct,wrong:a.wrong+s.wrong}),{correct:0,wrong:0});
   const summary=document.createElement('p');summary.className='muted';
-  summary.textContent=`${sessions.length} fullførte økter · ${days.size} treningsdager · ${totals.correct+totals.wrong?Math.round(100*totals.correct/(totals.correct+totals.wrong)):0} % riktige totalt.`;
+  summary.textContent=`Siste ${sessions.length} fullførte økter · ${days.size} treningsdager · ${totals.correct+totals.wrong?Math.round(100*totals.correct/(totals.correct+totals.wrong)):0} % riktige i disse øktene.`;
   root.appendChild(summary);
   const allSessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at));
   const dayKeys=[...new Set(allSessions.map(s=>new Date(s.at).toLocaleDateString('sv-SE')))].sort();
