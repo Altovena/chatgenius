@@ -113,6 +113,7 @@
     .builder-design-card strong, .builder-design-card small { display:block; padding:0 12px; }
     .builder-design-card strong { margin-top:10px; }
     .builder-design-card small { padding-bottom:12px; color:var(--muted); }
+    .builder-capability-note { padding:12px 14px; border:1px solid #b45309; border-radius:10px; background:rgba(180,83,9,.08); margin:12px 0; font-size:.9rem; }
   </style>
 </head>
 <body class="design-2027 commercial-2027">
@@ -217,6 +218,7 @@
               <label><input type="radio" name="site_structure" value="multipage"> Med undersider</label>
             </div>
             <p class="muted">Anbefalingen er foreløpig regelbasert. Den endelige generatoren må støtte undersider før disse kan leveres.</p>
+            <div class="builder-capability-note" id="builder-structure-warning" hidden>Viktig: Dagens DemoSites-pakker genererer en one-pager. Hvis du velger undersider, registreres dette som ønske for videre levering – prøvesiden vil foreløpig ha én side.</div>
           </fieldset>
           <fieldset class="builder-step">
             <legend>4. Visuell profil</legend>
@@ -232,6 +234,7 @@
               <label>Designuttrykk<select name="brand_style"><option value="auto">La AI velge</option><option value="minimal">Minimalistisk og eksklusiv</option><option value="tech">Moderne og teknologisk</option><option value="scandinavian">Skandinavisk</option><option value="mediterranean">Middelhavsinspirert</option><option value="creative">Kreativ og leken</option><option value="luxury">Elegant og luksuriøs</option><option value="professional">Profesjonell</option><option value="organic">Naturlig og organisk</option><option value="bold">Dristig og fargerik</option></select></label>
             </div>
             <p id="builder-logo-status" class="muted" aria-live="polite">Bruk logo-URL eller last opp en bildefil. Opplastet fil prioriteres.</p>
+            <button type="button" id="builder-logo-clear" class="button button-secondary" style="padding:7px 12px;font-size:.85rem">Fjern valgt logofil</button>
             <label style="display:block;margin-top:12px">Merkevareregler og profilmanual som tekst<textarea name="brand_guidelines" rows="3" placeholder="Beskriv logo, farger, fonter, bildestil og eventuelle regler som alltid skal følges."></textarea></label>
             <div class="builder-profile-preview" aria-label="Forhåndsvisning av registrerte profilfarger">
               <div class="builder-profile-swatches"><span id="builder-primary-swatch"></span><span id="builder-accent-swatch"></span></div>
@@ -345,14 +348,27 @@
       var chosenPackage = "standard";
       var uploadedLogoDataUrl = null;
       var logoUploadPending = false;
+      var logoUploadInvalid = false;
+      var logoUploadVersion = 0;
       var logoStatus = document.getElementById("builder-logo-status");
-      document.getElementById("builder-logo-file").addEventListener("change", function (event) {
+      document.getElementById("builder-logo-clear").addEventListener("click", function () {
+        logoUploadVersion++;
         uploadedLogoDataUrl = null;
         logoUploadPending = false;
+        logoUploadInvalid = false;
+        document.getElementById("builder-logo-file").value = "";
+        logoStatus.textContent = "Ingen logofil valgt. Du kan bruke logo-URL i stedet.";
+      });
+      document.getElementById("builder-logo-file").addEventListener("change", function (event) {
+        var version = ++logoUploadVersion;
+        uploadedLogoDataUrl = null;
+        logoUploadPending = false;
+        logoUploadInvalid = false;
         var file = event.target.files && event.target.files[0];
         if (!file) { logoStatus.textContent = "Ingen logofil valgt."; return; }
         if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size > 950000) {
           event.target.value = "";
+          logoUploadInvalid = true;
           logoStatus.textContent = "Velg en PNG-, JPG- eller WEBP-fil under 950 KB.";
           return;
         }
@@ -360,16 +376,18 @@
         logoStatus.textContent = "Leser logofilen…";
         var reader = new FileReader();
         reader.onload = function () {
+          if (version !== logoUploadVersion) return;
           logoUploadPending = false;
           var value = String(reader.result || "");
           if (!/^data:image\/(png|jpeg|webp);base64,/.test(value) || value.length > 1400000) {
+            logoUploadInvalid = true;
             logoStatus.textContent = "Logoen kunne ikke klargjøres. Bruk en mindre bildefil.";
             return;
           }
           uploadedLogoDataUrl = value;
           logoStatus.textContent = "Logo klar: " + file.name;
         };
-        reader.onerror = function () { logoUploadPending = false; logoStatus.textContent = "Kunne ikke lese logofilen."; };
+        reader.onerror = function () { if (version !== logoUploadVersion) return; logoUploadPending = false; logoUploadInvalid = true; logoStatus.textContent = "Kunne ikke lese logofilen."; };
         reader.readAsDataURL(file);
       });
       function updateProfilePreview() {
@@ -385,6 +403,10 @@
       form.addEventListener("change", updateProfilePreview);
       var planBox = document.getElementById("builder-plan");
       var approvedPlan = null;
+      function updateStructureWarning() {
+        var selected = buildPlan(new FormData(form));
+        document.getElementById("builder-structure-warning").hidden = selected.structure !== "multipage";
+      }
       function buildPlan(data) {
         var purposes = data.getAll("site_purpose").map(String);
         if (!purposes.length) purposes = ["services", "leads"];
@@ -416,6 +438,8 @@
         planBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
       document.getElementById("builder-plan-button").addEventListener("click", showPlan);
+      form.addEventListener("change", updateStructureWarning);
+      updateStructureWarning();
       document.getElementById("builder-plan-edit").addEventListener("click", function () { approvedPlan = null; planBox.hidden = true; form.querySelector("[name=site_structure]").focus(); });
       document.getElementById("builder-plan-approve").addEventListener("click", function () { approvedPlan = buildPlan(new FormData(form)); document.getElementById("builder-plan-approve").textContent = "✓ Plan godkjent"; });
       form.addEventListener("input", function () { approvedPlan = null; document.getElementById("builder-plan-approve").textContent = "Godkjenn planen"; });
@@ -446,6 +470,7 @@
         var email = String(data.get("customer_email") || "").trim();
         if (!parsed.companyName || !email || email.indexOf("@") < 0) { showError("Fyll inn nettadresse eller bedriftsnavn, og en gyldig e-postadresse."); return; }
         if (logoUploadPending) { showError("Vent til logoen er ferdig lest før du fortsetter."); return; }
+        if (logoUploadInvalid) { showError("Velg en gyldig logofil, eller fjern filvalget før du fortsetter."); return; }
         var websitePlan = approvedPlan || buildPlan(data);
         var originalDescription = String(data.get("business_description") || "").trim();
         var brandProfile = ["Primærfarge: " + data.get("brand_primary"), "Aksentfarge: " + data.get("brand_accent"), "Overskriftsfont: " + String(data.get("brand_heading_font") || ""), "Brødtekstfont: " + String(data.get("brand_body_font") || ""), "Logoadresse: " + String(data.get("brand_logo_url") || ""), "Visuell stil: " + String(data.get("brand_style") || "auto"), "Profilregler: " + String(data.get("brand_guidelines") || "")];
