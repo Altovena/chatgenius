@@ -2,7 +2,7 @@ import { Chess } from './chess.js';
 
 export function setupAnalysis(engine,onPractice,onFindings){
   const el=id=>document.getElementById(id);
-  let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false;
+  let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false,selectedSource='imported';
   const PAGE_SIZE=12,MAX_GAMES=100,ARCHIVE_KEY='chess-academy-analysis-archive-v1';
   const progressBox=document.createElement('div');
   progressBox.className='finished-analysis-progress';
@@ -68,7 +68,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
       controls.append(prev,count,next);root.appendChild(controls);
     }
   }
-  function showGames(list){games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';if(games.length)choose(0);else renderGames();updateBatchControls();saveArchive()}
+  function showGames(list){selectedSource='imported';games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';if(games.length)choose(0);else renderGames();updateBatchControls();saveArchive()}
   el('loadPgn').onclick=()=>{const results=parsePgn(el('pgnText').value);if(!results.length){status('Ingen gyldige PGN-partier funnet. Lim inn et komplett parti fra Chess.com.');return}showGames(results);status(`${results.length} parti(er) importert fra PGN.`)};
   el('fetchGames').onclick=async()=>{
     const name=el('chessUser').value.trim();if(!/^[\w-]{2,30}$/.test(name)){status('Skriv inn et gyldig Chess.com-brukernavn.');return}
@@ -171,7 +171,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     resetFinishedExtras();
     busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
-      const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10);
+      const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10,selectedSource);
       showFindings(result);el('analysisStatus').textContent=`Ferdig: ${result.findings.length} forbedringspunkter. ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
     }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
   };
@@ -195,8 +195,8 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(busy)return false;
     const [local]=parsePgn(pgn);
     if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
-    if(!engine.ready){resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
-    selected=local;el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
+    if(!engine.ready){selectedSource='academy';resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
+    selected=local;selectedSource='academy';el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
     resetFinishedExtras();analysisLayout?.classList.add('recent-game-active');progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
     el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     showRecentAnalysis();
