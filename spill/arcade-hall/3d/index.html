@@ -97,6 +97,8 @@ function renderCabinets(){
   if(p.x+width<0||p.x-width>w){el.hidden=true;continue}
   el.hidden=false;el.style.width=(width*scaleX)+'px';el.style.height=(height*scaleY)+'px';el.style.left=((p.x-width/2)*scaleX)+'px';el.style.top=((p.y-height*.55)*scaleY)+'px';
   el.style.zIndex=String(Math.floor(1000-p.d*20));
+  const dist=Math.hypot(g.z-cam.z,g.side*1.93-cam.x),diff=Math.abs(angleDiff(Math.atan2(g.side*1.93-cam.x,g.z-cam.z),cam.yaw));
+  pick.push({g,dist,diff,bounds:{left:p.x-width/2,right:p.x+width/2,top:p.y-height*.55,bottom:p.y+height*.45}});
  }
 }
 function render(){
@@ -126,11 +128,11 @@ function render(){
  }
  // Render cabinets back-to-front; each one is a solid plane facing the central aisle.
  pick=[];
- for(const g of [...games].sort((a,b)=>Math.hypot(b.z-cam.z,b.side*1.93-cam.x)-Math.hypot(a.z-cam.z,a.side*1.93-cam.x)))boxFront(g);
+ renderCabinets();
  nearest=null;let best=Infinity;
  for(const it of pick)if(it.dist<1.6&&it.diff<.72&&it.dist<best){nearest=it.g;best=it.dist}
  $('play').disabled=!nearest;$('play').textContent=nearest?'▶ '+nearest.name:'▶ Spill';
- renderCabinets(); drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
+ drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
 }
 function drawMap(){
  const w=mini.width,h=mini.height;mc.clearRect(0,0,w,h);mc.fillStyle='#101a34';mc.fillRect(0,0,w,h);
