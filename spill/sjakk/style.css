@@ -75,3 +75,9 @@
 .account-import-panel input[type=file]::file-selector-button{margin-right:12px;padding:10px 12px;border:1px solid #69867a;border-radius:8px;background:#2c5145;color:#f0f8ed;cursor:pointer}
 .account-import-panel .muted{font-size:12px;line-height:1.55;overflow-wrap:anywhere}
 .account-import-panel button{width:100%;min-height:44px;margin-top:10px}
+
+.board-end-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;width:100%;margin-top:12px}
+.board-end-actions[hidden]{display:none!important}
+.board-end-actions button{min-height:44px;min-width:145px;padding:10px 16px;border-radius:10px;border:1px solid #9c7445;background:#fff7e8;color:#4b3020;font:inherit;font-weight:700;cursor:pointer}
+.board-end-actions button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:520px){.board-end-actions{flex-direction:column}.board-end-actions button{width:100%}}
