@@ -148,7 +148,20 @@ function updateTopicTrends(analyzed){
     const change=document.createElement('span');change.textContent=after<before?'Færre funn':after>before?'Flere funn':'Uendret';
     header.append(name,change);
     const detail=document.createElement('small');detail.textContent=`Per 100 undersøkte trekk: tidligere ${before.toFixed(1)} → siste fem ${after.toFixed(1)}`;
-    row.append(header,detail);root.appendChild(row);
+    row.append(header,detail);
+    const available=allOwnPositions().filter(p=>p.topic===topic).length;
+    const train=document.createElement('button');train.className='secondary';
+    train.textContent=available?`Tren på ${topic.toLowerCase()} (${Math.min(10,available)}) →`:'Ingen lagrede øvelser ennå';
+    train.disabled=!available;
+    train.onclick=()=>{
+      const filter=$('chessThemeFilter');
+      if(![...filter.options].some(option=>option.value===topic)){
+        $('coachAllStatus').textContent='Temaet har ingen tilgjengelige øvelser ennå.';return;
+      }
+      filter.value=topic;
+      $('coachTen').click();
+    };
+    row.appendChild(train);root.appendChild(row);
   }
   const caveat=document.createElement('p');caveat.className='muted';caveat.textContent='Dette er en indikasjon, ikke en presis ferdighetsmåling. Motoren undersøker et utvalg trekk, og feiltypene er automatiske kategorier. Sammenlign bare innenfor Chess.com-gruppen.';root.appendChild(caveat);
 }
