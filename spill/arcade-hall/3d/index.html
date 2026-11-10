@@ -33,7 +33,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 </style>
 <script src="../machines.js"></script></head><body>
 <header><a href="../">← Til vanlig hall</a><strong>✦ FREDDYS ARCADE <span style="color:#93fff0">3D TEST</span></strong><a href="/spill/">Alle spill</a></header>
-<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="cabinet-layer" id="cabinet-layer" aria-label="Spillmaskiner i hallen"></div><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p></div>
+<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="cabinet-layer" id="cabinet-layer" aria-label="Spillmaskiner i hallen"></div><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Dra med mus eller finger for å se deg rundt. W/S går, A/D snur. Trykk på en maskin.</p></div>
 <div class="compass"><span>HALLKART</span><canvas id="map" width="115" height="155"></canvas></div>
 <div class="note">360° fri sving · faktisk dybde · trykk på maskinen for å gå bort</div>
 <div class="controls"><button data-move="left" aria-label="Snu venstre">⟲</button><button class="step" data-move="forward" aria-label="Gå frem">▲</button><button class="step" data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu høyre">⟳</button><button class="action" id="play" disabled>▶ Spill</button></div>
@@ -147,11 +147,27 @@ function select(g){if(!g)return;const distance=Math.hypot(g.z-cam.z,g.side*1.15-
 function open(g){selected=g;modal=true;$('art').textContent=g.icon;$('title').textContent=g.name;$('description').textContent=g.desc;$('launch').href=g.url;$('overlay').classList.add('open')}
 function close(){modal=false;selected=null;$('overlay').classList.remove('open')}
 $('dismiss').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('play').onclick=()=>select(nearest);
+let gesture=null;
 canvas.addEventListener('pointerdown',e=>{
+ gesture={id:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,moved:false};
+ canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+ if(!gesture||gesture.id!==e.pointerId)return;
+ const distance=Math.hypot(e.clientX-gesture.startX,e.clientY-gesture.startY);
+ if(distance>8)gesture.moved=true;
+ if(gesture.moved){cam.yaw+=(e.clientX-gesture.lastX)*.0045;target=null}
+ gesture.lastX=e.clientX;
+});
+canvas.addEventListener('pointerup',e=>{
+ if(!gesture||gesture.id!==e.pointerId)return;
+ const wasDrag=gesture.moved;gesture=null;
+ if(wasDrag)return;
  const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*canvas.width,y=(e.clientY-rect.top)/rect.height*canvas.height;
  const hits=pick.filter(it=>x>=it.bounds.left&&x<=it.bounds.right&&y>=it.bounds.top&&y<=it.bounds.bottom).sort((a,b)=>a.dist-b.dist);
- if(hits[0])select(hits[0].g)
+ if(hits[0])select(hits[0].g);
 });
+canvas.addEventListener('pointercancel',()=>{gesture=null});
 document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape')close();if(k==='enter'&&!modal)select(nearest);keys.add(k)});
 document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();held.clear()});
 document.querySelectorAll('[data-move]').forEach(btn=>{const m=btn.dataset.move;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);held.add(m);target=null});for(const event of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(event,()=>held.delete(m))});
