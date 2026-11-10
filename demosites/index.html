@@ -114,6 +114,11 @@
     .builder-design-card strong { margin-top:10px; }
     .builder-design-card small { padding-bottom:12px; color:var(--muted); }
     .builder-capability-note { padding:12px 14px; border:1px solid #b45309; border-radius:10px; background:rgba(180,83,9,.08); margin:12px 0; font-size:.9rem; }
+    .builder-step[hidden], .builder-final[hidden] { display:none; }
+    .builder-wizard-progress { margin:0 0 16px; color:var(--ink-soft); font-weight:700; }
+    .builder-wizard-nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin:16px 0; }
+    .builder-wizard-nav button { min-height:46px; padding:10px 22px; border:1px solid var(--line); border-radius:12px; font:inherit; font-weight:700; cursor:pointer; }
+    .builder-wizard-nav button:last-child { background:var(--teal); color:white; }
   </style>
 </head>
 <body class="design-2027 commercial-2027">
@@ -176,6 +181,7 @@
       <div class="section-heading"><p class="eyebrow">Lag din egen</p><h2 id="start-title">Legg inn detaljene — AI-en gjør resten</h2><p>En eksisterende nettside gir best resultat. Har du ingen side, skriver du bedriftsnavn, bransje og en kort beskrivelse.</p></div>
       <div class="order-card" id="order-card">
         <form id="order-form" novalidate>
+          <p class="builder-wizard-progress" id="builder-wizard-progress" aria-live="polite">Trinn 1 av 6</p>
           <fieldset class="builder-step">
             <legend>1. Hva skal nettsiden gjøre?</legend>
             <p class="muted">Velg gjerne flere formål. Vi tilpasser nettstedplanen etter virksomheten.</p>
@@ -251,6 +257,7 @@
               <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-atelier-2026" alt="Atelier layout med redaksjonell komposisjon"><input type="radio" name="design_layout" value="atelier"><strong>C – Atelier</strong><small>Kreativ og raffinert</small></label>
             </div>
           </fieldset>
+          <div class="builder-final" id="builder-final">
           <div class="order-grid" style="margin-top:12px">
             <label class="full">Språk på nettsiden
               <select name="site_language" aria-label="Språk på nettsiden">
@@ -278,6 +285,7 @@
           <section id="builder-plan" class="builder-plan" hidden aria-live="polite"><h3>Din foreslåtte nettstedplan</h3><p id="builder-plan-reason"></p><strong>Forslag til innhold</strong><ul id="builder-plan-pages"></ul><p id="builder-plan-cta"></p><p class="muted">Dette er en plan, ikke en garanti om at alle funksjonene leveres av dagens generator. Du kan endre valgene ovenfor før bestilling.</p><div class="builder-plan-actions"><button type="button" id="builder-plan-approve">Godkjenn planen</button><button type="button" id="builder-plan-edit">Endre valgene</button></div></section>
           <button class="order-submit" type="submit" id="order-submit">Vis meg den nye nettsiden min →</button>
           <div class="order-error" id="order-error"></div>
+          </div>
         </form>
         <div class="order-progress" id="order-progress" aria-live="polite"><div class="bar"><span id="order-progress-bar"></span></div><p id="order-progress-text">Starter…</p></div>
         <div class="order-success" id="order-success"><div class="big-check">🎉</div><h3>Prøvesiden din er klar!</h3><p>Sender deg dit nå…</p><a id="order-preview-link" href="#" rel="noopener">Åpne prøvesiden min →</a><p style="color:var(--muted);font-size:.9rem">Live i fire dager. Bestill fra siden dersom du vil beholde den.</p></div>
@@ -346,6 +354,46 @@
       var successBox = document.getElementById("order-success");
       var previewLink = document.getElementById("order-preview-link");
       var chosenPackage = "standard";
+      var wizardSteps = Array.from(form.querySelectorAll("fieldset.builder-step")).concat(document.getElementById("builder-final"));
+      var wizardIndex = 0;
+      function showWizardStep(index, shouldScroll) {
+        wizardIndex = Math.max(0, Math.min(index, wizardSteps.length - 1));
+        wizardSteps.forEach(function (step, i) { step.hidden = i !== wizardIndex; });
+        document.getElementById("builder-wizard-progress").textContent = "Trinn " + (wizardIndex + 1) + " av " + wizardSteps.length + (wizardIndex === wizardSteps.length - 1 ? " · Gjennomgå og lag prøveside" : "");
+        document.getElementById("order-error").style.display = "none";
+        if (shouldScroll !== false) document.getElementById("builder-wizard-progress").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      wizardSteps.forEach(function (step, index) {
+        var nav = document.createElement("div");
+        nav.className = "builder-wizard-nav";
+        if (index > 0) {
+          var back = document.createElement("button");
+          back.type = "button"; back.textContent = "← Tilbake";
+          back.addEventListener("click", function () { showWizardStep(index - 1); });
+          nav.appendChild(back);
+        }
+        if (index < wizardSteps.length - 1) {
+          var next = document.createElement("button");
+          next.type = "button"; next.textContent = "Neste →";
+          next.addEventListener("click", function () {
+            if (index === 1) {
+              var name = form.querySelector('[name="site_or_name"]');
+              var email = form.querySelector('[name="customer_email"]');
+              if (!name.value.trim() || !email.checkValidity() || !email.value.trim()) {
+                var invalid = !name.value.trim() ? name : email;
+                invalid.focus(); invalid.setAttribute("aria-invalid", "true");
+                window.alert("Fyll inn bedriftsnavn eller nettadresse og en gyldig e-postadresse.");
+                return;
+              }
+              name.removeAttribute("aria-invalid"); email.removeAttribute("aria-invalid");
+            }
+            showWizardStep(index + 1);
+          });
+          nav.appendChild(next);
+        }
+        step.appendChild(nav);
+      });
+      showWizardStep(0, false);
       var uploadedLogoDataUrl = null;
       var logoUploadPending = false;
       var logoUploadInvalid = false;
