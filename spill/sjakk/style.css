@@ -81,3 +81,17 @@
 .board-end-actions button{min-height:44px;min-width:145px;padding:10px 16px;border-radius:10px;border:1px solid #9c7445;background:#fff7e8;color:#4b3020;font:inherit;font-weight:700;cursor:pointer}
 .board-end-actions button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:520px){.board-end-actions{flex-direction:column}.board-end-actions button{width:100%}}
+
+/* Personal chess training dashboard and session progress */
+#chessDashboard,#practiceProgress,#sessionHistory,#sessionSummary{margin:14px 0;padding:16px;border:1px solid #416355;border-radius:14px;background:#1b342e;min-width:0}
+#chessDashboard h3,#practiceProgress h3,#sessionHistory h3,#sessionSummary h3{margin:0 0 10px;color:#e9f3e8;font-size:17px}
+#chessDashboard p,#practiceProgress p,#sessionHistory p,#sessionSummary p{line-height:1.5}
+#chessDashboard button,#practiceProgress button{min-height:44px;max-width:100%;white-space:normal;text-align:center}
+#chessDashboard .own-topic-track{height:10px;overflow:hidden;border-radius:999px;background:#344c41}
+#sessionHistory .game-trend-chart{display:flex;align-items:flex-end;gap:7px;min-height:140px;overflow-x:auto;padding:12px 2px 4px}
+#sessionHistory .game-trend-item{flex:1 0 26px;max-width:54px;height:125px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+#sessionHistory .game-trend-bar{width:75%;min-height:3px;background:#a6d59b;border-radius:5px 5px 2px 2px}
+#sessionHistory .game-trend-item small{font-size:10px;color:#d0dfd4;white-space:nowrap}
+#sessionHistory select{min-height:44px;max-width:100%;border:1px solid #718e7d;border-radius:8px;background:#263e35;color:#fff;padding:8px}
+#sessionHistory .own-topic-row{margin:12px 0;min-width:0}
+@media(max-width:520px){#chessDashboard,#practiceProgress,#sessionHistory,#sessionSummary{padding:12px}#chessDashboard button,#practiceProgress button{width:100%}#sessionHistory .game-trend-item{flex-basis:24px}}
