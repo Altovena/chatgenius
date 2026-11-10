@@ -17,6 +17,14 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .overlay{position:absolute;inset:0;display:none;place-items:center;padding:15px;background:#040712d9;backdrop-filter:blur(10px);z-index:10}.overlay.open{display:grid}
 .dialog{width:min(440px,100%);background:linear-gradient(145deg,#20234d,#0a1728);border:1px solid #a2ffe1a1;border-radius:20px;padding:26px;text-align:center;box-shadow:0 30px 70px #000b}.dialog .art{font-size:67px}.dialog h2{margin:6px 0;font-size:29px}.dialog p{color:#b8c9dc;line-height:1.5}
 .dialog .buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:19px}.dialog a,.dialog button{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:11px 18px;border-radius:11px;text-decoration:none;font-weight:850;border:1px solid #6594ad}.dialog a{background:#a0ffe7;color:#092333}.dialog button{background:#1e3551;color:white}
+.overlay.playing{padding:8px;background:#030711f5;display:flex;flex-direction:column;gap:9px}
+.overlay.playing .dialog{display:none}
+.game-view{display:none;flex-direction:column;gap:8px;width:min(1180px,100%);height:min(94dvh,960px);min-height:0}
+.overlay.playing .game-view{display:flex}
+.game-view .game-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#101b34;border:1px solid #76f6e765;border-radius:10px;padding:8px 12px}
+.game-view .game-bar strong{font-size:13px;color:#cbfff1}
+.game-view .game-bar button{cursor:pointer;background:#28405e;border:1px solid #96d8e3;color:#fff;border-radius:8px;padding:9px 12px}
+.game-view iframe{flex:1;width:100%;min-height:0;background:#060c1d;border:2px solid #77f0df;border-radius:12px}
 @media(max-width:700px){header{padding:8px}header strong{font-size:12px}header a{font-size:10px;padding:7px}.hud{top:50px;min-width:65vw;max-width:65vw;padding:6px}.hud b{font-size:10px}.hud p{font-size:10px}.compass{top:107px;right:6px;padding:3px}.compass canvas{width:70px;height:104px}.controls{bottom:10px;gap:4px;padding:5px}.controls button{min-width:45px;min-height:48px}.controls .action{min-width:91px;padding:0 6px}.note{bottom:73px;font-size:10px;max-width:90%;white-space:normal}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 .cabinet-layer{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
@@ -59,7 +67,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 <div class="compass"><span>HALLKART</span><canvas id="map" width="115" height="155"></canvas></div>
 <div class="note">360° fri sving · faktisk dybde · trykk på maskinen for å gå bort</div>
 <div class="controls"><button data-move="left" aria-label="Snu venstre">⟲</button><button class="step" data-move="forward" aria-label="Gå frem">▲</button><button class="step" data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu høyre">⟳</button><button class="action" id="play" disabled>▶ Spill</button></div>
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog"><div class="art" id="art"></div><h2 id="title"></h2><p id="description"></p><div class="buttons"><a id="launch" href="#">▶ SPILL NÅ</a><button id="dismiss">← Tilbake til hallen</button></div></div></div>
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog"><div class="art" id="art"></div><h2 id="title"></h2><p id="description"></p><div class="buttons"><button id="inline-play">▶ Spill i hallen</button><a id="launch" href="#" target="_blank" rel="noopener">↗ Åpne separat</a><button id="dismiss">← Tilbake til hallen</button></div></div><div class="game-view" id="game-view"><div class="game-bar"><strong id="game-label">Spill</strong><button id="stop-play">✕ Tilbake til hallen</button></div><iframe id="game-frame" title="Spill i 3D-arkadehallen" allow="fullscreen; autoplay" loading="lazy"></iframe></div></div>
 </main><script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext('2d'),mini=$('map'),mc=mini.getContext('2d');
@@ -188,7 +196,17 @@ function drawMap(){
 }
 function select(g){if(!g)return;const distance=Math.hypot(g.z-cam.z,g.side*1.15-cam.x);if(distance<.57){open(g);return}target={g,x:g.side*1.15,z:g.z}}
 function open(g){selected=g;modal=true;$('art').textContent=g.icon;$('title').textContent=g.name;$('description').textContent=g.desc;$('launch').href=g.url;$('overlay').classList.add('open')}
-function close(){modal=false;selected=null;$('overlay').classList.remove('open')}
+function close(){
+ modal=false;selected=null;$('game-frame').removeAttribute('src');
+ $('overlay').classList.remove('playing','open');
+}
+$('inline-play').onclick=()=>{
+ if(!selected||!selected.url.startsWith('/spill/'))return;
+ $('game-label').textContent=selected.name;
+ $('overlay').classList.add('playing');
+ $('game-frame').src=selected.url;
+};
+$('stop-play').onclick=close;
 $('dismiss').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('play').onclick=()=>select(nearest);
 let gesture=null;
 canvas.addEventListener('pointerdown',e=>{
