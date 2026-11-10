@@ -162,7 +162,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     const root=el('analysisResults');root.replaceChildren();
     result.findings.forEach((f,i)=>{
       const card=document.createElement('div');card.className='finding';
-      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>${f.opponentReply?`<p>Et mulig sterkt svar fra motstanderen etter ditt trekk: <b>${safe(f.opponentReply)}</b>.</p>`:''}<p>${safe(f.explanation)}</p>`;
+      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p><b>Spilt trekk:</b> ${safe(f.actual)} · <b>Bedre alternativ:</b> ${safe(f.best)}</p>${f.opponentReply?`<p><b>Mulig svar fra motstanderen:</b> ${safe(f.opponentReply)}</p>`:''}<p>${safe(f.explanation)}</p><p class="finding-coach-tip"><b>Treningsoppgave:</b> Finn ${safe(f.best)} på brettet før du ser løsningen. Se først etter sjakker, slag og trusler.</p>`;
       const button=document.createElement('button');button.className='secondary';button.textContent='Tren på denne stillingen →';button.onclick=()=>onPractice(result.practicePositions,i);card.appendChild(button);root.appendChild(card);
     });
   }
