@@ -339,6 +339,35 @@ function updatePracticeProgress(positions){
   }
   const caveat=document.createElement('small');caveat.className='muted';caveat.textContent='Riktigprosenten gjelder registrerte øvingsforsøk, ikke partier. To riktige på rad regnes som mestret; repetisjon kan fortsatt være nødvendig.';root.appendChild(caveat);
 }
+function updateChessDashboard(positions){
+  let root=$('chessDashboard');
+  if(!root){
+    root=document.createElement('section');root.id='chessDashboard';root.className='own-topic-guidance';
+    $('allGamesSummary').after(root);
+  }
+  root.replaceChildren();
+  const heading=document.createElement('h3');heading.textContent='Din sjakktrening i dag';root.appendChild(heading);
+  const now=Date.now();
+  const due=positions.filter(p=>{const a=stats.puzzles[puzzleKey(p)];return !a?.right||!Number.isFinite(a.nextReview)||a.nextReview<=now;}).length;
+  const newCount=positions.filter(p=>{const a=stats.puzzles[puzzleKey(p)];return !a?.right&&!a?.wrong;}).length;
+  const goal=Number.isInteger(stats.weeklyPracticeGoal)&&stats.weeklyPracticeGoal>=1&&stats.weeklyPracticeGoal<=7?stats.weeklyPracticeGoal:3;
+  const weekStart=new Date();weekStart.setHours(0,0,0,0);weekStart.setDate(weekStart.getDate()-(weekStart.getDay()+6)%7);
+  const sessions=(stats.practiceSessions||[]).filter(s=>Number.isFinite(s.at));
+  const thisWeek=new Set(sessions.filter(s=>s.at>=weekStart.getTime()).map(s=>new Date(s.at).toLocaleDateString('sv-SE')));
+  const details=document.createElement('p');details.className='muted';
+  details.textContent=`${due} stillinger klare for trening · ${newCount} nye · ${thisWeek.size} av ${goal} treningsdager denne uken.`;
+  root.appendChild(details);
+  const track=document.createElement('div');track.className='own-topic-track';track.style.margin='10px 0';
+  const fill=document.createElement('div');fill.style.width=`${Math.min(100,Math.round(thisWeek.size/goal*100))}%`;fill.style.height='100%';fill.style.background='var(--accent, #587d68)';fill.style.borderRadius='inherit';
+  track.appendChild(fill);track.setAttribute('role','progressbar');track.setAttribute('aria-valuenow',String(Math.min(thisWeek.size,goal)));track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(goal));track.setAttribute('aria-label','Ukentlig treningsmål');root.appendChild(track);
+  const start=document.createElement('button');start.className='secondary';
+  start.textContent='Start dagens økt →';start.disabled=!positions.length;
+  start.onclick=()=>{const daily=$('practiceProgress')?.querySelector('button');if(daily)daily.click();};
+  root.appendChild(start);
+  if(!positions.length){
+    const help=document.createElement('p');help.className='muted';help.textContent='Analyser et parti først for å få personlige treningsoppgaver.';root.appendChild(help);
+  }
+}
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
@@ -355,6 +384,7 @@ function updateAllGamesPlan(){
   }
   updatePracticeProgress(positions);
   updateSessionHistory();
+  updateChessDashboard(positions);
   $('chessThemes').replaceChildren();
   for(const [topic,count] of Object.entries(byTopic).sort((a,b)=>b[1]-a[1])){
     const chip=document.createElement('span');chip.className='chess-theme';chip.textContent=`${topic}: ${count}`;$('chessThemes').appendChild(chip);
