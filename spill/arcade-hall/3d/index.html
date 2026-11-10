@@ -39,6 +39,11 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .arcade-cabinet.pinball .panel{position:relative;overflow:hidden;clip-path:polygon(13% 0,87% 0,100% 100%,0 100%);background:repeating-linear-gradient(145deg,#93deed55 0 5px,transparent 6px 15px),radial-gradient(circle at 50% 40%,var(--glow),#121c4e 60%,#070b1a)}
 .arcade-cabinet.pinball .panel::before{content:"◆　✦　◆";display:block;position:absolute;inset:17% 0 auto;color:#fffdd0;text-align:center;font-size:clamp(8px,1.5vw,17px);text-shadow:0 0 7px #fff}
 .arcade-cabinet.pinball .panel::after{content:"";position:absolute;bottom:10%;left:27%;width:46%;height:11%;background:linear-gradient(90deg,#fee4a5,#fff,#fee4a5);box-shadow:0 0 8px #fff}
+/* A shallow 3D cabinet shell makes the wall-facing machines feel physical. */
+.arcade-cabinet{overflow:visible;transform-style:preserve-3d;transform-origin:center center;transform:perspective(650px) rotateY(var(--view-angle,0rad));backface-visibility:hidden}
+.arcade-cabinet::before{content:"";position:absolute;top:3%;bottom:2%;width:19%;right:-18%;background:linear-gradient(90deg,#101a31,#263554 45%,#070c17);border:2px solid var(--glow);border-left:none;box-shadow:inset -3px 0 9px #000b,4px 5px 9px #0008;clip-path:polygon(0 0,100% 5%,100% 96%,0 100%);pointer-events:none}
+.arcade-cabinet.side-right::before{right:auto;left:-18%;border-left:2px solid var(--glow);border-right:none;background:linear-gradient(90deg,#080e1c,#253450 70%,#0e192a)}
+.arcade-cabinet::after{content:"";position:absolute;left:12%;right:12%;bottom:-5%;height:5%;background:#050815;border:1px solid #546a8a;box-shadow:0 3px 9px #000a;pointer-events:none}
 .arcade-cabinet[hidden]{display:none!important}
 .arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
@@ -99,7 +104,7 @@ function boxFront(g){
  pick.push({g,bounds,dist,diff});
  if(dist<1.6&&diff<.72){ctx.font='900 '+clamp(size*.1,11,18)+'px system-ui';ctx.fillStyle='#b5ffec';ctx.fillText('▶ SPILL',p.x,top-12)}
 }
-const cabinets=games.map(g=>{const el=document.createElement('button');el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
+const cabinets=games.map(g=>{const el=document.createElement('button');el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'')+(g.side===1?' side-right':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
 function renderCabinets(){
  const h=canvas.height,w=canvas.width,scaleX=canvas.clientWidth/w,scaleY=canvas.clientHeight/h;
  for(const {g,el} of cabinets){
@@ -111,6 +116,8 @@ function renderCabinets(){
   if(p.x+width<0||p.x-width>w){el.hidden=true;continue}
   el.hidden=false;el.style.width=(width*scaleX)+'px';el.style.height=(height*scaleY)+'px';el.style.left=((p.x-width/2)*scaleX)+'px';el.style.top=((p.y-height*.55)*scaleY)+'px';
   el.style.zIndex=String(Math.floor(1000-p.d*20));
+  // Rotate the visible front subtly as the visitor looks across the aisle.
+  el.style.setProperty('--view-angle',clamp(Math.atan2(sideways,depth)*.42,-.48,.48)+'rad');
   const dist=Math.hypot(g.z-cam.z,g.side*1.93-cam.x),diff=Math.abs(angleDiff(Math.atan2(g.side*1.93-cam.x,g.z-cam.z),cam.yaw));
   pick.push({g,dist,diff,bounds:{left:p.x-width/2,right:p.x+width/2,top:p.y-height*.55,bottom:p.y+height*.45}});
  }
