@@ -188,6 +188,39 @@ function updatePracticeProgress(positions){
   const schedule=document.createElement('p');schedule.className='muted';
   schedule.textContent=`Treningsplan: ${due.length} klare nå · ${upcoming.length} planlagt senere · ${mastered.length} av ${positions.length} mestret.`;
   root.appendChild(schedule);
+  if(positions.length){
+    const daily=document.createElement('button');daily.className='secondary';
+    daily.textContent='Start dagens treningsøkt (inntil 10 stillinger) →';
+    daily.onclick=()=>{
+      const all=allOwnPositions();
+      const now=Date.now();
+      const dueItems=all.filter(p=>{
+        const a=stats.puzzles[puzzleKey(p)];
+        return a?.right&&(!Number.isFinite(a.nextReview)||a.nextReview<=now);
+      });
+      const newItems=all.filter(p=>{
+        const a=stats.puzzles[puzzleKey(p)];
+        return !a?.right&&!a?.wrong;
+      });
+      const missed=all.filter(p=>{
+        const a=stats.puzzles[puzzleKey(p)];
+        return a?.wrong&&!a?.right;
+      });
+      const pick=(items,count)=>items.sort((a,b)=>{
+        const x=stats.puzzles[puzzleKey(a)]||{},y=stats.puzzles[puzzleKey(b)]||{};
+        return (x.nextReview||0)-(y.nextReview||0)||(x.last||0)-(y.last||0);
+      }).slice(0,count);
+      const chosen=[...pick(dueItems,6),...pick(missed,2),...pick(newItems,4)];
+      const seen=new Set();
+      const session=chosen.filter(p=>{const key=puzzleKey(p);if(seen.has(key))return false;seen.add(key);return true;}).slice(0,10);
+      if(session.length<10){
+        const extra=all.filter(p=>!seen.has(puzzleKey(p))&&(!stats.puzzles[puzzleKey(p)]?.right||!Number.isFinite(stats.puzzles[puzzleKey(p)]?.nextReview)||stats.puzzles[puzzleKey(p)].nextReview<=now));
+        for(const p of extra.slice(0,10-session.length))session.push(p);
+      }
+      startOwnPractice(session);
+    };
+    root.appendChild(daily);
+  }
   if(due.length){
     const start=document.createElement('button');start.className='secondary';
     start.textContent=`Tren ${Math.min(10,due.length)} oppgaver som er klare nå →`;
