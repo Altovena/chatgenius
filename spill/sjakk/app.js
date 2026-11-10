@@ -26,7 +26,11 @@ const puzzleKey=p=>`${p.fen}|${p.from}${p.to}`;
 function recordPuzzleAttempt(success){
   const key=puzzleKey(puzzle),old=stats.puzzles[key]||{right:0,wrong:0,last:0,streak:0};
   old[success?'right':'wrong']++;old.streak=success?old.streak+1:0;
-  old.last=Date.now();stats.puzzles[key]=old;
+  old.last=Date.now();
+  old.history ||= [];
+  old.history.push({at:old.last,correct:Boolean(success)});
+  if(old.history.length>30)old.history=old.history.slice(-30);
+  stats.puzzles[key]=old;
   if(trainingOrigin==='analysis'){
     old.nextReview=success?Date.now()+[0,1,3,7,14][Math.min(4,old.streak)]*86400000:Date.now();
   }
@@ -165,6 +169,39 @@ function updateTopicTrends(analyzed){
   }
   const caveat=document.createElement('p');caveat.className='muted';caveat.textContent='Dette er en indikasjon, ikke en presis ferdighetsmåling. Motoren undersøker et utvalg trekk, og feiltypene er automatiske kategorier. Sammenlign bare innenfor Chess.com-gruppen.';root.appendChild(caveat);
 }
+function updatePracticeProgress(positions){
+  let root=$('practiceProgress');
+  if(!root){
+    root=document.createElement('section');root.id='practiceProgress';root.className='own-topic-guidance';
+    $('ownLearningStats').after(root);
+  }
+  root.replaceChildren();
+  const title=document.createElement('h3');title.textContent='Blir du bedre på øvelsene?';root.appendChild(title);
+  const keys=new Set(positions.map(puzzleKey));
+  const attempts=[...keys].flatMap(key=>(stats.puzzles[key]?.history||[]).map(h=>({...h,key})))
+    .filter(h=>Number.isFinite(h.at)&&typeof h.correct==='boolean').sort((a,b)=>a.at-b.at);
+  if(!attempts.length){
+    const note=document.createElement('p');note.className='muted';
+    note.textContent='Fullfør treningsstillinger for å begynne å måle utviklingen. Tidligere resultater beholdes, men har ikke detaljert forsøkshistorikk.';
+    root.appendChild(note);return;
+  }
+  const recent=attempts.slice(-20),prior=attempts.slice(-40,-20);
+  const percent=arr=>Math.round(100*arr.filter(x=>x.correct).length/arr.length);
+  const line=document.createElement('p');line.className='muted';
+  line.textContent=`Siste ${recent.length} forsøk: ${percent(recent)} % riktige.`+(prior.length?` Forrige ${prior.length}: ${percent(prior)} %.`:' Flere forsøk trengs for å sammenligne perioder.');
+  root.appendChild(line);
+  const topics=topicLearningSnapshot(positions);
+  for(const item of topics.slice(0,4)){
+    const row=document.createElement('div');row.className='own-topic-row';
+    const header=document.createElement('div');const name=document.createElement('strong');name.textContent=item.topic;
+    const status=document.createElement('span');status.textContent=`${item.mastered} av ${item.total} mestret`;
+    header.append(name,status);
+    const track=document.createElement('div');track.className='own-topic-track';
+    const fill=document.createElement('i');fill.style.width=`${item.total?Math.round(item.mastered/item.total*100):0}%`;track.appendChild(fill);
+    row.append(header,track);root.appendChild(row);
+  }
+  const caveat=document.createElement('small');caveat.className='muted';caveat.textContent='Riktigprosenten gjelder registrerte øvingsforsøk, ikke partier. To riktige på rad regnes som mestret; repetisjon kan fortsatt være nødvendig.';root.appendChild(caveat);
+}
 function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
@@ -179,6 +216,7 @@ function updateAllGamesPlan(){
   for(const [label,count] of [['Trent minst én gang',practiced],['Klare for repetisjon',review.length],['Mestret to ganger på rad',mastered]]){
     const item=document.createElement('div');item.className='own-learning-stat';const b=document.createElement('b');b.textContent=count;const span=document.createElement('span');span.textContent=label;item.append(b,span);$('ownLearningStats').appendChild(item);
   }
+  updatePracticeProgress(positions);
   $('chessThemes').replaceChildren();
   for(const [topic,count] of Object.entries(byTopic).sort((a,b)=>b[1]-a[1])){
     const chip=document.createElement('span');chip.className='chess-theme';chip.textContent=`${topic}: ${count}`;$('chessThemes').appendChild(chip);
