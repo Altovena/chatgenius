@@ -51,7 +51,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     return result;
   }
-  function choose(i){resetFinishedExtras();selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
+  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
   function renderGames(){
     const root=el('importedGames');root.replaceChildren();
     const start=page*PAGE_SIZE;
