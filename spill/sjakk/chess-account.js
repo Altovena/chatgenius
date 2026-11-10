@@ -201,6 +201,31 @@ $('accountSignOut').addEventListener('click',async()=>{
   try{const client=await getSupabase();const {error}=await client.auth.signOut();if(error)throw error;session=null;cloudGames=[];cloudProgress=null;progressBaselineVersion=null;lastProgressFingerprint='';renderSession();renderGames();}
   catch(error){setSyncStatus(error.message);}
 });
+function updateUndoProgressButton(){
+  $('accountUndoImportProgress').hidden=!localStorage.getItem('freddyChessProgressBeforeRestore');
+}
+$('accountUndoImportProgress').addEventListener('click',()=>{
+  const previous=localStorage.getItem('freddyChessProgressBeforeRestore');
+  if(!previous)return;
+  let state;
+  try{state=JSON.parse(previous);}catch{setSyncStatus('Den forrige lokale kopien kunne ikke leses.');return;}
+  if(!validProgressState(state)){setSyncStatus('Den forrige lokale kopien har ugyldig format.');return;}
+  if(!window.confirm('Angre siste gjenoppretting og hente tilbake forrige lokale treningsfremgang? Skyarkivet endres ikke.'))return;
+  try{
+    const current=localStorage.getItem('freddyChessProgress');
+    localStorage.setItem('freddyChessProgress',previous);
+    if(current)localStorage.setItem('freddyChessProgressBeforeRestore',current);
+    else localStorage.removeItem('freddyChessProgressBeforeRestore');
+    localStorage.setItem(IMPORT_REVIEW_KEY,'true');
+    progressBaselineVersion=null;
+    lastProgressFingerprint='';
+    localStorage.removeItem('freddyChessProgressCloudVersion');
+    localStorage.removeItem(SYNC_FINGERPRINT_KEY);
+    localStorage.removeItem(SYNC_USER_KEY);
+    window.location.reload();
+  }catch(error){setSyncStatus('Kunne ikke angre gjenopprettingen: '+(error.message||'ukjent feil'));}
+});
+updateUndoProgressButton();
 let pendingProgressImport=null;
 $('accountImportProgressFile').addEventListener('change',async event=>{
   pendingProgressImport=null;
