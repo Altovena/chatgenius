@@ -81,7 +81,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 (()=>{'use strict';
 const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext('2d'),mini=$('map'),mc=mini.getContext('2d');
 const raw=window.CHATGENIUS_ARCADE_MACHINES||[];
-const games=raw.filter(g=>g&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:(Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9)*1.8}));
+const games=raw.filter(g=>g&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:1.2+(Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9)*1.8}));
 const end=Math.max(6.25,...games.map(g=>g.z+.7)),cam={x:0,z:0,yaw:0,y:1.6};
 const keys=new Set(),held=new Set(),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 let previous=performance.now(),selected=null,target=null,modal=false,pick=[],nearest=null;
