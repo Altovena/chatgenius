@@ -529,6 +529,7 @@ async function onPuzzleSquare(sq){
         stats.streak=0;stats.attempts++;const skill=stats.skills[puzzle.skill]||{attempts:0,correct:0};skill.attempts++;stats.skills[puzzle.skill]=skill;
         if(trainingOrigin!=='analysis')$('puzzleFeedback').textContent='Trekket er lovlig, men det gir ikke den beste fortsettelsen. Se etter motspillet og prøv igjen.';
         else {
+          $('puzzleFeedback').textContent='Dette var ikke motorens anbefalte trekk. Se etter sjakker, slag og trusler før du prøver igjen.';
           const after=new Chess(training.fen());after.move(valid);
           const risk=threatenedPieces(after,puzzleColor).find(t=>t.value>=500);
           if(risk)$('puzzleFeedback').textContent+=` Merk også at ${risk.name} på ${risk.square} er angrepet etter trekket. Vurder om den kan slås eller forsvares.`;
