@@ -366,9 +366,11 @@ function updateChessDashboard(positions){
     const resume=document.createElement('div');resume.className='chess-resume-card';
     const status=document.createElement('strong');status.textContent=`Forrige økt: oppgave ${completed+1} av ${total}`;
     const hint=document.createElement('p');hint.className='muted';hint.textContent=`${completed} av ${total} oppgaver passert. Fortsett der du slapp.`;
+    const progress=document.createElement('div');progress.className='own-topic-track';progress.style.margin='8px 0 12px';progress.setAttribute('role','progressbar');progress.setAttribute('aria-label','Fremdrift i forrige treningsøkt');progress.setAttribute('aria-valuemin','0');progress.setAttribute('aria-valuemax',String(total));progress.setAttribute('aria-valuenow',String(completed));
+    const bar=document.createElement('div');bar.style.width=`${Math.round(completed/total*100)}%`;bar.style.height='100%';bar.style.background='var(--accent, #587d68)';bar.style.borderRadius='inherit';progress.appendChild(bar);
     const resumeButton=document.createElement('button');resumeButton.className='secondary';resumeButton.textContent='Fortsett forrige økt →';
     resumeButton.onclick=()=>$('resumeOwnTraining').click();
-    resume.append(status,hint,resumeButton);root.appendChild(resume);
+    resume.append(status,hint,progress,resumeButton);root.appendChild(resume);
   }
   const start=document.createElement('button');start.className='secondary';
   start.textContent='Start dagens økt →';start.disabled=!positions.length;
