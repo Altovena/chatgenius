@@ -111,7 +111,14 @@ export function setupAnalysis(engine,onPractice,onFindings){
         const evaluation=await engine.search(played.fen(),{ms:500,skill:20});
         const lost=Math.max(0,suggestion.score+evaluation.score);
         if(suggestion.move.slice(0,4)!==actual.from+actual.to&&lost>=75){
-          const topic=actual.piece==='k'?'Kongesikkerhet':i<20?'Åpning':actual.captured?'Taktikk':'Stillingsspill';
+          // These are training labels, not claims about the exact tactical cause.
+          // A move played in the opening is not necessarily an opening-theory mistake.
+          const fullMove=Math.floor(i/2)+1;
+          const isCheck=actual.san.includes('+')||actual.san.includes('#');
+          const isKingMove=actual.piece==='k';
+          const isExchange=Boolean(actual.captured);
+          const isEndgame=fullMove>=35;
+          const topic=isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
           findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,topic});
         }
       }catch{skipped++}
