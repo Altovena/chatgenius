@@ -41,6 +41,10 @@
       "dest": "/spill/sjakk/index.html"
     },
     {
+      "src": "/spill/flipperhall/?",
+      "dest": "/spill/flipperhall/index.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
