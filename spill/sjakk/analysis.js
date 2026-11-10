@@ -127,7 +127,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>b.loss-a.loss);
-    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. Se på truslene og motstanderens beste svar for å forstå forskjellen.`}));
+    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. Se på truslene og motstanderens beste svar for å forstå forskjellen.`}));
     if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:2});
     return {findings,practicePositions,skipped};
   }
