@@ -28,7 +28,7 @@ function recordPuzzleAttempt(success){
   old[success?'right':'wrong']++;old.streak=success?old.streak+1:0;
   old.last=Date.now();
   old.history ||= [];
-  old.history.push({at:old.last,correct:Boolean(success)});
+  old.history.push({at:old.last,correct:Boolean(success),...(trainingOrigin==='analysis'&&practiceSessionStart?{sessionStarted:practiceSessionStart.started}:{})});
   if(old.history.length>30)old.history=old.history.slice(-30);
   stats.puzzles[key]=old;
   if(trainingOrigin==='analysis'){
@@ -854,7 +854,7 @@ let practiceSessionStart=null;
 function showPracticeSessionSummary(){
   if(!practiceSessionStart)return;
   const session=practiceSessionStart;practiceSessionStart=null;
-  const attempts=session.keys.flatMap(key=>(stats.puzzles[key]?.history||[]).filter(h=>h.at>=session.started));
+  const attempts=session.keys.flatMap(key=>(stats.puzzles[key]?.history||[]).filter(h=>h.sessionStarted===session.started||(h.sessionStarted==null&&h.at>=session.started&&h.at<=Date.now())));
   const correct=attempts.filter(h=>h.correct).length;
   const wrong=attempts.length-correct;
   let root=$('sessionSummary');
