@@ -84,10 +84,10 @@ function updateGameTrend(analyzed){
   }
   root.replaceChildren();
   const heading=document.createElement('h3');heading.textContent='Utvikling fra parti til parti';root.appendChild(heading);
-  const tracked=analyzed.filter(g=>g.analysisVersion>=3&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
+  const tracked=analyzed.filter(g=>g.source==='imported'&&g.analysisVersion>=4&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
     .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
   if(!tracked.length){
-    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se en sammenlignbar utvikling. Eldre analyser med en annen metode for utvalg av trekk holdes utenfor for å unngå misvisende sammenligninger.';root.appendChild(empty);return;
+    const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se utviklingen. Partier mot datamaskinen og eldre analyser med annen metode holdes utenfor denne sammenligningen.';root.appendChild(empty);return;
   }
   const latest=tracked.slice(-5),previous=tracked.slice(-10,-5);
   const mean=arr=>arr.reduce((s,g)=>s+g.count/g.checked*100,0)/arr.length;
@@ -564,7 +564,7 @@ $('trainingDifficulty').onchange=()=>{if(trainingOrigin==='analysis')return;queu
 function backToAnalysis(){trainingOrigin='general';setTab(analysisReturnTab);if(analysisReturnTab==='analysis')requestAnimationFrame(()=>window.scrollTo(0,analysisScrollY))}
 function completeOwnQueue(){if(analysisReturnTab==='progress'){stats.ownQueue=null;persist();$('coachAllStatus').textContent='Økten er fullført! Feilene dine prioriteres ved neste trening.'}backToAnalysis()}
 $('nextPuzzle').onclick=()=>{if(trainingOrigin==='analysis'){if(analysisPracticeIndex+1<analysisPractice.length){analysisPracticeIndex++;loadPuzzle()}else completeOwnQueue()}else loadPuzzle()};
-const analysisBack=document.createElement('button');analysisBack.id='analysisBack';analysisBack.className='secondary analysis-back';analysisBack.textContent='← Tilbake til Chess.com-analysen';analysisBack.hidden=true;$('trainPanel').querySelector('.training-layout').before(analysisBack);analysisBack.onclick=backToAnalysis;
+const analysisBack=document.createElement('button');analysisBack.id='analysisBack';analysisBack.className='secondary analysis-back';analysisBack.textContent='← Tilbake til partianalysen';analysisBack.hidden=true;$('trainPanel').querySelector('.training-layout').before(analysisBack);analysisBack.onclick=backToAnalysis;
 const showLine=document.createElement('button');showLine.id='showLine';showLine.className='secondary';showLine.textContent='Se den viktige fortsettelsen →';showLine.hidden=true;$('nextPuzzle').before(showLine);
 showLine.onclick=()=>{if(!puzzleSolved||!puzzle.continuation)return;showLine.hidden=true;const line=puzzle.continuation;let i=0;function step(){if(i>=line.length)return;const next=line[i++];const move=training.move({...next,promotion:'q'});$('puzzleTurn').textContent=`Fortsettelse: ${move.san}`;renderPuzzle();if(i<line.length)setTimeout(step,850)}step()};
 const skipPuzzle=document.createElement('button');skipPuzzle.id='skipPuzzle';skipPuzzle.className='secondary';skipPuzzle.textContent='Hopp over uten å se svaret';$('nextPuzzle').after(skipPuzzle);
