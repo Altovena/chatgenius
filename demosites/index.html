@@ -105,6 +105,14 @@
     .builder-profile-swatches span { display: block; width: 34px; height: 34px; border: 1px solid rgba(127,127,127,.35); border-radius: 8px; }
     .builder-profile-preview p { margin: 0; }
     .builder-profile-preview small { display: block; color: var(--muted); }
+    .builder-design-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(185px,1fr)); }
+    .builder-design-card { display:block; cursor:pointer; border:2px solid var(--line); border-radius:14px; overflow:hidden; background:var(--paper); }
+    .builder-design-card:has(input:checked) { border-color:var(--teal); outline:2px solid var(--teal); outline-offset:2px; }
+    .builder-design-card input { margin:12px 8px 0 12px; accent-color:var(--teal); }
+    .builder-design-card img { width:100%; aspect-ratio:16/10; object-fit:cover; object-position:top; display:block; background:#111827; }
+    .builder-design-card strong, .builder-design-card small { display:block; padding:0 12px; }
+    .builder-design-card strong { margin-top:10px; }
+    .builder-design-card small { padding-bottom:12px; color:var(--muted); }
   </style>
 </head>
 <body class="design-2027 commercial-2027">
@@ -226,6 +234,16 @@
             <div class="builder-profile-preview" aria-label="Forhåndsvisning av registrerte profilfarger">
               <div class="builder-profile-swatches"><span id="builder-primary-swatch"></span><span id="builder-accent-swatch"></span></div>
               <p><strong>Din visuelle profil</strong><small id="builder-profile-summary">Valgte farger vises her</small></p>
+            </div>
+          </fieldset>
+          <fieldset class="builder-step">
+            <legend>5. Velg designretning</legend>
+            <p class="muted">Tre forskjellige layouts fra dagens DemoSites-motor. Velg én, eller la systemet anbefale ut fra bransjen.</p>
+            <div class="builder-design-grid">
+              <label class="builder-design-card"><input type="radio" name="design_layout" value="auto" checked><strong>AI anbefaler</strong><small>Bransjetilpasset valg</small></label>
+              <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-cinematic-2026" alt="Cinematic layout med stort fotografi"><input type="radio" name="design_layout" value="cinematic"><strong>A – Cinematic</strong><small>Filmisk og eksklusiv</small></label>
+              <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-bento-2026" alt="Bento layout med modulære seksjoner"><input type="radio" name="design_layout" value="bento"><strong>B – Bento</strong><small>Moderne og salgsorientert</small></label>
+              <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-atelier-2026" alt="Atelier layout med redaksjonell komposisjon"><input type="radio" name="design_layout" value="atelier"><strong>C – Atelier</strong><small>Kreativ og raffinert</small></label>
             </div>
           </fieldset>
           <div class="order-grid" style="margin-top:12px">
@@ -412,6 +430,7 @@
             logo_url: data.has("brand_profile_enabled") ? String(data.get("brand_logo_url") || "").trim() || undefined : undefined,
             brand_color: data.has("brand_profile_enabled") ? String(data.get("brand_primary") || "").trim() : undefined,
             accent_color: data.has("brand_profile_enabled") ? String(data.get("brand_accent") || "").trim() : undefined,
+            layout_variant: String(data.get("design_layout") || "auto") !== "auto" ? String(data.get("design_layout")) : undefined,
             industry: String(data.get("industry") || "").trim() || undefined,
             notes: planNotes,
             package_id: String(data.get("package_id") || chosenPackage || "standard"),
