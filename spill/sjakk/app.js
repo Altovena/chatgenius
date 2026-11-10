@@ -267,7 +267,7 @@ function updatePracticeProgress(positions){
   schedule.textContent=`Treningsplan: ${due.length} klare nå · ${upcoming.length} planlagt senere · ${mastered.length} av ${positions.length} mestret.`;
   root.appendChild(schedule);
   if(positions.length){
-    const daily=document.createElement('button');daily.className='secondary';
+    const daily=document.createElement('button');daily.id='startDailyChessPractice';daily.className='secondary';
     daily.textContent='Start dagens treningsøkt (inntil 10 stillinger) →';
     daily.onclick=()=>{
       const all=allOwnPositions();
@@ -372,7 +372,7 @@ function updateChessDashboard(positions){
   }
   const start=document.createElement('button');start.className='secondary';
   start.textContent='Start dagens økt →';start.disabled=!positions.length;
-  start.onclick=()=>{const daily=$('practiceProgress')?.querySelector('button');if(daily)daily.click();};
+  start.onclick=()=>{const daily=$('startDailyChessPractice');if(daily)daily.click();};
   root.appendChild(start);
   if(!positions.length){
     const help=document.createElement('p');help.className='muted';help.textContent='Analyser et parti først for å få personlige treningsoppgaver.';root.appendChild(help);
