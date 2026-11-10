@@ -89,6 +89,17 @@
     .delivery-card p { margin: 0; color: var(--muted); }
     .payment-note { margin-top: 22px; padding: 18px 20px; border: 1px solid rgba(34,211,238,.3); border-radius: 16px; background: rgba(34,211,238,.08); color: var(--ink-soft); }
     .seller-link { color: inherit; opacity: .7; text-decoration: none; }
+    .builder-step { border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin: 0 0 16px; }
+    .builder-step legend { font-weight: 800; padding: 0 7px; }
+    .builder-options { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 9px; }
+    .builder-options label { display: flex; align-items: center; gap: 8px; padding: 11px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+    .builder-options input { accent-color: var(--teal); }
+    .builder-plan { border: 1px solid var(--teal); background: var(--surface-strong); border-radius: 14px; padding: 18px; margin: 16px 0; }
+    .builder-plan[hidden] { display: none; }
+    .builder-plan ul { margin: 8px 0 14px; }
+    .builder-plan-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .builder-plan-actions button { min-height: 44px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--line); cursor: pointer; font: inherit; font-weight: 700; }
+    .builder-plan-actions button:first-child { background: var(--teal); color: white; }
   </style>
 </head>
 <body class="design-2027 commercial-2027">
@@ -151,10 +162,49 @@
       <div class="section-heading"><p class="eyebrow">Lag din egen</p><h2 id="start-title">Legg inn detaljene — AI-en gjør resten</h2><p>En eksisterende nettside gir best resultat. Har du ingen side, skriver du bedriftsnavn, bransje og en kort beskrivelse.</p></div>
       <div class="order-card" id="order-card">
         <form id="order-form" novalidate>
+          <fieldset class="builder-step">
+            <legend>1. Hva skal nettsiden gjøre?</legend>
+            <p class="muted">Velg gjerne flere formål. Vi tilpasser nettstedplanen etter virksomheten.</p>
+            <div class="builder-options" id="builder-purpose-options">
+              <label><input type="checkbox" name="site_purpose" value="products"> Selge produkter</label>
+              <label><input type="checkbox" name="site_purpose" value="digital_products"> Digitale produkter</label>
+              <label><input type="checkbox" name="site_purpose" value="services"> Selge tjenester</label>
+              <label><input type="checkbox" name="site_purpose" value="leads"> Få henvendelser</label>
+              <label><input type="checkbox" name="site_purpose" value="company"> Presentere bedrift</label>
+              <label><input type="checkbox" name="site_purpose" value="information"> Informasjonsside</label>
+              <label><input type="checkbox" name="site_purpose" value="blog"> Blogg / magasin</label>
+              <label><input type="checkbox" name="site_purpose" value="portfolio"> Portefølje</label>
+              <label><input type="checkbox" name="site_purpose" value="booking"> Booking</label>
+              <label><input type="checkbox" name="site_purpose" value="hospitality"> Restaurant / hotell</label>
+              <label><input type="checkbox" name="site_purpose" value="property"> Eiendom</label>
+              <label><input type="checkbox" name="site_purpose" value="events"> Arrangementer</label>
+              <label><input type="checkbox" name="site_purpose" value="organization"> Organisasjon</label>
+              <label><input type="checkbox" name="site_purpose" value="other"> Annet</label>
+            </div>
+            <label style="display:block;margin-top:12px"><input type="checkbox" name="recommend_purpose" checked> La systemet anbefale formål når jeg ikke har valgt</label>
+          </fieldset>
+          <fieldset class="builder-step">
+            <legend>2. Fortell om virksomheten</legend>
           <div class="order-grid">
             <label>Nettadresse eller bedriftsnavn *<input name="site_or_name" required placeholder="www.bedriften.no eller Larvik Bilpleie AS"></label>
             <label>E-post *<input name="customer_email" type="email" required autocomplete="email" placeholder="deg@bedriften.no"></label>
           </div>
+          <div class="order-grid" style="margin-top:12px">
+            <label>Målgruppe<input name="target_audience" placeholder="F.eks. boligeiere på Costa Blanca"></label>
+            <label>Geografisk marked<input name="market" placeholder="F.eks. Alicante-provinsen"></label>
+            <label>Viktigste mål<input name="primary_goal" placeholder="F.eks. flere tilbudsforespørsler"></label>
+            <label>Inspirasjonsnettsider<input name="inspiration_urls" placeholder="Valgfrie lenker"></label>
+          </div>
+          </fieldset>
+          <fieldset class="builder-step">
+            <legend>3. Velg oppbygning</legend>
+            <div class="builder-options">
+              <label><input type="radio" name="site_structure" value="auto" checked> La systemet anbefale</label>
+              <label><input type="radio" name="site_structure" value="onepage"> One-pager</label>
+              <label><input type="radio" name="site_structure" value="multipage"> Med undersider</label>
+            </div>
+            <p class="muted">Anbefalingen er foreløpig regelbasert. Den endelige generatoren må støtte undersider før disse kan leveres.</p>
+          </fieldset>
           <div class="order-grid" style="margin-top:12px">
             <label class="full">Språk på nettsiden
               <select name="site_language" aria-label="Språk på nettsiden">
@@ -178,6 +228,8 @@
           </div>
           <label style="display:block;margin-top:14px;font-size:.85rem;font-weight:600;color:var(--ink-soft)">Fortell om bedriften <span style="font-weight:400;color:var(--muted)">(valgfritt, men anbefalt)</span><textarea name="business_description" rows="3" placeholder="Viktigste tjenester, produkter, priser, områder og hva som skiller dere fra konkurrentene."></textarea></label>
           <details style="margin-top:12px"><summary style="cursor:pointer;font-size:.88rem;color:var(--muted)">Valgfritt: telefon og bransje</summary><div class="order-grid" style="margin-top:12px"><label>Telefon<input name="customer_phone" type="tel" autocomplete="tel" placeholder="+47 …"></label><label>Bransje<input name="industry" placeholder="Tannlege, rådgiver, håndverker …"></label></div></details>
+          <div class="builder-plan-actions" style="margin-top:16px"><button type="button" id="builder-plan-button">Se anbefalt nettstedplan</button></div>
+          <section id="builder-plan" class="builder-plan" hidden aria-live="polite"><h3>Din foreslåtte nettstedplan</h3><p id="builder-plan-reason"></p><strong>Forslag til innhold</strong><ul id="builder-plan-pages"></ul><p id="builder-plan-cta"></p><p class="muted">Dette er en plan, ikke en garanti om at alle funksjonene leveres av dagens generator. Du kan endre valgene ovenfor før bestilling.</p><div class="builder-plan-actions"><button type="button" id="builder-plan-approve">Godkjenn planen</button><button type="button" id="builder-plan-edit">Endre valgene</button></div></section>
           <button class="order-submit" type="submit" id="order-submit">Vis meg den nye nettsiden min →</button>
           <div class="order-error" id="order-error"></div>
         </form>
@@ -248,6 +300,42 @@
       var successBox = document.getElementById("order-success");
       var previewLink = document.getElementById("order-preview-link");
       var chosenPackage = "standard";
+      var planBox = document.getElementById("builder-plan");
+      var approvedPlan = null;
+      function buildPlan(data) {
+        var purposes = data.getAll("site_purpose").map(String);
+        if (!purposes.length) purposes = ["services", "leads"];
+        var requested = String(data.get("site_structure") || "auto");
+        var complex = purposes.some(function (p) { return ["products", "digital_products", "blog", "property", "hospitality", "events"].indexOf(p) >= 0; }) || purposes.length > 2;
+        var structure = requested === "auto" ? (complex ? "multipage" : "onepage") : requested;
+        var pages = ["Forside", "Om oss"];
+        if (purposes.includes("products") || purposes.includes("digital_products")) pages.push("Produkter og kategorier");
+        if (purposes.includes("services")) pages.push("Tjenester");
+        if (purposes.includes("property")) pages.push("Eiendommer / prosjekter");
+        if (purposes.includes("hospitality")) pages.push("Meny / rom");
+        if (purposes.includes("events")) pages.push("Arrangementer");
+        if (purposes.includes("blog") || purposes.includes("information")) pages.push("Artikler / kunnskap");
+        if (purposes.includes("portfolio")) pages.push("Arbeider / portefølje");
+        pages.push("Kontakt");
+        var cta = purposes.includes("products") || purposes.includes("digital_products") ? "Se produkter" : purposes.includes("booking") ? "Bestill tid" : "Ta kontakt";
+        return { purposes: purposes, structure: structure, pages: structure === "onepage" ? pages.map(function (p) { return p + " (seksjon)"; }) : pages, cta: cta,
+          audience: String(data.get("target_audience") || "").trim(), market: String(data.get("market") || "").trim(), goal: String(data.get("primary_goal") || "").trim(), inspiration: String(data.get("inspiration_urls") || "").trim() };
+      }
+      function showPlan() {
+        var plan = buildPlan(new FormData(form));
+        var pages = document.getElementById("builder-plan-pages");
+        pages.replaceChildren();
+        plan.pages.forEach(function (page) { var li = document.createElement("li"); li.textContent = page; pages.appendChild(li); });
+        document.getElementById("builder-plan-reason").textContent = (plan.structure === "onepage" ? "Vi foreslår én samlet side for en enkel kundereise." : "Vi foreslår undersider slik at de ulike tilbudene får tydelig plass.") + " Dette er en foreløpig anbefaling som kan overstyres.";
+        document.getElementById("builder-plan-cta").textContent = "Hovedhandling: «" + plan.cta + "».";
+        planBox.hidden = false;
+        approvedPlan = null;
+        planBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      document.getElementById("builder-plan-button").addEventListener("click", showPlan);
+      document.getElementById("builder-plan-edit").addEventListener("click", function () { approvedPlan = null; planBox.hidden = true; form.querySelector("[name=site_structure]").focus(); });
+      document.getElementById("builder-plan-approve").addEventListener("click", function () { approvedPlan = buildPlan(new FormData(form)); document.getElementById("builder-plan-approve").textContent = "✓ Plan godkjent"; });
+      form.addEventListener("input", function () { approvedPlan = null; document.getElementById("builder-plan-approve").textContent = "Godkjenn planen"; });
       document.querySelectorAll("[data-package]").forEach(function (link) {
         link.addEventListener("click", function () {
           chosenPackage = link.getAttribute("data-package") || "standard";
@@ -274,6 +362,9 @@
         var parsed = parseSiteOrName(data.get("site_or_name"));
         var email = String(data.get("customer_email") || "").trim();
         if (!parsed.companyName || !email || email.indexOf("@") < 0) { showError("Fyll inn nettadresse eller bedriftsnavn, og en gyldig e-postadresse."); return; }
+        var websitePlan = approvedPlan || buildPlan(data);
+        var originalDescription = String(data.get("business_description") || "").trim();
+        var planNotes = [originalDescription, "[DemoSites 2.0 brukerønsker – plan, ikke bekreftede funksjoner]", "Formål: " + websitePlan.purposes.join(", "), "Struktur: " + websitePlan.structure, "Foreslått innhold: " + websitePlan.pages.join("; "), "Primær CTA: " + websitePlan.cta, "Målgruppe: " + websitePlan.audience, "Marked: " + websitePlan.market, "Mål: " + websitePlan.goal, "Inspirasjon: " + websitePlan.inspiration].filter(Boolean).join("\n");
         submitBtn.disabled = true; submitBtn.textContent = "Bygger prøvesiden…"; progress.style.display = "block";
         var steps = ["Leser nettsiden din…","Velger bransje og design…","Skriver tekster…","Kontrollerer bilder og lager hero…","Setter sammen prøvesiden…","Gjør siden live…"];
         var stepIndex = 0; progressText.textContent = steps[0]; progressBar.style.width = "10%";
@@ -284,7 +375,7 @@
             customer_phone: String(data.get("customer_phone") || "").trim() || undefined,
             website_url: parsed.websiteUrl || undefined,
             industry: String(data.get("industry") || "").trim() || undefined,
-            notes: String(data.get("business_description") || "").trim() || undefined,
+            notes: planNotes,
             package_id: String(data.get("package_id") || chosenPackage || "standard"),
             site_language: String(data.get("site_language") || "nb").trim()
           })
