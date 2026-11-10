@@ -113,7 +113,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
         // a forced-mate evaluation as a fictitious loss of 1,000 pawns.
         const forcedMate=Math.abs(suggestion.score)>=100000||Math.abs(evaluation.score)>=100000;
         const lost=forcedMate?null:Math.max(0,suggestion.score+evaluation.score);
-        let opponentReply=null,replyCapture=null,canRecapture=false;
+        let opponentReply=null,replyCapture=null,canRecapture=false,recaptureGain=null;
         if(evaluation.move&&evaluation.move!=='(none)'){
           try{
             const response=new Chess(played.fen());
@@ -123,7 +123,14 @@ export function setupAnalysis(engine,onPractice,onFindings){
             // A capture followed by an immediate legal recapture may be a normal exchange.
             // Do not label it an outright piece loss without checking this response.
             if(replyCapture&&reply?.to){
-              canRecapture=response.moves({verbose:true}).some(m=>m.to===reply.to&&Boolean(m.captured));
+              const recaptures=response.moves({verbose:true}).filter(m=>m.to===reply.to&&Boolean(m.captured));
+              canRecapture=recaptures.length>0;
+              if(canRecapture){
+                const values={p:1,n:3,b:3,r:5,q:9,k:0};
+                // A legal recapture takes the piece the opponent just moved.
+                // This is a one-ply material estimate, not a full exchange evaluation.
+                recaptureGain=(values[reply.piece]||0)-(values[replyCapture]||0);
+              }
             }
           }catch{/* An invalid or missing engine reply must not discard a useful finding. */}
         }
