@@ -466,12 +466,12 @@ function loadPuzzle(){
   training=new Chess(puzzle.fen);puzzleColor=training.turn();puzzleSelected=null;puzzleSolved=false;puzzleMissed=false;checkingAlternative=false;trainHint=null;trainingStage=0;hintCount=0;trainingRound++;
   compareMoves.disabled=false;clearComparison();
   if(trainingOrigin==='analysis'&&analysisReturnTab==='progress'&&stats.ownQueue){stats.ownQueue.index=analysisPracticeIndex;persist()}
-  $('puzzleTitle').textContent=trainingOrigin==='analysis'?puzzle.title:`Utfordring ${trainingRound}`;$('puzzleLevel').textContent=trainingOrigin==='analysis'?'Fra Chess.com-analysen din':'Tenk selv – se etter sjakker, slag og trusler';
+  $('puzzleTitle').textContent=trainingOrigin==='analysis'?puzzle.title:`Utfordring ${trainingRound}`;$('puzzleLevel').textContent=trainingOrigin==='analysis'?'Fra analysen av ditt eget parti':'Tenk selv – se etter sjakker, slag og trusler';
   $('puzzleIndex').textContent=trainingOrigin==='analysis'?`Forbedringspunkt ${analysisPracticeIndex+1} av ${analysisPractice.length}`:`${puzzleData.length} varianter`;$('skillBadge').hidden=true;
   $('puzzlePrompt').textContent=trainingOrigin==='analysis'?(puzzle.prompt||'Finn en bedre fortsettelse i ditt eget parti.') :Number($('trainingDifficulty').value)===1?'Finn et godt og trygt trekk.':'Finn det sterkeste trekket i stillingen.';
   $('puzzleFeedback').textContent='Kontroller motstanderens mulige svar før du spiller.';$('puzzleFeedback').style.color='';
   $('puzzleTurn').textContent=puzzleColor==='w'?'Hvit trekker':'Svart trekker';
-  const backLabel=analysisReturnTab==='progress'?'← Tilbake til treningsplanen':'← Tilbake til Chess.com-analysen';
+  const backLabel=analysisReturnTab==='progress'?'← Tilbake til treningsplanen':'← Tilbake til partianalysen';
   $('nextPuzzle').disabled=true;$('nextPuzzle').textContent=trainingOrigin==='analysis'?(analysisPracticeIndex+1<analysisPractice.length?'Neste forbedringspunkt →':backLabel):'Neste oppgave →';$('puzzleHint').disabled=Number($('trainingDifficulty').value)===3;
   $('analysisBack').hidden=trainingOrigin!=='analysis';$('analysisBack').textContent=backLabel;$('skipPuzzle').textContent=trainingOrigin==='analysis'?(analysisPracticeIndex+1<analysisPractice.length?'Hopp over og gå videre →':backLabel):'Hopp over uten å se svaret';
   if($('showLine'))$('showLine').hidden=true;renderPuzzle();
