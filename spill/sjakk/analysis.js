@@ -2,7 +2,7 @@ import { Chess } from './chess.js';
 
 export function setupAnalysis(engine,onPractice,onFindings){
   const el=id=>document.getElementById(id);
-  let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false;
+  let games=[],selected=null,busy=false,page=0,batchCursor=0,stopBatch=false,selectedSource='imported';
   const PAGE_SIZE=12,MAX_GAMES=100,ARCHIVE_KEY='chess-academy-analysis-archive-v1';
   const progressBox=document.createElement('div');
   progressBox.className='finished-analysis-progress';
@@ -51,7 +51,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     return result;
   }
-  function choose(i){resetFinishedExtras();selected=games[i];el('analysisMeta').textContent=`${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · ${selected.result}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
+  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];const own=el('chessUser').value.trim().toLowerCase();const side=selected.white.trim().toLowerCase()===own?'hvit':selected.black.trim().toLowerCase()===own?'svart':'ikke identifisert';el('analysisMeta').textContent=`Chess.com · ${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · Dine trekk: ${side}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
   function renderGames(){
     const root=el('importedGames');root.replaceChildren();
     const start=page*PAGE_SIZE;
@@ -68,7 +68,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
       controls.append(prev,count,next);root.appendChild(controls);
     }
   }
-  function showGames(list){games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';if(games.length)choose(0);else renderGames();updateBatchControls();saveArchive()}
+  function showGames(list){selectedSource='imported';games=list.slice(0,MAX_GAMES);page=0;batchCursor=0;selected=null;el('batchSummary').textContent='';if(games.length)choose(0);else renderGames();updateBatchControls();saveArchive()}
   el('loadPgn').onclick=()=>{const results=parsePgn(el('pgnText').value);if(!results.length){status('Ingen gyldige PGN-partier funnet. Lim inn et komplett parti fra Chess.com.');return}showGames(results);status(`${results.length} parti(er) importert fra PGN.`)};
   el('fetchGames').onclick=async()=>{
     const name=el('chessUser').value.trim();if(!/^[\w-]{2,30}$/.test(name)){status('Skriv inn et gyldig Chess.com-brukernavn.');return}
@@ -87,13 +87,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
       showGames(parsed);status(`${parsed.length} partier hentet fra Chess.com. Velg ett for analyse.`);
     }catch(e){status(`${e.message} Hvis nettleseren blokkerer Chess.com, kan du lime inn PGN fra Analyse → Del → PGN.`)}finally{button.disabled=false}
   };
-  async function analyzeOne(game,progress,maxMoves=8){
+  async function analyzeOne(game,progress,maxMoves=8,source='imported'){
     const replay=new Chess();replay.loadPgn(game.pgn,{strict:false});const allMoves=replay.history({verbose:true});
     const name=el('chessUser').value.trim().toLowerCase();
     const white=game.white.trim().toLowerCase(),black=game.black.trim().toLowerCase();
     // Never attribute another player's mistakes to the account being coached.
-    if(name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
-    const color=name?(white===name?'w':'b'):'w';
+    if(source!=='academy'&&name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
+    const color=source==='academy'?'w':name?(white===name?'w':'b'):'w';
     // Sample the entire game, not only the final moves: opening, middlegame and endgame.
     const ownMoves=allMoves.map((_,i)=>i).filter(i=>i%2===(color==='w'?0:1));
     const indices=ownMoves.length<=maxMoves?ownMoves:Array.from({length:maxMoves},(_,k)=>ownMoves[Math.round(k*(ownMoves.length-1)/(maxMoves-1))]);
@@ -154,15 +154,15 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>(b.forcedMate?100000:b.loss)-(a.forcedMate?100000:a.loss));
-    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
-    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
+    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',source,topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`${source==='academy'?'Mot datamaskinen':'Chess.com'} · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
+    if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,source,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
     return {findings,practicePositions,skipped};
   }
   function showFindings(result){
     const root=el('analysisResults');root.replaceChildren();
     result.findings.forEach((f,i)=>{
       const card=document.createElement('div');card.className='finding';
-      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>${f.opponentReply?`<p>Et mulig sterkt svar fra motstanderen etter ditt trekk: <b>${safe(f.opponentReply)}</b>.</p>`:''}<p>${safe(f.explanation)}</p>`;
+      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p><b>Spilt trekk:</b> ${safe(f.actual)} · <b>Bedre alternativ:</b> ${safe(f.best)}</p>${f.opponentReply?`<p><b>Mulig svar fra motstanderen:</b> ${safe(f.opponentReply)}</p>`:''}<p>${safe(f.explanation)}</p><p class="finding-coach-tip"><b>Treningsoppgave:</b> Trykk «Tren på denne stillingen», og prøv å finne det beste trekket selv. Se først etter sjakker, slag og trusler.</p>`;
       const button=document.createElement('button');button.className='secondary';button.textContent='Tren på denne stillingen →';button.onclick=()=>onPractice(result.practicePositions,i);card.appendChild(button);root.appendChild(card);
     });
   }
@@ -171,7 +171,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     resetFinishedExtras();
     busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
-      const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10);
+      const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10,selectedSource);
       showFindings(result);el('analysisStatus').textContent=`Ferdig: ${result.findings.length} forbedringspunkter. ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
     }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
   };
@@ -195,8 +195,8 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(busy)return false;
     const [local]=parsePgn(pgn);
     if(!local){status('Kunne ikke lese det avsluttede partiet.');return false}
-    if(!engine.ready){resetFinishedExtras();el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
-    selected=local;el('analysisMeta').textContent=`Partiet du nettopp spilte · ${local.white} – ${local.black} · ${local.moves} halvtrekk`;
+    if(!engine.ready){selectedSource='academy';resetFinishedExtras();el('analysisMeta').textContent=`♟ Sjakkakademiet · Du spilte hvit mot datamaskinen · ${local.moves} halvtrekk`;el('analysisStatus').textContent='Stockfish starter fortsatt. Trykk «Analyser valgt parti» om litt.';selected=local;el('analyzeGame').disabled=false;return true}
+    selected=local;selectedSource='academy';el('analysisMeta').textContent=`♟ Sjakkakademiet · Du spilte hvit mot datamaskinen · ${local.moves} halvtrekk · analyserer dine trekk`;
     resetFinishedExtras();analysisLayout?.classList.add('recent-game-active');progressBox.hidden=false;progressBar.value=0;progressPercent.textContent='0 %';progressText.textContent='Stockfish analyserer partiet';
     el('analysisResults').replaceChildren();busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     showRecentAnalysis();
@@ -205,7 +205,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
         const percent=Math.min(99,Math.round((k-1)/total*100));
         progressBar.value=percent;progressPercent.textContent=`${percent} %`;
         el('analysisStatus').textContent=`Analyserer ditt siste parti · trekk ${k} av ${total} …`;
-      },100);
+      },100,'academy');
       progressBar.value=100;progressPercent.textContent='100 %';progressText.textContent='Analysen er ferdig';
       showFindings(result);
       el('analysisStatus').textContent=result.findings.length?`Fant ${result.findings.length} forbedringspunkter. Trykk «Tren på denne stillingen» under et av funnene for å øve.`:'Analysen er ferdig. Ingen tydelige forbedringspunkter ble funnet i de undersøkte trekkene.';
