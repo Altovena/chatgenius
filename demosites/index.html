@@ -479,7 +479,9 @@
         var pages = document.getElementById("builder-plan-pages");
         pages.replaceChildren();
         plan.pages.forEach(function (page) { var li = document.createElement("li"); li.textContent = page; pages.appendChild(li); });
-        document.getElementById("builder-plan-reason").textContent = (plan.structure === "onepage" ? "Vi foreslår én samlet side for en enkel kundereise." : "Vi foreslår undersider slik at de ulike tilbudene får tydelig plass.") + " Dette er en foreløpig anbefaling som kan overstyres.";
+        var structureWasAutomatic = new FormData(form).get("site_structure") === "auto";
+        var reason = plan.structure === "onepage" ? "Én samlet side gir en enkel kundereise." : "Undersider gir hvert tilbud tydelig plass og mulighet for egne landingssider.";
+        document.getElementById("builder-plan-reason").textContent = (structureWasAutomatic ? "Foreløpig anbefaling: " : "Valgt struktur: ") + reason + (plan.structure === "multipage" ? " Dagens prøveside blir likevel en one-pager; undersidene er et videreutviklingsønske." : "");
         document.getElementById("builder-plan-cta").textContent = "Hovedhandling: «" + plan.cta + "».";
         planBox.hidden = false;
         approvedPlan = null;
@@ -516,7 +518,7 @@
         var data = new FormData(form);
         var parsed = parseSiteOrName(data.get("site_or_name"));
         var email = String(data.get("customer_email") || "").trim();
-        if (!parsed.companyName || !email || email.indexOf("@") < 0) { showError("Fyll inn nettadresse eller bedriftsnavn, og en gyldig e-postadresse."); return; }
+        if (!parsed.companyName || !email || !form.querySelector('[name="customer_email"]').checkValidity()) { showWizardStep(1); window.alert("Fyll inn nettadresse eller bedriftsnavn, og en gyldig e-postadresse."); return; }
         if (logoUploadPending) { showError("Vent til logoen er ferdig lest før du fortsetter."); return; }
         if (logoUploadInvalid) { showError("Velg en gyldig logofil, eller fjern filvalget før du fortsetter."); return; }
         var websitePlan = approvedPlan || buildPlan(data);
