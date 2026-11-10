@@ -53,24 +53,28 @@ function polygon(vertices,fill,stroke,width=1){
 }
 function line(a,b,color,width=1){const pa=project(a),pb=project(b);if(!pa||!pb)return;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
 function boxFront(g){
- const x=g.side*1.93,z=g.z,w=.52,height=g.url.includes('/flipperhall/')?1.13:1.85;
- const front=g.side===-1?x+.14:x-.14;
- const p=(dz,y)=>({x:front,y,z:z+dz});
- const color=g.color||'#77f5ee',flipper=height<1.5;
- const face=polygon([p(-w,0),p(w,0),p(w,height),p(-w,height)],'#141527',color,3);
- if(!face)return;
- const screen=polygon([p(-w*.77,flipper?.72:1.04),p(w*.77,flipper?.72:1.04),p(w*.77,flipper?1.02:1.52),p(-w*.77,flipper?1.02:1.52)],'#172648',color,2);
- if(screen){
-  const midx=(screen[0].x+screen[2].x)/2,midy=(screen[0].y+screen[2].y)/2;
-  const size=clamp(Math.abs(screen[2].x-screen[0].x)*.56,12,80);
-  ctx.fillStyle='#fff';ctx.font=size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=14;ctx.shadowColor=color;ctx.fillText(g.icon,midx,midy);ctx.shadowBlur=0;
- }
- const sign=polygon([p(-w*.87,height-.25),p(w*.87,height-.25),p(w*.87,height-.06),p(-w*.87,height-.06)],color);
- if(sign){let midx=(sign[0].x+sign[2].x)/2,midy=(sign[0].y+sign[2].y)/2;ctx.fillStyle='#071222';ctx.font='900 '+clamp(Math.abs(sign[2].y-sign[0].y)*.52,8,18)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.name,midx,midy,Math.max(35,Math.abs(sign[2].x-sign[0].x)*.94))}
- const bounds=face.reduce((r,p)=>({left:Math.min(r.left,p.x),right:Math.max(r.right,p.x),top:Math.min(r.top,p.y),bottom:Math.max(r.bottom,p.y)}),{left:Infinity,right:-Infinity,top:Infinity,bottom:-Infinity});
- const dist=Math.hypot(g.z-cam.z,front-cam.x),diff=Math.abs(angleDiff(Math.atan2(front-cam.x,g.z-cam.z),cam.yaw));
+ // Camera-facing cabinet billboard: legible from the aisle and while turning.
+ const location={x:g.side*1.93,y:1.12,z:g.z},p=project(location);if(!p)return;
+ const size=clamp(canvas.height*1.28/p.d,34,310),wide=size*.53;
+ if(p.x+wide<0||p.x-wide>canvas.width||p.y+size<0||p.y-size>canvas.height)return;
+ const left=p.x-wide*.5,top=p.y-size*.56,color=g.color||'#75ffe8',pinball=g.url.includes('/flipperhall/');
+ ctx.shadowColor=color;ctx.shadowBlur=clamp(24/p.d,3,16);
+ ctx.fillStyle='#121827';ctx.fillRect(left,top,wide,size);
+ ctx.strokeStyle=color;ctx.lineWidth=clamp(5/p.d,1.1,4);ctx.strokeRect(left,top,wide,size);
+ ctx.shadowBlur=0;
+ ctx.fillStyle=color;ctx.fillRect(left+3,top+3,wide-6,size*.17);
+ ctx.fillStyle='#08172a';ctx.fillRect(left+wide*.11,top+size*.25,wide*.78,size*.47);
+ ctx.strokeStyle=color;ctx.strokeRect(left+wide*.11,top+size*.25,wide*.78,size*.47);
+ ctx.font=clamp(size*.3,14,67)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.fillStyle='#fff';ctx.fillText(g.icon,p.x,top+size*.48);
+ ctx.font='900 '+clamp(size*.09,8,18)+'px system-ui';ctx.fillStyle='#041421';ctx.fillText(g.name,p.x,top+size*.102,wide*.9);
+ ctx.fillStyle=pinball?'#ffaa67':'#82e7f6';
+ ctx.fillRect(left+wide*.16,top+size*.8,wide*.68,size*.065);
+ if(pinball){ctx.beginPath();ctx.moveTo(left,top+size*.8);ctx.lineTo(left+wide,top+size*.8);ctx.lineTo(left+wide*.7,top+size*.98);ctx.lineTo(left+wide*.3,top+size*.98);ctx.closePath();ctx.strokeStyle=color;ctx.stroke()}
+ const bounds={left,top,right:left+wide,bottom:top+size};
+ const dist=Math.hypot(g.z-cam.z,location.x-cam.x),diff=Math.abs(angleDiff(Math.atan2(location.x-cam.x,g.z-cam.z),cam.yaw));
  pick.push({g,bounds,dist,diff});
- if(dist<1.6&&diff<.72){const cx=(bounds.left+bounds.right)/2,cy=bounds.top-13;ctx.fillStyle='#afffe8';ctx.shadowBlur=12;ctx.shadowColor='#afffe8';ctx.font='900 '+clamp(canvas.width/110,12,20)+'px system-ui';ctx.textAlign='center';ctx.fillText('▶ '+g.name,cx,cy);ctx.shadowBlur=0}
+ if(dist<1.6&&diff<.72){ctx.font='900 '+clamp(size*.1,11,18)+'px system-ui';ctx.fillStyle='#b5ffec';ctx.fillText('▶ SPILL',p.x,top-12)}
 }
 function render(){
  const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
