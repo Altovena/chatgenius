@@ -110,6 +110,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
         const played=new Chess(fen);played.move({from:actual.from,to:actual.to,promotion:actual.promotion||'q'});
         const evaluation=await engine.search(played.fen(),{ms:500,skill:20});
         const lost=Math.max(0,suggestion.score+evaluation.score);
+        let opponentReply=null;
+        if(evaluation.move&&evaluation.move!=='(none)'){
+          try{
+            const response=new Chess(played.fen());
+            opponentReply=response.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'})?.san||null;
+          }catch{/* An invalid or missing engine reply must not discard a useful finding. */}
+        }
         if(suggestion.move.slice(0,4)!==actual.from+actual.to&&lost>=75){
           // These are training labels, not claims about the exact tactical cause.
           // A move played in the opening is not necessarily an opening-theory mistake.
@@ -119,7 +126,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
           const isExchange=Boolean(actual.captured);
           const isEndgame=fullMove>=35;
           const topic=isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
-          findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,topic});
+          findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,topic,opponentReply});
         }
       }catch{skipped++}
       // Give Safari a chance to render progress and honor a stop request.
@@ -127,7 +134,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>b.loss-a.loss);
-    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. Se på truslene og motstanderens beste svar for å forstå forskjellen.`}));
+    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}Sammenlign trusler, slag og kongesikkerhet før du velger trekk.`}));
     if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:3});
     return {findings,practicePositions,skipped};
   }
@@ -135,7 +142,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     const root=el('analysisResults');root.replaceChildren();
     result.findings.forEach((f,i)=>{
       const card=document.createElement('div');card.className='finding';
-      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>≈ ${Math.round(f.loss/10)/10} bondepoeng</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>`;
+      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>≈ ${Math.round(f.loss/10)/10} bondepoeng</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>${f.opponentReply?`<p>Et mulig sterkt svar fra motstanderen etter ditt trekk: <b>${safe(f.opponentReply)}</b>.</p>`:''}`;
       const button=document.createElement('button');button.className='secondary';button.textContent='Tren på denne stillingen →';button.onclick=()=>onPractice(result.practicePositions,i);card.appendChild(button);root.appendChild(card);
     });
   }
