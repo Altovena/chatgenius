@@ -28,6 +28,17 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .arcade-cabinet.pinball .screen{flex:.8;background:radial-gradient(circle at 50% 20%,#493c7e,#080e25 80%);border-radius:5px 5px 2px 2px}
 .arcade-cabinet.pinball .panel{height:24%;width:95%;margin-bottom:6%;background:linear-gradient(160deg,var(--glow),#172444 56%,#080e22);border:2px solid var(--glow);clip-path:polygon(13% 0,87% 0,100% 100%,0 100%);box-shadow:inset 0 0 15px #0008}
 .arcade-cabinet:not(.pinball) .panel::before{content:"●　●";display:block;font-size:clamp(7px,1vw,12px);text-align:center;color:white;text-shadow:0 0 5px #fff}
+.arcade-cabinet{isolation:isolate;border-left-width:5px;border-right-width:5px;box-shadow:0 0 12px var(--glow),inset 4px 0 8px #000c,inset -5px 0 9px #000a,0 8px 12px #000b}
+.arcade-cabinet .marquee{position:relative;flex-shrink:0;letter-spacing:.035em;border-bottom:3px solid #080e1d;box-shadow:inset 0 2px 4px #ffffff7a,0 2px 6px #000b}
+.arcade-cabinet .screen{position:relative;isolation:isolate;overflow:hidden;border:5px solid #050913;border-radius:42% / 13%;box-shadow:inset 0 0 19px #000,0 0 0 2px #56637a,0 0 12px var(--glow);text-shadow:0 0 12px var(--glow)}
+.arcade-cabinet .screen::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:repeating-linear-gradient(to bottom,#fff0 0px,#fff0 3px,#0004 4px),linear-gradient(125deg,#ffffff47 0%,#ffffff09 24%,transparent 44%);border-radius:inherit}
+.arcade-cabinet .panel{position:relative;min-height:12%;border:2px solid #111827;border-top:2px solid #9cb3c8;box-shadow:inset 0 2px 5px #ffffff3c,0 3px 7px #000c;overflow:visible}
+.arcade-cabinet:not(.pinball) .panel::before{content:"";position:absolute;left:27%;top:-43%;width:13%;height:67%;border-radius:45% 45% 20% 20%;background:linear-gradient(90deg,#081729 15%,#caefff 42%,#253d5e 80%);border-top:4px solid #e44067;box-shadow:0 0 3px #fff,0 1px 5px #000;transform:rotate(-11deg)}
+.arcade-cabinet:not(.pinball) .panel::after{content:"● ●";position:absolute;right:8%;top:19%;color:#f3db71;text-shadow:0 0 5px #f9d36d;font-size:clamp(8px,1.4vw,15px);letter-spacing:.1em}
+.arcade-cabinet.pinball .screen{border-radius:5px;background:radial-gradient(ellipse at 45% 36%,#6d569e,#17112d 75%);border-color:#121020}
+.arcade-cabinet.pinball .panel{position:relative;overflow:hidden;clip-path:polygon(13% 0,87% 0,100% 100%,0 100%);background:repeating-linear-gradient(145deg,#93deed55 0 5px,transparent 6px 15px),radial-gradient(circle at 50% 40%,var(--glow),#121c4e 60%,#070b1a)}
+.arcade-cabinet.pinball .panel::before{content:"◆　✦　◆";display:block;position:absolute;inset:17% 0 auto;color:#fffdd0;text-align:center;font-size:clamp(8px,1.5vw,17px);text-shadow:0 0 7px #fff}
+.arcade-cabinet.pinball .panel::after{content:"";position:absolute;bottom:10%;left:27%;width:46%;height:11%;background:linear-gradient(90deg,#fee4a5,#fff,#fee4a5);box-shadow:0 0 8px #fff}
 .arcade-cabinet[hidden]{display:none!important}
 .arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
