@@ -113,13 +113,18 @@ export function setupAnalysis(engine,onPractice,onFindings){
         // a forced-mate evaluation as a fictitious loss of 1,000 pawns.
         const forcedMate=Math.abs(suggestion.score)>=100000||Math.abs(evaluation.score)>=100000;
         const lost=forcedMate?null:Math.max(0,suggestion.score+evaluation.score);
-        let opponentReply=null,replyCapture=null;
+        let opponentReply=null,replyCapture=null,canRecapture=false;
         if(evaluation.move&&evaluation.move!=='(none)'){
           try{
             const response=new Chess(played.fen());
             const reply=response.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'});
             opponentReply=reply?.san||null;
             replyCapture=reply?.captured||null;
+            // A capture followed by an immediate legal recapture may be a normal exchange.
+            // Do not label it an outright piece loss without checking this response.
+            if(replyCapture&&reply?.to){
+              canRecapture=response.moves({verbose:true}).some(m=>m.to===reply.to&&Boolean(m.captured));
+            }
           }catch{/* An invalid or missing engine reply must not discard a useful finding. */}
         }
         if(suggestion.move.slice(0,4)!==actual.from+actual.to&&(forcedMate||lost>=75)){
@@ -131,9 +136,9 @@ export function setupAnalysis(engine,onPractice,onFindings){
           const isExchange=Boolean(actual.captured);
           const isEndgame=fullMove>=35;
           const pieceNames={p:'bonde',n:'springer',b:'løper',r:'tårn',q:'dronning'};
-          const lostMajorPiece=['n','b','r','q'].includes(replyCapture);
-          const topic=forcedMate?'Mattfare':lostMajorPiece?'Brikker under angrep':isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
-          const explanation=lostMajorPiece?`Motorens foreslåtte svar ${opponentReply} slår din ${pieceNames[replyCapture]}. Sjekk om du kunne forhindret dette.`:forcedMate?'Motoren ser en mulig mattsekvens. Undersøk sjakker og kongens fluktfelt.':'Se etter sjakker, slag og trusler før du bestemmer deg.';
+          const lostMajorPiece=['n','b','r','q'].includes(replyCapture)&&!canRecapture;
+          const topic=forcedMate?'Mattsekvens':lostMajorPiece?'Brikker under angrep':isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
+          const explanation=lostMajorPiece?`Motorens foreslåtte svar ${opponentReply} slår din ${pieceNames[replyCapture]}. Sjekk om du kunne forhindret dette.`:forcedMate?'Motoren ser en mulig mattsekvens. Undersøk sjakker og kongens fluktfelt.' :canRecapture&&replyCapture?'Motorens foreslåtte svar innebærer et slag som du kan svare på med et lovlig gjenslag. Undersøk om byttet er gunstig.':'Se etter sjakker, slag og trusler før du bestemmer deg.';
           findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,forcedMate,topic,opponentReply,explanation});
         }
       }catch{skipped++}
