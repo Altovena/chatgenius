@@ -181,6 +181,28 @@ function updatePracticeProgress(positions){
   }
   root.replaceChildren();
   const title=document.createElement('h3');title.textContent='Blir du bedre på øvelsene?';root.appendChild(title);
+  const now=Date.now();
+  const due=positions.filter(p=>{const a=stats.puzzles[puzzleKey(p)];return !a?.right||!Number.isFinite(a.nextReview)||a.nextReview<=now;});
+  const upcoming=positions.filter(p=>{const a=stats.puzzles[puzzleKey(p)];return a?.right&&Number.isFinite(a.nextReview)&&a.nextReview>now;});
+  const mastered=positions.filter(p=>(stats.puzzles[puzzleKey(p)]?.streak||0)>=2);
+  const schedule=document.createElement('p');schedule.className='muted';
+  schedule.textContent=`Treningsplan: ${due.length} klare nå · ${upcoming.length} planlagt senere · ${mastered.length} av ${positions.length} mestret.`;
+  root.appendChild(schedule);
+  if(due.length){
+    const start=document.createElement('button');start.className='secondary';
+    start.textContent=`Tren ${Math.min(10,due.length)} oppgaver som er klare nå →`;
+    start.onclick=()=>{
+      const ranked=rankedOwnPositions().filter(p=>{const a=stats.puzzles[puzzleKey(p)];return !a?.right||!Number.isFinite(a.nextReview)||a.nextReview<=Date.now();});
+      startOwnPractice(ranked.slice(0,10));
+    };
+    root.appendChild(start);
+  }
+  if(upcoming.length){
+    const next=Math.min(...upcoming.map(p=>stats.puzzles[puzzleKey(p)].nextReview));
+    const nextDate=document.createElement('p');nextDate.className='muted';
+    nextDate.textContent=`Neste planlagte repetisjon: ${new Date(next).toLocaleDateString('nb-NO')}.`;
+    root.appendChild(nextDate);
+  }
   const keys=new Set(positions.map(puzzleKey));
   const attempts=[...keys].flatMap(key=>(stats.puzzles[key]?.history||[]).map(h=>({...h,key})))
     .filter(h=>Number.isFinite(h.at)&&typeof h.correct==='boolean').sort((a,b)=>a.at-b.at);
