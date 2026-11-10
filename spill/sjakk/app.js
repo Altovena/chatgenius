@@ -718,7 +718,7 @@ $('puzzleHint').onclick=()=>{
 };
 $('trainingDifficulty').onchange=()=>{if(trainingOrigin==='analysis')return;queue=[];loadPuzzle()};
 function backToAnalysis(){trainingOrigin='general';setTab(analysisReturnTab);if(analysisReturnTab==='analysis')requestAnimationFrame(()=>window.scrollTo(0,analysisScrollY))}
-function completeOwnQueue(){if(analysisReturnTab==='progress'){stats.ownQueue=null;persist();$('coachAllStatus').textContent='Økten er fullført! Feilene dine prioriteres ved neste trening.'}backToAnalysis()}
+function completeOwnQueue(){if(analysisReturnTab==='progress'){stats.ownQueue=null;persist();$('coachAllStatus').textContent='Økten er fullført! Se oppsummeringen nedenfor.';showPracticeSessionSummary()}backToAnalysis()}
 $('nextPuzzle').onclick=()=>{if(trainingOrigin==='analysis'){if(analysisPracticeIndex+1<analysisPractice.length){analysisPracticeIndex++;loadPuzzle()}else completeOwnQueue()}else loadPuzzle()};
 const analysisBack=document.createElement('button');analysisBack.id='analysisBack';analysisBack.className='secondary analysis-back';analysisBack.textContent='← Tilbake til partianalysen';analysisBack.hidden=true;$('trainPanel').querySelector('.training-layout').before(analysisBack);analysisBack.onclick=backToAnalysis;
 const showLine=document.createElement('button');showLine.id='showLine';showLine.className='secondary';showLine.textContent='Se den viktige fortsettelsen →';showLine.hidden=true;$('nextPuzzle').before(showLine);
@@ -729,8 +729,43 @@ const lessons=[{title:'Kontroller sentrum',tag:'ÅPNING',body:'Feltene e4, d4, e
 $('lessons').innerHTML=lessons.map((l,i)=>`<article class="lesson"><span class="num">LEKSJON ${String(i+1).padStart(2,'0')} · ${l.tag}</span><h3>${l.title}</h3><p>${l.body}</p><ul>${l.points.map(p=>`<li>${p}</li>`).join('')}</ul><button data-lesson="${i}">${i===2||i===4?'Øv på temaet →':'Prøv i et parti →'}</button></article>`).join('');document.querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>{if(['2','4'].includes(b.dataset.lesson)){setTab('train')}else{setTab('play')}});
 analysisApi=setupAnalysis(engine,(positions,index)=>{analysisScrollY=window.scrollY;analysisReturnTab='analysis';trainingOrigin='analysis';analysisPractice=positions;analysisPracticeIndex=index;loadPuzzle();setTab('train')},summary=>{stats.analyzedGames[summary.gameId]={topics:summary.topics,count:summary.count,positions:summary.positions,source:summary.source,date:summary.date,white:summary.white,black:summary.black,checked:summary.checked,analysisVersion:summary.analysisVersion};const keys=Object.keys(stats.analyzedGames);if(keys.length>100)delete stats.analyzedGames[keys[0]];persist()});
 $('coachAnalyze').onclick=()=>setTab('analysis');
+let practiceSessionStart=null;
+function showPracticeSessionSummary(){
+  if(!practiceSessionStart)return;
+  const session=practiceSessionStart;practiceSessionStart=null;
+  const attempts=session.keys.flatMap(key=>(stats.puzzles[key]?.history||[]).filter(h=>h.at>=session.started));
+  const correct=attempts.filter(h=>h.correct).length;
+  const wrong=attempts.length-correct;
+  let root=$('sessionSummary');
+  if(!root){
+    root=document.createElement('section');root.id='sessionSummary';root.className='own-topic-guidance';
+    $('practiceProgress').after(root);
+  }
+  root.replaceChildren();
+  const heading=document.createElement('h3');heading.textContent='Oppsummering av treningsøkten';root.appendChild(heading);
+  const result=document.createElement('p');result.textContent=`${correct} riktige og ${wrong} feilforsøk i ${session.keys.length} valgte stillinger.`;root.appendChild(result);
+  const previous=(stats.practiceSessions||[]).slice(-5);
+  if(previous.length){
+    const total=previous.reduce((sum,x)=>sum+x.correct+x.wrong,0);
+    if(total){
+      const compare=document.createElement('p');compare.className='muted';
+      compare.textContent=`Riktigprosent: ${attempts.length?Math.round(correct/attempts.length*100):0} %. Forrige ${previous.length} økter: ${Math.round(previous.reduce((sum,x)=>sum+x.correct,0)/total*100)} %.`;
+      root.appendChild(compare);
+    }
+  }
+  const reminder=document.createElement('p');reminder.className='muted';
+  reminder.textContent=wrong?'Stillinger med feil blir prioritert ved neste repetisjon.':'Ingen registrerte feilforsøk i denne økten.';
+  root.appendChild(reminder);
+  if(attempts.length){
+    stats.practiceSessions ||= [];
+    stats.practiceSessions.push({at:Date.now(),correct,wrong,positions:session.keys.length});
+    stats.practiceSessions=stats.practiceSessions.slice(-40);
+    persist();
+  }
+}
 function startOwnPractice(positions,resumeIndex=0){
   if(!positions.length){setTab('analysis');return}
+  practiceSessionStart={started:Date.now(),keys:[...new Set(positions.map(puzzleKey))]};
   analysisPractice=positions;analysisPracticeIndex=resumeIndex;analysisReturnTab='progress';trainingOrigin='analysis';
   stats.ownQueue={keys:positions.map(puzzleKey),index:resumeIndex};
   persist();loadPuzzle();setTab('train');
