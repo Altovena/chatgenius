@@ -926,9 +926,15 @@ $('coachTen').onclick=()=>startOwnPractice(rankedOwnPositions().slice(0,10));
 $('resumeOwnTraining').onclick=()=>{
   const saved=stats.ownQueue;if(!saved?.keys?.length)return;
   const map=new Map(allOwnPositions().map(p=>[puzzleKey(p),p]));
-  const positions=saved.keys.map(k=>map.get(k)).filter(Boolean);
-  if(!positions.length){stats.ownQueue=null;persist();return}
-  startOwnPractice(positions,Math.min(saved.index,positions.length-1),true);
+  const available=saved.keys.map((key,index)=>({position:map.get(key),index})).filter(item=>item.position);
+  if(!available.length){stats.ownQueue=null;persist();updateAllGamesPlan();return}
+  const next=available.findIndex(item=>item.index>=saved.index);
+  const resumeAt=next>=0?next:available.length-1;
+  const positions=available.map(item=>item.position);
+  // Keep the original session start even if a previously analyzed position disappeared.
+  const originalStarted=saved.started;
+  startOwnPractice(positions,resumeAt,false);
+  if(Number.isFinite(originalStarted)){stats.ownQueue.started=originalStarted;practiceSessionStart.started=originalStarted;persist()}
 };
 $('chessThemeFilter').onchange=()=>{
   const topic=$('chessThemeFilter').value,count=allOwnPositions().filter(p=>topic==='alle'||p.topic===topic).length;
