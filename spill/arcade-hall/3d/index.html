@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Freddys Arcade · 3D test</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:#050711;color:#fff;font-family:Inter,system-ui,Segoe UI,sans-serif;overflow:hidden}
+header{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(12px,3vw,32px);z-index:4;background:linear-gradient(#050713ee,#05071355);pointer-events:none}
+header a,header button{pointer-events:auto;color:#a9fff0;text-decoration:none;background:#122139ad;border:1px solid #7af6db55;border-radius:9px;padding:9px 12px;font-size:12px}
+header strong{letter-spacing:.08em;color:#ffe1ae;font-size:clamp(13px,2vw,19px)}
+main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch-action:none}
+.hud{position:absolute;left:50%;top:65px;transform:translateX(-50%);z-index:2;background:#071226c9;border:1px solid #9db4db55;border-radius:12px;padding:10px 15px;text-align:center;min-width:min(440px,85vw);backdrop-filter:blur(8px)}
+.hud b{display:block;color:#c6fff5;font-size:12px;letter-spacing:.1em}.hud p{margin:5px 0 0;font-size:12px;color:#c5d5e9}
+.compass{position:absolute;right:14px;top:69px;z-index:3;background:#081326dd;border:1px solid #97d9e277;border-radius:12px;padding:7px;text-align:center;box-shadow:0 7px 24px #0008}.compass canvas{width:115px;height:155px}.compass span{font-size:10px;color:#c6ffef}
+.controls{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;z-index:3;background:#081428e8;border:1px solid #83a4cb55;padding:8px;border-radius:15px}
+.controls button,.play{border:1px solid #9ad8f28c;background:#182b4e;color:#fff;border-radius:10px;min-width:53px;min-height:50px;font-size:19px;font-weight:800;touch-action:none}
+.controls .step{background:#294c6e}.controls .action{background:linear-gradient(120deg,#9bffe8,#e7d8ff);color:#12223b;min-width:114px;padding:0 14px;font-size:12px}
+.controls button:active{filter:brightness(1.35)}
+.note{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);z-index:2;background:#080d1bc9;border-radius:9px;padding:7px 12px;text-align:center;color:#acc6dc;font-size:11px;white-space:nowrap}
+.overlay{position:absolute;inset:0;display:none;place-items:center;padding:15px;background:#040712d9;backdrop-filter:blur(10px);z-index:10}.overlay.open{display:grid}
+.dialog{width:min(440px,100%);background:linear-gradient(145deg,#20234d,#0a1728);border:1px solid #a2ffe1a1;border-radius:20px;padding:26px;text-align:center;box-shadow:0 30px 70px #000b}.dialog .art{font-size:67px}.dialog h2{margin:6px 0;font-size:29px}.dialog p{color:#b8c9dc;line-height:1.5}
+.dialog .buttons{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:19px}.dialog a,.dialog button{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:11px 18px;border-radius:11px;text-decoration:none;font-weight:850;border:1px solid #6594ad}.dialog a{background:#a0ffe7;color:#092333}.dialog button{background:#1e3551;color:white}
+@media(max-width:700px){header{padding:8px}header strong{font-size:12px}header a{font-size:10px;padding:7px}.hud{top:50px;min-width:65vw;max-width:65vw;padding:6px}.hud b{font-size:10px}.hud p{font-size:10px}.compass{top:107px;right:6px;padding:3px}.compass canvas{width:70px;height:104px}.controls{bottom:10px;gap:4px;padding:5px}.controls button{min-width:45px;min-height:48px}.controls .action{min-width:91px;padding:0 6px}.note{bottom:73px;font-size:10px;max-width:90%;white-space:normal}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<script src="../machines.js"></script></head><body>
+<header><a href="../">← Til vanlig hall</a><strong>✦ FREDDYS ARCADE <span style="color:#93fff0">3D TEST</span></strong><a href="/spill/">Alle spill</a></header>
+<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p></div>
+<div class="compass"><span>HALLKART</span><canvas id="map" width="115" height="155"></canvas></div>
+<div class="note">360° fri sving · faktisk dybde · trykk på maskinen for å gå bort</div>
+<div class="controls"><button data-move="left" aria-label="Snu venstre">⟲</button><button class="step" data-move="forward" aria-label="Gå frem">▲</button><button class="step" data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu høyre">⟳</button><button class="action" id="play" disabled>▶ Spill</button></div>
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="title"><div class="dialog"><div class="art" id="art"></div><h2 id="title"></h2><p id="description"></p><div class="buttons"><a id="launch" href="#">▶ SPILL NÅ</a><button id="dismiss">← Tilbake til hallen</button></div></div></div>
+</main><script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('world'),ctx=canvas.getContext('2d'),mini=$('map'),mc=mini.getContext('2d');
+const raw=window.CHATGENIUS_ARCADE_MACHINES||[];
+const games=raw.filter(g=>g&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9}));
+const end=Math.max(6.25,...games.map(g=>g.z+.7)),cam={x:0,z:0,yaw:0,y:1.6};
+const keys=new Set(),held=new Set(),clamp=(v,a,b)=>Math.min(b,Math.max(a,v)),angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
+let previous=performance.now(),selected=null,target=null,modal=false,pick=[],nearest=null;
+$('location').textContent='ARKADEHALLEN · '+games.length+' MASKINER';
+function dimensions(){const ratio=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.round(canvas.clientWidth*ratio);canvas.height=Math.round(canvas.clientHeight*ratio)}
+window.addEventListener('resize',dimensions);dimensions();
+function project(v){
+ const dx=v.x-cam.x,dz=v.z-cam.z,depth=dx*Math.sin(cam.yaw)+dz*Math.cos(cam.y);
+ const sideways=dx*Math.cos(cam.yaw)-dz*Math.sin(cam.y);
+ if(depth<.11)return null;
+ const focal=Math.min(canvas.width*1.06,canvas.height*1.37);
+ return {x:canvas.width*.5+sideways*focal/depth,y:canvas.height*.5-(v.y-cam.y)*focal/depth,d:depth};
+}
+function polygon(vertices,fill,stroke,width=1){
+ const pts=vertices.map(project);if(pts.some(p=>!p))return null;
+ ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(const p of pts.slice(1))ctx.lineTo(p.x,p.y);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+ if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke()}
+ return pts;
+}
+function line(a,b,color,width=1){const pa=project(a),pb=project(b);if(!pa||!pb)return;ctx.beginPath();ctx.moveTo(pa.x,pa.y);ctx.lineTo(pb.x,pb.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
+function boxFront(g){
+ const x=g.side*1.93,z=g.z,w=.52,height=g.url.includes('/flipperhall/')?1.13:1.85;
+ const front=g.side===-1?x+.14:x-.14;
+ const p=(dz,y)=>({x:front,y,z:z+dz});
+ const color=g.color||'#77f5ee',flipper=height<1.5;
+ const face=polygon([p(-w,0),p(w,0),p(w,height),p(-w,height)],'#141527',color,3);
+ if(!face)return;
+ const screen=polygon([p(-w*.77,flipper?.72:1.04),p(w*.77,flipper?.72:1.04),p(w*.77,flipper?1.02:1.52),p(-w*.77,flipper?1.02:1.52)],'#172648',color,2);
+ if(screen){
+  const midx=(screen[0].x+screen[2].x)/2,midy=(screen[0].y+screen[2].y)/2;
+  const size=clamp(Math.abs(screen[2].x-screen[0].x)*.56,12,80);
+  ctx.fillStyle='#fff';ctx.font=size+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowBlur=14;ctx.shadowColor=color;ctx.fillText(g.icon,midx,midy);ctx.shadowBlur=0;
+ }
+ const sign=polygon([p(-w*.87,height-.25),p(w*.87,height-.25),p(w*.87,height-.06),p(-w*.87,height-.06)],color);
+ if(sign){let midx=(sign[0].x+sign[2].x)/2,midy=(sign[0].y+sign[2].y)/2;ctx.fillStyle='#071222';ctx.font='900 '+clamp(Math.abs(sign[2].y-sign[0].y)*.52,8,18)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.name,midx,midy,Math.max(35,Math.abs(sign[2].x-sign[0].x)*.94))}
+ const bounds=face.reduce((r,p)=>({left:Math.min(r.left,p.x),right:Math.max(r.right,p.x),top:Math.min(r.top,p.y),bottom:Math.max(r.bottom,p.y)}),{left:Infinity,right:-Infinity,top:Infinity,bottom:-Infinity});
+ const dist=Math.hypot(g.z-cam.z,front-cam.x),diff=Math.abs(angleDiff(Math.atan2(front-cam.x,g.z-cam.z),cam.yaw));
+ pick.push({g,bounds,dist,diff});
+ if(dist<1.6&&diff<.72){const cx=(bounds.left+bounds.right)/2,cy=bounds.top-13;ctx.fillStyle='#afffe8';ctx.shadowBlur=12;ctx.shadowColor='#afffe8';ctx.font='900 '+clamp(canvas.width/110,12,20)+'px system-ui';ctx.textAlign='center';ctx.fillText('▶ '+g.name,cx,cy);ctx.shadowBlur=0}
+}
+function render(){
+ const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
+ const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#07071c');sky.addColorStop(.53,'#211443');sky.addColorStop(1,'#030a15');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+ // Fixed world geometry; unlike a photograph, it responds correctly to yaw.
+ for(let z=Math.ceil(end);z>=0;z--){
+  polygon([{x:-3,y:0,z},{x:3,y:0,z},{x:3,y:0,z:z+1},{x:-3,y:0,z:z+1}],z%2?'#11182c':'#17223a','#33476c55');
+  line({x:-3,y:0,z},{x:3,y:0,z},'#53b5d434');
+ }
+ for(const side of [-1,1]){
+  const x=side*3;
+  for(let z=0;z<end;z++){
+   polygon([{x,y:0,z},{x,y:2.9,z},{x,y:2.9,z:z+1},{x,y:0,z:z+1}],z%2?'#121530':'#18183a','#694ec544');
+   line({x,y:2.74,z},{x,y:2.74,z:z+1},side<0?'#e34cf9':'#4bf1f2',5);
+  }
+  line({x,y:0,z:0},{x,y:0,z:end},'#d078fd77',4);
+ }
+ for(let z=0;z<end;z+=1.8){
+  line({x:-3,y:2.89,z},{x:3,y:2.89,z},'#ffb3f8',4);
+ }
+ // Render cabinets back-to-front; each one is a solid plane facing the central aisle.
+ pick=[];
+ for(const g of [...games].sort((a,b)=>Math.hypot(b.z-cam.z,b.side*1.93-cam.x)-Math.hypot(a.z-cam.z,a.side*1.93-cam.x)))boxFront(g);
+ nearest=null;let best=Infinity;
+ for(const it of pick)if(it.dist<1.6&&it.diff<.72&&it.dist<best){nearest=it.g;best=it.dist}
+ $('play').disabled=!nearest;$('play').textContent=nearest?'▶ '+nearest.name:'▶ Spill';
+ drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
+}
+function drawMap(){
+ const w=mini.width,h=mini.height;mc.clearRect(0,0,w,h);mc.fillStyle='#101a34';mc.fillRect(0,0,w,h);
+ mc.fillStyle='#244063';mc.fillRect(w*.24,6,w*.52,h-12);
+ for(const g of games){mc.fillStyle=g.color||'#88fff0';mc.fillRect(w/2+g.side*w*.34-3,h-12-g.z/end*(h-21)-3,6,6)}
+ const px=w/2+cam.x/3*w*.27,py=h-12-cam.z/end*(h-21);mc.save();mc.translate(px,py);mc.rotate(cam.yaw);mc.fillStyle='#f9fff8';mc.beginPath();mc.moveTo(0,-11);mc.lineTo(-6,7);mc.lineTo(6,7);mc.closePath();mc.fill();mc.restore()
+}
+function select(g){if(!g)return;const distance=Math.hypot(g.z-cam.z,g.side*1.15-cam.x);if(distance<.57){open(g);return}target={g,x:g.side*1.15,z:g.z}}
+function open(g){selected=g;modal=true;$('art').textContent=g.icon;$('title').textContent=g.name;$('description').textContent=g.desc;$('launch').href=g.url;$('overlay').classList.add('open')}
+function close(){modal=false;selected=null;$('overlay').classList.remove('open')}
+$('dismiss').onclick=close;$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))close()});$('play').onclick=()=>select(nearest);
+canvas.addEventListener('pointerdown',e=>{
+ const rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)/rect.width*canvas.width,y=(e.clientY-rect.top)/rect.height*canvas.height;
+ const hits=pick.filter(it=>x>=it.bounds.left&&x<=it.bounds.right&&y>=it.bounds.top&&y<=it.bounds.bottom).sort((a,b)=>a.dist-b.dist);
+ if(hits[0])select(hits[0].g)
+});
+document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape')close();if(k==='enter'&&!modal)select(nearest);keys.add(k)});
+document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();held.clear()});
+document.querySelectorAll('[data-move]').forEach(btn=>{const m=btn.dataset.move;btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture(e.pointerId);held.add(m);target=null});for(const event of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(event,()=>held.delete(m))});
+function tick(now){
+ const dt=Math.min(.05,(now-previous)/1000||0);previous=now;
+ if(!modal){
+  let turn=0,move=0;
+  if(keys.has('a')||keys.has('arrowleft')||held.has('left'))turn--;
+  if(keys.has('d')||keys.has('arrowright')||held.has('right'))turn++;
+  if(keys.has('w')||keys.has('arrowup')||held.has('forward'))move++;
+  if(keys.has('s')||keys.has('arrowdown')||held.has('back'))move--;
+  if(turn||move)target=null;
+  if(target){
+   const dx=target.x-cam.x,dz=target.z-cam.z,d=Math.hypot(dx,dz);
+   if(d>.05){const desired=Math.atan2(dx,dz);cam.yaw+=clamp(angleDiff(desired,cam.yaw),-dt*2.6,dt*2.6);const step=Math.min(d,dt*1.8);cam.x+=dx/d*step;cam.z+=dz/d*step}
+   else{const desired=Math.atan2(target.g.side*1.9-cam.x,target.g.z-cam.z);const diff=angleDiff(desired,cam.yaw);if(Math.abs(diff)<.045){const g=target.g;target=null;open(g)}else cam.yaw+=clamp(diff,-dt*2.6,dt*2.6)}
+  }else{
+   cam.yaw+=turn*dt*1.65;
+   cam.x=clamp(cam.x+Math.sin(cam.yaw)*move*dt*1.5,-1.28,1.28);
+   cam.z=clamp(cam.z+Math.cos(cam.yaw)*move*dt*1.5,0,end-.18);
+  }
+ }
+ render();requestAnimationFrame(tick)
+}requestAnimationFrame(tick);
+})();</script></body></html>
