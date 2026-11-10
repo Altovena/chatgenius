@@ -89,7 +89,9 @@ function renderCabinets(){
  const h=canvas.height,w=canvas.width,scaleX=canvas.clientWidth/w,scaleY=canvas.clientHeight/h;
  let shown=0,first='';
  for(const {g,el} of cabinets){
-  const p=project({x:g.side*1.93,y:1.12,z:g.z});
+  const dx=g.side*1.93-cam.x,dz=g.z-cam.z,depth=dx*Math.sin(cam.yaw)+dz*Math.cos(cam.yaw),sideways=dx*Math.cos(cam.yaw)-dz*Math.sin(cam.yaw);
+  const focal=Math.min(w*.78,h*.83);
+  const p=depth>.11?{x:w*.5+sideways*focal/depth,y:h*.5-(1.12-cam.y)*focal/depth,d:depth}:null;
   if(!first){const dz=g.z-cam.z,dx=g.side*1.93-cam.x;first=g.name+' z='+g.z+' cam='+cam.z+'/'+cam.yaw.toFixed(2)+' dx='+dx.toFixed(2)+' dz='+dz.toFixed(2)+' depth='+(dx*Math.sin(cam.yaw)+dz*Math.cos(cam.yaw)).toFixed(2)+' '+(p?'x='+Math.round(p.x):'behind')}
   if(!p||p.d<.26){el.hidden=true;continue}
   const height=clamp(h*1.22/p.d,42,260),width=height*.52;
