@@ -113,11 +113,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
         // a forced-mate evaluation as a fictitious loss of 1,000 pawns.
         const forcedMate=Math.abs(suggestion.score)>=100000||Math.abs(evaluation.score)>=100000;
         const lost=forcedMate?null:Math.max(0,suggestion.score+evaluation.score);
-        let opponentReply=null;
+        let opponentReply=null,replyCapture=null;
         if(evaluation.move&&evaluation.move!=='(none)'){
           try{
             const response=new Chess(played.fen());
-            opponentReply=response.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'})?.san||null;
+            const reply=response.move({from:evaluation.move.slice(0,2),to:evaluation.move.slice(2,4),promotion:evaluation.move[4]||'q'});
+            opponentReply=reply?.san||null;
+            replyCapture=reply?.captured||null;
           }catch{/* An invalid or missing engine reply must not discard a useful finding. */}
         }
         if(suggestion.move.slice(0,4)!==actual.from+actual.to&&(forcedMate||lost>=75)){
@@ -128,8 +130,11 @@ export function setupAnalysis(engine,onPractice,onFindings){
           const isKingMove=actual.piece==='k';
           const isExchange=Boolean(actual.captured);
           const isEndgame=fullMove>=35;
-          const topic=isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
-          findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,forcedMate,topic,opponentReply});
+          const pieceNames={p:'bonde',n:'springer',b:'løper',r:'tårn',q:'dronning'};
+          const lostMajorPiece=['n','b','r','q'].includes(replyCapture);
+          const topic=forcedMate?'Mattfare':lostMajorPiece?'Brikker under angrep':isKingMove?'Kongesikkerhet':isCheck||isExchange?'Taktiske valg':isEndgame?'Sluttspill':fullMove<=10?'Åpningsvalg':'Stillingsspill';
+          const explanation=lostMajorPiece?`Motorens foreslåtte svar ${opponentReply} slår din ${pieceNames[replyCapture]}. Sjekk om du kunne forhindret dette.`:forcedMate?'Motoren ser en mulig mattsekvens. Undersøk sjakker og kongens fluktfelt.':'Se etter sjakker, slag og trusler før du bestemmer deg.';
+          findings.push({moveNo:Math.floor(i/2)+1,actual:actual.san,best:recommended.san,fen,from:recommended.from,to:recommended.to,color,loss:lost,forcedMate,topic,opponentReply,explanation});
         }
       }catch{skipped++}
       // Give Safari a chance to render progress and honor a stop request.
@@ -137,7 +142,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     let fingerprint=2166136261;for(const char of game.pgn)fingerprint=Math.imul(fingerprint^char.charCodeAt(0),16777619);
     findings.sort((a,b)=>(b.forcedMate?100000:b.loss)-(a.forcedMate?100000:a.loss));
-    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}Sammenlign trusler, slag og kongesikkerhet før du velger trekk.`}));
+    const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`Partiet ditt · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
     if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
     return {findings,practicePositions,skipped};
   }
@@ -145,7 +150,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     const root=el('analysisResults');root.replaceChildren();
     result.findings.forEach((f,i)=>{
       const card=document.createElement('div');card.className='finding';
-      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>${f.opponentReply?`<p>Et mulig sterkt svar fra motstanderen etter ditt trekk: <b>${safe(f.opponentReply)}</b>.</p>`:''}`;
+      card.innerHTML=`<div class="finding-head"><b>Trekk ${f.moveNo}: ${safe(f.topic)}</b><span>${f.forcedMate?'Mulig mattsekvens':`≈ ${Math.round(f.loss/10)/10} bondepoeng`}</span></div><p>Du spilte <b>${safe(f.actual)}</b>. Stockfish foreslår <b>${safe(f.best)}</b>.</p>${f.opponentReply?`<p>Et mulig sterkt svar fra motstanderen etter ditt trekk: <b>${safe(f.opponentReply)}</b>.</p>`:''}<p>${safe(f.explanation)}</p>`;
       const button=document.createElement('button');button.className='secondary';button.textContent='Tren på denne stillingen →';button.onclick=()=>onPractice(result.practicePositions,i);card.appendChild(button);root.appendChild(card);
     });
   }
