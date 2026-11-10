@@ -30,7 +30,7 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 </style>
 <script src="../machines.js"></script></head><body>
 <header><a href="../">← Til vanlig hall</a><strong>✦ FREDDYS ARCADE <span style="color:#93fff0">3D TEST</span></strong><a href="/spill/">Alle spill</a></header>
-<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="cabinet-layer" id="cabinet-layer" aria-label="Spillmaskiner i hallen"></div><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p><p id="debug" style="font-size:10px;color:#ffda92"></p></div>
+<main aria-label="Interaktiv arkadehall i 3D"><canvas id="world"></canvas><div class="cabinet-layer" id="cabinet-layer" aria-label="Spillmaskiner i hallen"></div><div class="hud"><b id="location">ARKADEHALLEN · 12 MASKINER</b><p id="message">Bruk A/D for å snu deg og W/S for å gå. Trykk på en maskin.</p></div>
 <div class="compass"><span>HALLKART</span><canvas id="map" width="115" height="155"></canvas></div>
 <div class="note">360° fri sving · faktisk dybde · trykk på maskinen for å gå bort</div>
 <div class="controls"><button data-move="left" aria-label="Snu venstre">⟲</button><button class="step" data-move="forward" aria-label="Gå frem">▲</button><button class="step" data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu høyre">⟳</button><button class="action" id="play" disabled>▶ Spill</button></div>
@@ -47,11 +47,12 @@ $('location').textContent='ARKADEHALLEN · '+games.length+' MASKINER';
 function dimensions(){const ratio=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.round(canvas.clientWidth*ratio);canvas.height=Math.round(canvas.clientHeight*ratio)}
 window.addEventListener('resize',dimensions);dimensions();
 function project(v){
- const dx=v.x-cam.x,dz=v.z-cam.z,depth=dx*Math.sin(cam.yaw)+dz*Math.cos(cam.y);
- const sideways=dx*Math.cos(cam.yaw)-dz*Math.sin(cam.y);
- if(depth<.11)return null;
- const focal=Math.min(canvas.width*.78,canvas.height*.83);
- return {x:canvas.width*.5+sideways*focal/depth,y:canvas.height*.5-(v.y-cam.y)*focal/depth,d:depth};
+ const worldX=Number(v.x)-cam.x,worldZ=Number(v.z)-cam.z,heading=cam.yaw;
+ const forward=worldX*Math.sin(heading)+worldZ*Math.cos(heading);
+ if(!Number.isFinite(forward)||forward<=.11)return null;
+ const side=worldX*Math.cos(heading)-worldZ*Math.sin(heading);
+ const lens=Math.min(canvas.width*.78,canvas.height*.83);
+ return {x:canvas.width/2+side*lens/forward,y:canvas.height/2-(Number(v.y)-cam.y)*lens/forward,d:forward};
 }
 function polygon(vertices,fill,stroke,width=1){
  const pts=vertices.map(project);if(pts.some(p=>!p))return null;
@@ -87,17 +88,18 @@ function boxFront(g){
 const cabinets=games.map(g=>{const el=document.createElement('button');el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
 function renderCabinets(){
  const h=canvas.height,w=canvas.width,scaleX=canvas.clientWidth/w,scaleY=canvas.clientHeight/h;
- let shown=0,first='';
  for(const {g,el} of cabinets){
-  const p=project({x:g.side*1.93,y:1.12,z:g.z});
-  if(!first){const dz=g.z-cam.z,dx=g.side*1.93-cam.x;first=g.name+' z='+g.z+' cam='+cam.z+'/'+cam.yaw.toFixed(2)+' dx='+dx.toFixed(2)+' dz='+dz.toFixed(2)+' depth='+(dx*Math.sin(cam.yaw)+dz*Math.cos(cam.yaw)).toFixed(2)+' '+(p?'x='+Math.round(p.x):'behind')}
+  const dx=g.side*1.93-cam.x,dz=g.z-cam.z,depth=dx*Math.sin(cam.yaw)+dz*Math.cos(cam.yaw),sideways=dx*Math.cos(cam.yaw)-dz*Math.sin(cam.yaw);
+  const focal=Math.min(w*.78,h*.83);
+  const p=depth>.11?{x:w*.5+sideways*focal/depth,y:h*.5-(1.12-cam.y)*focal/depth,d:depth}:null;
   if(!p||p.d<.26){el.hidden=true;continue}
-  const height=clamp(h*1.22/p.d,42,260),width=height*.52;
+  const height=clamp(h*.94/p.d,38,190),width=height*.53;
   if(p.x+width<0||p.x-width>w){el.hidden=true;continue}
-  shown++;el.hidden=false;el.style.width=(width*scaleX)+'px';el.style.height=(height*scaleY)+'px';el.style.left=((p.x-width/2)*scaleX)+'px';el.style.top=((p.y-height*.55)*scaleY)+'px';
+  el.hidden=false;el.style.width=(width*scaleX)+'px';el.style.height=(height*scaleY)+'px';el.style.left=((p.x-width/2)*scaleX)+'px';el.style.top=((p.y-height*.55)*scaleY)+'px';
   el.style.zIndex=String(Math.floor(1000-p.d*20));
+  const dist=Math.hypot(g.z-cam.z,g.side*1.93-cam.x),diff=Math.abs(angleDiff(Math.atan2(g.side*1.93-cam.x,g.z-cam.z),cam.yaw));
+  pick.push({g,dist,diff,bounds:{left:p.x-width/2,right:p.x+width/2,top:p.y-height*.55,bottom:p.y+height*.45}});
  }
- $('debug').textContent='Viser '+shown+'/'+cabinets.length+' · Canvas '+w+'×'+h+' · '+first;
 }
 function render(){
  const w=canvas.width,h=canvas.height;ctx.clearRect(0,0,w,h);
@@ -126,11 +128,11 @@ function render(){
  }
  // Render cabinets back-to-front; each one is a solid plane facing the central aisle.
  pick=[];
- for(const g of [...games].sort((a,b)=>Math.hypot(b.z-cam.z,b.side*1.93-cam.x)-Math.hypot(a.z-cam.z,a.side*1.93-cam.x)))boxFront(g);
+ renderCabinets();
  nearest=null;let best=Infinity;
  for(const it of pick)if(it.dist<1.6&&it.diff<.72&&it.dist<best){nearest=it.g;best=it.dist}
  $('play').disabled=!nearest;$('play').textContent=nearest?'▶ '+nearest.name:'▶ Spill';
- renderCabinets(); drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
+ drawMap();$('location').textContent=games.length+' MASKINER · '+Math.round(cam.z*8)+' M · '+Math.round(cam.yaw*180/Math.PI)+'°';
 }
 function drawMap(){
  const w=mini.width,h=mini.height;mc.clearRect(0,0,w,h);mc.fillStyle='#101a34';mc.fillRect(0,0,w,h);
