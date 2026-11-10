@@ -16,24 +16,16 @@
 @keyframes machinePulse{to{box-shadow:0 0 37px #70ffedaa;filter:brightness(1.14)}}
 @media(max-width:700px){.mini-map{top:47px;right:8px;width:90px;padding:5px}.mini-map strong{font-size:8px}.map-floor{height:108px}.map-dot{width:6px;height:6px}.interact{bottom:108px;font-size:12px;padding:7px 13px}.station .icon{width:33px;height:29px}}
 @media(prefers-reduced-motion:reduce){.station.near{animation:none}}
-</style></head><body><div class="shell"><header><a href="/spill/">← ChatGenius Spill</a><b>✦ FREDDYS ARCADE <span>THE WALKABLE HALL · 2026</span></b><a href="/spill/flipperhall/">Flipperhall ↗</a></header><div class="hero"><h1>Velkommen til <em>arkadehallen.</em></h1><p>Gå mellom maskinene, kom nærmere og start spillet du vil prøve.</p></div><main class="scene" id="scene" aria-label="Utforskbar virtuell arkadehall"><div class="view"><div class="photo" id="photo"></div><div class="lights"></div></div><div class="hint" id="hint">← / → snur blikket · ↑ / ↓ går i synsretningen</div><div class="mini-map" aria-label="Kart over hallen"><strong>HALLKART</strong><div class="map-floor" id="mapFloor"><div class="map-player" id="mapPlayer" title="Du er her"></div></div></div><div id="stations"></div><div class="progress" id="progress">Inngangen · 0 m</div><button class="interact" id="interact" hidden>▶ Spill på nærmeste maskin</button><div class="dock" aria-label="Bevegelseskontroller"><button data-move="left" aria-label="Snu mot venstre">⟲</button><button class="walk" data-move="forward" aria-label="Gå fremover">▲</button><button data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu mot høyre">⟳</button><span class="label">Gå bort til en lysende maskin og velg spill</span></div><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="machineTitle"><div class="machine"><div class="big" id="machineIcon"></div><h2 id="machineTitle"></h2><p id="machineDesc"></p><div class="buttons"><a id="playLink" href="#">▶ SPILL NÅ</a><button id="close">← Fortsett å utforske</button></div></div></div></main><div class="footer">ChatGenius Arcade · PC: A/D snu · W/S gå · Mobil: snu/gå eller trykk på en maskin <button id="reset">Til inngangen</button></div></div>
+</style><script src="./machines.js"></script></head><body><div class="shell"><header><a href="/spill/">← ChatGenius Spill</a><b>✦ FREDDYS ARCADE <span>THE WALKABLE HALL · 2026</span></b><a href="/spill/flipperhall/">Flipperhall ↗</a></header><div class="hero"><h1>Velkommen til <em>arkadehallen.</em></h1><p>Gå mellom <span id="machineCount">spillmaskinene</span>, kom nærmere og start spillet du vil prøve.</p></div><main class="scene" id="scene" aria-label="Utforskbar virtuell arkadehall"><div class="view"><div class="photo" id="photo"></div><div class="lights"></div></div><div class="hint" id="hint">← / → snur blikket · ↑ / ↓ går i synsretningen</div><div class="mini-map" aria-label="Kart over hallen"><strong>HALLKART</strong><div class="map-floor" id="mapFloor"><div class="map-player" id="mapPlayer" title="Du er her"></div></div></div><div id="stations"></div><div class="progress" id="progress">Inngangen · 0 m</div><button class="interact" id="interact" hidden>▶ Spill på nærmeste maskin</button><div class="dock" aria-label="Bevegelseskontroller"><button data-move="left" aria-label="Snu mot venstre">⟲</button><button class="walk" data-move="forward" aria-label="Gå fremover">▲</button><button data-move="back" aria-label="Gå bakover">▼</button><button data-move="right" aria-label="Snu mot høyre">⟳</button><span class="label">Gå bort til en lysende maskin og velg spill</span></div><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="machineTitle"><div class="machine"><div class="big" id="machineIcon"></div><h2 id="machineTitle"></h2><p id="machineDesc"></p><div class="buttons"><a id="playLink" href="#">▶ SPILL NÅ</a><button id="close">← Fortsett å utforske</button></div></div></div></main><div class="footer">ChatGenius Arcade · PC: A/D snu · W/S gå · Mobil: snu/gå eller trykk på en maskin <button id="reset">Til inngangen</button></div></div>
 <script>
 (()=>{'use strict';const $=id=>document.getElementById(id),scene=$('scene'),list=$('stations'),photo=$('photo'),modal=$('modal');
-const games=[
-{name:'Castle Chaos',icon:'🏰',desc:'Middelalderflipper med borg, ramper og drageoppdrag.',url:'/spill/flipperhall/?machine=0',side:-1,z:.75,color:'#ffb36c'},
-{name:'Space Invaders',icon:'👾',desc:'Klassisk invasjon av romvesener, oppdatert for mobil og PC.',url:'/spill/mobil/',side:1,z:.75,color:'#64f5dc'},
-{name:'Neon Velocity',icon:'🏎️',desc:'Futuristisk racingflipper med lysende sløyfer og turbobonus.',url:'/spill/flipperhall/?machine=1',side:-1,z:1.65,color:'#54ecff'},
-{name:'Neon Rift 2026',icon:'⚡',desc:'Overlev fiendebølger i den futuristiske neonarenaen.',url:'/spill/neon-rift-2026/',side:1,z:1.65,color:'#d598ff'},
-{name:'Cosmic Odyssey',icon:'🚀',desc:'Kosmisk flipper med portaler, planeter og bonusbaner.',url:'/spill/flipperhall/?machine=2',side:-1,z:2.55,color:'#d69aff'},
-{name:'Galaga',icon:'🛸',desc:'Luftkamp med retrofølelse, bølger og rask arkadeaction.',url:'/spill/galaga/mobil/',side:1,z:2.55,color:'#9cf9fc'},
-{name:'Jungle Temple',icon:'🌿',desc:'Flipper mellom jungelruiner, tunneler og skjulte mål.',url:'/spill/flipperhall/?machine=3',side:-1,z:3.45,color:'#cbf08b'},
-{name:'Tank Battle',icon:'🛡️',desc:'Naviger, sikt og bekjemp fiendtlige stridsvogner.',url:'/spill/tank-battle/mobil/',side:1,z:3.45,color:'#ffcd70'},
-{name:'Abyssal Depths',icon:'🐙',desc:'Dyphavsflipper med glødende koraller og undervannsramper.',url:'/spill/flipperhall/?machine=4',side:-1,z:4.35,color:'#66eaff'},
-{name:'Donkey Kong',icon:'🦍',desc:'Hopp mellom plattformene i et klassisk arkadeeventyr.',url:'/spill/donkey-kong/mobil/',side:1,z:4.35,color:'#ffa66f'},
-{name:'Clockwork Carnival',icon:'🎡',desc:'Mekanisk tivoliflipper med tannhjul og bonusoppdrag.',url:'/spill/flipperhall/?machine=5',side:-1,z:5.2,color:'#ffca85'},
-{name:'Sjakkakademiet',icon:'♟️',desc:'Ta en pause fra action og tren sjakk mot motor og tidligere partier.',url:'/spill/sjakk/',side:1,z:5.2,color:'#f3f4fd'}];
+// The hall and future 3D scenes use the same machine registry.
+const games=(window.CHATGENIUS_ARCADE_MACHINES||[]).filter(g=>g&&g.name&&g.url&&g.id).map((g,i)=>({...g,side:g.side===-1||g.side===1?g.side:(i%2===0?-1:1),z:Number.isFinite(g.z)?g.z:.75+Math.floor(i/2)*.9}));
+const maxDepth=Math.max(5.35,...games.map(g=>g.z+.15));
+$('machineCount').textContent=games.length+' spillmaskiner';
+const depthPct=z=>91-z*83/maxDepth;
 let cam={x:0,z:0,yaw:0},goal=null,active=null,key=new Set(),held=new Set(),prev=performance.now(),nearest=null;
-for(const [i,g] of games.entries()){const b=document.createElement('button');b.className='station';b.type='button';b.style.setProperty('--glow',g.color+'88');b.innerHTML=`<span class="icon">${g.icon}</span><b>${g.name}</b><small>Gå bort hit →</small>`;b.addEventListener('click',()=>select(i));list.append(b);g.element=b;const dot=document.createElement('span');dot.className='map-dot';dot.style.setProperty('--dot',g.color);dot.style.left=(50+g.side*31)+'%';dot.style.top=(91-g.z*15.5)+'%';dot.title=g.name;$('mapFloor').append(dot)}
+for(const [i,g] of games.entries()){const b=document.createElement('button');b.className='station';b.type='button';b.style.setProperty('--glow',g.color+'88');b.innerHTML=`<span class="icon">${g.icon}</span><b>${g.name}</b><small>Gå bort hit →</small>`;b.addEventListener('click',()=>select(i));list.append(b);g.element=b;const dot=document.createElement('span');dot.className='map-dot';dot.style.setProperty('--dot',g.color);dot.style.left=(50+g.side*31)+'%';dot.style.top=depthPct(g.z)+'%';dot.title=g.name;$('mapFloor').append(dot)}
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 const angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 const machineBearing=g=>Math.atan2(g.side*1.08-cam.x,g.z-cam.z);
@@ -54,7 +46,7 @@ function draw(){
  photo.style.transform=`translate(${(-cam.yaw*17-cam.x*4).toFixed(2)}%,${(cam.z*1.1).toFixed(2)}%) scale(${backdropScale.toFixed(3)})`;
  nearest=null;let nearestDistance=Infinity;
  $('mapPlayer').style.left=(50+cam.x*38)+'%';
- $('mapPlayer').style.top=(91-cam.z*15.5)+'%';
+ $('mapPlayer').style.top=depthPct(cam.z)+'%';
  $('mapPlayer').style.transform=`translate(-50%,-50%) rotate(${cam.yaw.toFixed(3)}rad)`;
  for(let i=0;i<games.length;i++){
   const g=games[i],dx=g.side*1.08-cam.x,dz=g.z-cam.z;
@@ -94,7 +86,7 @@ function tick(now){
     cam.yaw+=clamp(angleDiff(travelYaw,cam.yaw),-dt*2.8,dt*2.8);
     const step=Math.min(d,dt*1.25);
     cam.x=clamp(cam.x+mx/d*step,-.88,.88);
-    cam.z=clamp(cam.z+mz/d*step,0,5.35);
+    cam.z=clamp(cam.z+mz/d*step,0,maxDepth);
    }else{
     cam.x=goal.x;cam.z=goal.z;
     const face=goal.i===null?0:machineBearing(games[goal.i]);
@@ -109,7 +101,7 @@ function tick(now){
   }else{
    cam.yaw=clamp(cam.yaw+turn*dt*1.75,-1.5,1.5);
    cam.x=clamp(cam.x+Math.sin(cam.yaw)*move*dt*1.12,-.88,.88);
-   cam.z=clamp(cam.z+Math.cos(cam.yaw)*move*dt*1.12,0,5.35);
+   cam.z=clamp(cam.z+Math.cos(cam.yaw)*move*dt*1.12,0,maxDepth);
   }
  }
  draw();requestAnimationFrame(tick)
