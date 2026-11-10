@@ -879,7 +879,9 @@ function showPracticeSessionSummary(){
   root.appendChild(reminder);
   if(attempts.length){
     stats.practiceSessions ||= [];
-    stats.practiceSessions.push({at:Date.now(),correct,wrong,positions:session.keys.length});
+    const sessionId=`${session.started}:${session.keys.join('~')}`;
+    if(stats.practiceSessions.some(entry=>entry.sessionId===sessionId))return;
+    stats.practiceSessions.push({at:Date.now(),sessionId,correct,wrong,positions:session.keys.length});
     stats.practiceSessions=stats.practiceSessions.slice(-40);
     persist();
     updateSessionHistory();
