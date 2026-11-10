@@ -154,6 +154,19 @@ function render(){
  polygon([{x:-3,y:0,z:end},{x:3,y:0,z:end},{x:3,y:2.9,z:end},{x:-3,y:2.9,z:end}],'#172342','#7056c8',3);
  polygon([{x:-2.05,y:.45,z:end-.02},{x:2.05,y:.45,z:end-.02},{x:2.05,y:2.45,z:end-.02},{x:-2.05,y:2.45,z:end-.02}],'#0a1936','#70e9ff',4);
  for(let i=0;i<7;i++)line({x:-1.9+i*.63,y:.55,z:end-.03},{x:-1.9+i*.63,y:2.33,z:end-.03},'#674cff66',2);
+ // A perspective-aware neon sign anchors the room in a classic 1980s arcade.
+ const sign=project({x:0,y:1.72,z:end-.08});
+ if(sign){
+  const unit=Math.min(w*.78,h*.83)/sign.d,letter=clamp(unit*.27,8,64);
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor='#ff56d8';ctx.shadowBlur=clamp(unit*.35,3,23);
+  ctx.font='900 '+letter+'px system-ui';ctx.fillStyle='#ffd9f7';
+  ctx.fillText('FREDDYS ARCADE',sign.x,sign.y,unit*3.1);
+  ctx.shadowColor='#53f7ff';ctx.shadowBlur=clamp(unit*.2,2,12);
+  ctx.font='800 '+clamp(unit*.12,6,28)+'px system-ui';ctx.fillStyle='#86f9ff';
+  ctx.fillText('★  EST. 1986  ★',sign.x,sign.y+letter*.9,unit*2.5);
+  ctx.restore();
+ }
  for(let z=Math.ceil(end);z>=0;z--){
   polygon([{x:-3,y:0,z},{x:3,y:0,z},{x:3,y:0,z:z+1},{x:-3,y:0,z:z+1}],z%2?'#11182c':'#17223a','#33476c55');
   line({x:-3,y:0,z},{x:3,y:0,z},'#53b5d434');
