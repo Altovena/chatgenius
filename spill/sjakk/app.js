@@ -84,7 +84,7 @@ function updateGameTrend(analyzed){
   }
   root.replaceChildren();
   const heading=document.createElement('h3');heading.textContent='Utvikling fra parti til parti';root.appendChild(heading);
-  const tracked=analyzed.filter(g=>g.analysisVersion===3&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
+  const tracked=analyzed.filter(g=>g.analysisVersion>=3&&g.checked>0&&g.date&&Number.isFinite(Number(g.count)))
     .sort((a,b)=>a.date.localeCompare(b.date)).slice(-20);
   if(!tracked.length){
     const empty=document.createElement('p');empty.className='muted';empty.textContent='Analyser flere Chess.com-partier for å se en sammenlignbar utvikling. Eldre analyser med en annen metode for utvalg av trekk holdes utenfor for å unngå misvisende sammenligninger.';root.appendChild(empty);return;
@@ -581,7 +581,7 @@ function rankedOwnPositions(){
   const priority=p=>{
     const a=stats.puzzles[puzzleKey(p)]||{};
     const due=!a.right||!Number.isFinite(a.nextReview)||a.nextReview<=now||a.wrong>a.right;
-    const severity=Number.isFinite(p.loss)?Math.min(Math.max(p.loss,0),1000)/200:0;
+    const severity=p.forcedMate?5:Number.isFinite(p.loss)?Math.min(Math.max(p.loss,0),1000)/200:0;
     const mistakes=Math.min(a.wrong||0,10);
     return (due?100:0)+mistakes*8+severity*3-Math.min(a.streak||0,5)*6+(a.last?Math.min(5,(now-a.last)/86400000):6);
   };
