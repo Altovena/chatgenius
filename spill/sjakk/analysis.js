@@ -90,9 +90,13 @@ export function setupAnalysis(engine,onPractice,onFindings){
   async function analyzeOne(game,progress,maxMoves=8){
     const replay=new Chess();replay.loadPgn(game.pgn,{strict:false});const allMoves=replay.history({verbose:true});
     const name=el('chessUser').value.trim().toLowerCase();
-    let color=game.white.toLowerCase()===name?'w':game.black.toLowerCase()===name?'b':null;
-    if(!color)color=game.white.toLowerCase().includes('freddy')?'w':game.black.toLowerCase().includes('freddy')?'b':'w';
-    const indices=allMoves.map((_,i)=>i).filter(i=>i%2===(color==='w'?0:1)).slice(-maxMoves);
+    const white=game.white.trim().toLowerCase(),black=game.black.trim().toLowerCase();
+    // Never attribute another player's mistakes to the account being coached.
+    if(name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
+    const color=name?(white===name?'w':'b'):'w';
+    // Sample the entire game, not only the final moves: opening, middlegame and endgame.
+    const ownMoves=allMoves.map((_,i)=>i).filter(i=>i%2===(color==='w'?0:1));
+    const indices=ownMoves.length<=maxMoves?ownMoves:Array.from({length:maxMoves},(_,k)=>ownMoves[Math.round(k*(ownMoves.length-1)/(maxMoves-1))]);
     const position=new Chess(),before=[];for(const move of allMoves){before.push(position.fen());position.move(move)}
     const findings=[];let skipped=0;
     for(let k=0;k<indices.length;k++){
