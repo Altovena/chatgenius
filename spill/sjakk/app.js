@@ -875,9 +875,13 @@ function showPracticeSessionSummary(){
 }
 function startOwnPractice(positions,resumeIndex=0){
   if(!positions.length){setTab('analysis');return}
-  practiceSessionStart={started:Date.now(),keys:[...new Set(positions.map(puzzleKey))]};
+  const keys=positions.map(puzzleKey);
+  const saved=stats.ownQueue;
+  const continuing=resumeIndex>0&&saved?.keys?.length===keys.length&&saved.keys.every((key,i)=>key===keys[i]);
+  const started=continuing&&Number.isFinite(saved.started)?saved.started:Date.now();
+  practiceSessionStart={started,keys:[...new Set(keys)]};
   analysisPractice=positions;analysisPracticeIndex=resumeIndex;analysisReturnTab='progress';trainingOrigin='analysis';
-  stats.ownQueue={keys:positions.map(puzzleKey),index:resumeIndex};
+  stats.ownQueue={keys,index:resumeIndex,started};
   persist();loadPuzzle();setTab('train');
 }
 $('coachFive').onclick=()=>{
