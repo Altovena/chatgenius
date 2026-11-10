@@ -65,15 +65,16 @@ function topicLearningSnapshot(positions){
   const result=new Map();
   for(const p of positions){
     const topic=p.topic||'Andre forbedringspunkter';
-    if(!result.has(topic))result.set(topic,{topic,total:0,trained:0,mastered:0,wrong:0,due:0});
+    if(!result.has(topic))result.set(topic,{topic,total:0,trained:0,mastered:0,wrong:0,due:0,lossTotal:0,lossSamples:0});
     const row=result.get(topic),attempt=stats.puzzles[puzzleKey(p)];
     row.total++;
+    if(Number.isFinite(p.loss)&&p.loss>=0){row.lossTotal+=Math.min(p.loss,1000);row.lossSamples++;}
     if(attempt?.right||attempt?.wrong)row.trained++;
     if((attempt?.streak||0)>=2)row.mastered++;
     row.wrong+=attempt?.wrong||0;
     if(!attempt?.right||attempt.nextReview<=Date.now()||attempt.wrong>attempt.right)row.due++;
   }
-  return [...result.values()].sort((a,b)=>b.due-a.due||b.total-a.total);
+  return [...result.values()].sort((a,b)=>{const priority=x=>x.due*(1+Math.min(x.lossSamples?x.lossTotal/x.lossSamples:100,600)/300);return priority(b)-priority(a)||b.total-a.total;});
 }
 function updateGameTrend(analyzed){
   let root=$('gameTrend');
@@ -139,7 +140,7 @@ function updateAllGamesPlan(){
       header.append(strong,count);
       const track=document.createElement('div');track.className='own-topic-track';
       const fill=document.createElement('i');fill.style.width=`${Math.round(item.mastered/item.total*100)}%`;track.appendChild(fill);
-      const detail=document.createElement('small');detail.textContent=`${item.trained} øvd på · ${item.mastered} mestret to ganger · ${item.wrong} feilforsøk`;
+      const detail=document.createElement('small');detail.textContent=`${item.trained} øvd på · ${item.mastered} mestret to ganger · ${item.wrong} feilforsøk`+(item.lossSamples?` · gjennomsnittlig estimert tap ${Math.round(item.lossTotal/item.lossSamples)} centipawn`:'');
       card.append(header,track,detail);guidance.appendChild(card);
     }
     const note=document.createElement('p');note.className='muted';note.textContent=`Anbefalt nå: ${topics[0].topic.toLowerCase()}. Start med «Tren 10 anbefalte», eller velg tema nedenfor. Et punkt regnes som mestret etter to riktige løsninger på rad.`;guidance.appendChild(note);
