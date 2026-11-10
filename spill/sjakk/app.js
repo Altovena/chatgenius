@@ -288,7 +288,7 @@ function updatePracticeProgress(positions){
         const x=stats.puzzles[puzzleKey(a)]||{},y=stats.puzzles[puzzleKey(b)]||{};
         return (x.nextReview||0)-(y.nextReview||0)||(x.last||0)-(y.last||0);
       }).slice(0,count);
-      const chosen=[...pick(dueItems,6),...pick(missed,2),...pick(newItems,4)];
+      const chosen=[...pick(dueItems,6),...pick(missed,2),...pick(newItems,2)];
       const seen=new Set();
       const session=chosen.filter(p=>{const key=puzzleKey(p);if(seen.has(key))return false;seen.add(key);return true;}).slice(0,10);
       if(session.length<10){
@@ -827,7 +827,7 @@ $('puzzleHint').onclick=()=>{
 };
 $('trainingDifficulty').onchange=()=>{if(trainingOrigin==='analysis')return;queue=[];loadPuzzle()};
 function backToAnalysis(){trainingOrigin='general';setTab(analysisReturnTab);if(analysisReturnTab==='analysis')requestAnimationFrame(()=>window.scrollTo(0,analysisScrollY))}
-function completeOwnQueue(){if(analysisReturnTab==='progress'){stats.ownQueue=null;persist();$('coachAllStatus').textContent='Økten er fullført! Se oppsummeringen nedenfor.';showPracticeSessionSummary()}backToAnalysis()}
+function completeOwnQueue(){if(analysisReturnTab==='progress'){stats.ownQueue=null;persist();$('coachAllStatus').textContent='Økten er fullført! Se oppsummeringen nedenfor.';showPracticeSessionSummary();updateAllGamesPlan()}backToAnalysis()}
 $('nextPuzzle').onclick=()=>{if(trainingOrigin==='analysis'){if(analysisPracticeIndex+1<analysisPractice.length){analysisPracticeIndex++;loadPuzzle()}else completeOwnQueue()}else loadPuzzle()};
 const analysisBack=document.createElement('button');analysisBack.id='analysisBack';analysisBack.className='secondary analysis-back';analysisBack.textContent='← Tilbake til partianalysen';analysisBack.hidden=true;$('trainPanel').querySelector('.training-layout').before(analysisBack);analysisBack.onclick=backToAnalysis;
 const showLine=document.createElement('button');showLine.id='showLine';showLine.className='secondary';showLine.textContent='Se den viktige fortsettelsen →';showLine.hidden=true;$('nextPuzzle').before(showLine);
