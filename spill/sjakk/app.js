@@ -32,7 +32,11 @@ function recordPuzzleAttempt(success){
   if(old.history.length>30)old.history=old.history.slice(-30);
   stats.puzzles[key]=old;
   if(trainingOrigin==='analysis'){
-    old.nextReview=success?Date.now()+[0,1,3,7,14][Math.min(4,old.streak)]*86400000:Date.now();
+    // Spaced repetition: difficult positions return sooner; repeated successes extend the interval.
+    const recentErrors=old.history.slice(-5).filter(entry=>!entry.correct).length;
+    const baseDays=[0,1,3,7,14,30,60][Math.min(6,old.streak)];
+    const intervalDays=success?Math.max(old.streak>=2?1:0,Math.round(baseDays/(1+recentErrors*0.35))):0;
+    old.nextReview=old.last+intervalDays*86400000;
   }
 }
 function archiveFinishedGame(){
@@ -76,7 +80,7 @@ function topicLearningSnapshot(positions){
     if(attempt?.right||attempt?.wrong)row.trained++;
     if((attempt?.streak||0)>=2)row.mastered++;
     row.wrong+=attempt?.wrong||0;
-    if(!attempt?.right||attempt.nextReview<=Date.now()||attempt.wrong>attempt.right)row.due++;
+    if(!attempt?.right||!Number.isFinite(attempt.nextReview)||attempt.nextReview<=Date.now())row.due++;
   }
   return [...result.values()].sort((a,b)=>{const priority=x=>x.due*(1+Math.min(x.lossSamples?x.lossTotal/x.lossSamples:100,600)/300);return priority(b)-priority(a)||b.total-a.total;});
 }
@@ -206,7 +210,7 @@ function updateAllGamesPlan(){
   const analyzed=Object.values(stats.analyzedGames),positions=allOwnPositions();
   const byTopic={};
   for(const record of analyzed)for(const topic of record.topics||[])byTopic[topic]=(byTopic[topic]||0)+1;
-  const review=positions.filter(p=>{const s=stats.puzzles[puzzleKey(p)];return !s?.right||s.nextReview<=Date.now()||s.wrong>s.right});
+  const review=positions.filter(p=>{const s=stats.puzzles[puzzleKey(p)];return !s?.right||!Number.isFinite(s.nextReview)||s.nextReview<=Date.now()});
   const practiced=positions.filter(p=>stats.puzzles[puzzleKey(p)]?.right).length;
   const mastered=positions.filter(p=>(stats.puzzles[puzzleKey(p)]?.streak||0)>=2).length;
   $('allGamesSummary').textContent=`${analyzed.length} analyserte partier · ${positions.length} unike treningsstillinger.`;
@@ -687,7 +691,7 @@ function rankedOwnPositions(){
   const now=Date.now();
   const priority=p=>{
     const a=stats.puzzles[puzzleKey(p)]||{};
-    const due=!a.right||!Number.isFinite(a.nextReview)||a.nextReview<=now||a.wrong>a.right;
+    const due=!a.right||!Number.isFinite(a.nextReview)||a.nextReview<=now;
     const severity=p.forcedMate?5:Number.isFinite(p.loss)?Math.min(Math.max(p.loss,0),1000)/200:0;
     const mistakes=Math.min(a.wrong||0,10);
     return (due?100:0)+mistakes*8+severity*3-Math.min(a.streak||0,5)*6+(a.last?Math.min(5,(now-a.last)/86400000):6);
