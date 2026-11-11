@@ -179,15 +179,21 @@ export function setupAnalysis(engine,onPractice,onFindings){
   el('analyzeBatch').onclick=async()=>{
     if(busy||!games.length||batchCursor>=games.length)return;if(!engine.ready){el('analysisStatus').textContent='Vent til Stockfish er klar.';return}
     busy=true;stopBatch=false;el('analyzeBatch').disabled=true;el('analyzeGame').disabled=true;el('stopBatch').hidden=false;
-    const end=Math.min(games.length,batchCursor+10),start=batchCursor;let completed=0,found=0;
+    const end=Math.min(games.length,batchCursor+10),start=batchCursor;let completed=0,found=0,failed=0;
     try{
       for(let i=start;i<end&&!stopBatch;i++){
         const game=games[i];el('analysisStatus').textContent=`Parti ${i+1} av ${games.length} – forbereder analyse …`;
-        const result=await analyzeOne(game,(k,total)=>el('analysisStatus').textContent=`Parti ${i+1} av ${games.length} · trekk ${k} av ${total} …`,6);
-        if(!stopBatch){completed++;found+=result.findings.length;batchCursor=i+1;saveArchive();el('batchSummary').textContent=`${batchCursor} av ${games.length} partier gjennomgått. ${found} nye forbedringspunkter i denne økten. Se «Din utvikling» for samlet læringsplan.`;}
+        try{
+          const result=await analyzeOne(game,(k,total)=>el('analysisStatus').textContent=`Parti ${i+1} av ${games.length} · trekk ${k} av ${total} …`,6);
+          if(!stopBatch){completed++;found+=result.findings.length;batchCursor=i+1;saveArchive();el('batchSummary').textContent=`${batchCursor} av ${games.length} partier behandlet. ${completed} analysert · ${failed} hoppet over · ${found} forbedringspunkter. Analysen dekker inntil 6 av dine trekk per parti.`;}
+        }catch(error){
+          // Do not let a malformed or mismatched PGN block the rest of the archive.
+          failed++;batchCursor=i+1;saveArchive();
+          el('batchSummary').textContent=`${batchCursor} av ${games.length} partier behandlet. ${completed} analysert · ${failed} hoppet over. Siste feil: ${error.message}`;
+        }
       }
-      el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Ferdig med ${completed} partier. Du kan fortsette med neste gruppe.`;
-      if(batchCursor>=games.length)el('analysisStatus').textContent='Utvalgte trekk i alle importerte partier er gjennomgått (ikke fullstendig analyse av hvert trekk). Tren på forbedringspunktene under «Din utvikling».';
+      el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Utvalgsanalyse ferdig: ${completed} partier analysert, ${failed} hoppet over. Inntil 6 av dine trekk per parti. Du kan fortsette med neste gruppe.`;
+      if(batchCursor>=games.length)el('analysisStatus').textContent='Arkivet er behandlet: ${completed} partier analysert i siste gruppe, ${failed} hoppet over. Dette er en utvalgsanalyse, ikke fullstendig analyse av hvert trekk. Tren på forbedringspunktene under «Din utvikling».';
     }catch(e){el('analysisStatus').textContent='Batchanalysen stoppet: '+e.message}
     finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
   };
