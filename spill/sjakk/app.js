@@ -938,7 +938,10 @@ $('resumeOwnTraining').onclick=()=>{
   const positions=available.map(item=>item.position);
   // Keep the original session start even if a previously analyzed position disappeared.
   const originalStarted=saved.started;
-  const originalCorrect=saved.correct,originalWrong=saved.wrong;
+  // Migrate legacy unfinished sessions once, before recording any new attempts.
+  const legacyAttempts=Number.isFinite(saved.started)?saved.keys.flatMap(key=>(stats.puzzles[key]?.history||[]).filter(h=>h.sessionStarted===saved.started||(h.sessionStarted==null&&h.at>=saved.started&&h.at<=Date.now()))):[];
+  const originalCorrect=Number.isInteger(saved.correct)?saved.correct:legacyAttempts.filter(h=>h.correct).length;
+  const originalWrong=Number.isInteger(saved.wrong)?saved.wrong:legacyAttempts.filter(h=>!h.correct).length;
   startOwnPractice(positions,resumeAt,false);
   if(Number.isFinite(originalStarted)){
     stats.ownQueue.started=originalStarted;practiceSessionStart.started=originalStarted;
