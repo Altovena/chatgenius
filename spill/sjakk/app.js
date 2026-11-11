@@ -24,6 +24,13 @@ stats.analyzedGames ||= {};
 stats.ownQueue ||= null;
 const puzzleKey=p=>`${p.fen}|${p.from}${p.to}`;
 function recordPuzzleAttempt(success){
+  // Upgrade an in-progress legacy session before adding the current attempt.
+  const queue=stats.ownQueue;
+  if(trainingOrigin==='analysis'&&practiceSessionStart&&queue?.started===practiceSessionStart.started&&(!Number.isInteger(queue.correct)||!Number.isInteger(queue.wrong))){
+    const prior=queue.keys.flatMap(k=>(stats.puzzles[k]?.history||[]).filter(h=>h.sessionStarted===queue.started||(h.sessionStarted==null&&h.at>=queue.started&&h.at<=Date.now())));
+    if(!Number.isInteger(queue.correct))queue.correct=prior.filter(h=>h.correct).length;
+    if(!Number.isInteger(queue.wrong))queue.wrong=prior.filter(h=>!h.correct).length;
+  }
   const key=puzzleKey(puzzle),old=stats.puzzles[key]||{right:0,wrong:0,last:0,streak:0};
   old[success?'right':'wrong']++;old.streak=success?old.streak+1:0;
   old.last=Date.now();
