@@ -564,7 +564,7 @@
         var steps = ["Leser nettsiden din…","Velger bransje og design…","Skriver tekster…","Kontrollerer bilder og lager hero…","Setter sammen prøvesiden…","Gjør siden live…"];
         var stepIndex = 0; progressText.textContent = steps[0]; progressBar.style.width = "10%";
         var ticker = setInterval(function () { stepIndex = Math.min(stepIndex + 1, steps.length - 1); progressText.textContent = steps[stepIndex]; progressBar.style.width = (10 + (stepIndex / (steps.length - 1)) * 78) + "%"; }, 9000);
-        fetch(API_BASE + "/api/saas/demosites/request", {
+        fetch("/api/demosites-request", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
             company_name: parsed.companyName, customer_email: email,
             customer_phone: String(data.get("customer_phone") || "").trim() || undefined,
