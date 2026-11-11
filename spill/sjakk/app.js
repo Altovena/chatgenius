@@ -31,6 +31,10 @@ function recordPuzzleAttempt(success){
   old.history.push({at:old.last,correct:Boolean(success),...(trainingOrigin==='analysis'&&practiceSessionStart?{sessionStarted:practiceSessionStart.started}:{})});
   if(old.history.length>200)old.history=old.history.slice(-200);
   stats.puzzles[key]=old;
+  if(trainingOrigin==='analysis'&&practiceSessionStart&&stats.ownQueue?.started===practiceSessionStart.started){
+    stats.ownQueue.correct=(stats.ownQueue.correct||0)+(success?1:0);
+    stats.ownQueue.wrong=(stats.ownQueue.wrong||0)+(success?0:1);
+  }
   if(trainingOrigin==='analysis'){
     // Spaced repetition: difficult positions return sooner; repeated successes extend the interval.
     const recentErrors=old.history.slice(-5).filter(entry=>!entry.correct).length;
@@ -855,8 +859,9 @@ function showPracticeSessionSummary(){
   if(!practiceSessionStart)return;
   const session=practiceSessionStart;practiceSessionStart=null;
   const attempts=session.keys.flatMap(key=>(stats.puzzles[key]?.history||[]).filter(h=>h.sessionStarted===session.started||(h.sessionStarted==null&&h.at>=session.started&&h.at<=Date.now())));
-  const correct=attempts.filter(h=>h.correct).length;
-  const wrong=attempts.length-correct;
+  const saved=stats.ownQueue?.started===session.started?stats.ownQueue:null;
+  const correct=Number.isInteger(saved?.correct)?saved.correct:attempts.filter(h=>h.correct).length;
+  const wrong=Number.isInteger(saved?.wrong)?saved.wrong:attempts.length-correct;
   let root=$('sessionSummary');
   if(!root){
     root=document.createElement('section');root.id='sessionSummary';root.className='own-topic-guidance';
@@ -895,7 +900,7 @@ function startOwnPractice(positions,resumeIndex=0,resuming=false){
   const started=continuing&&Number.isFinite(saved.started)?saved.started:Date.now();
   practiceSessionStart={started,keys:[...new Set(keys)]};
   analysisPractice=positions;analysisPracticeIndex=resumeIndex;analysisReturnTab='progress';trainingOrigin='analysis';
-  stats.ownQueue={keys,index:resumeIndex,started};
+  stats.ownQueue={keys,index:resumeIndex,started,correct:continuing?(saved.correct||0):0,wrong:continuing?(saved.wrong||0):0};
   persist();loadPuzzle();setTab('train');
 }
 $('coachFive').onclick=()=>{
@@ -933,8 +938,14 @@ $('resumeOwnTraining').onclick=()=>{
   const positions=available.map(item=>item.position);
   // Keep the original session start even if a previously analyzed position disappeared.
   const originalStarted=saved.started;
+  const originalCorrect=saved.correct,originalWrong=saved.wrong;
   startOwnPractice(positions,resumeAt,false);
-  if(Number.isFinite(originalStarted)){stats.ownQueue.started=originalStarted;practiceSessionStart.started=originalStarted;persist()}
+  if(Number.isFinite(originalStarted)){
+    stats.ownQueue.started=originalStarted;practiceSessionStart.started=originalStarted;
+    stats.ownQueue.correct=Number.isInteger(originalCorrect)?originalCorrect:undefined;
+    stats.ownQueue.wrong=Number.isInteger(originalWrong)?originalWrong:undefined;
+    persist();
+  }
 };
 $('chessThemeFilter').onchange=()=>{
   const topic=$('chessThemeFilter').value,count=allOwnPositions().filter(p=>topic==='alle'||p.topic===topic).length;
