@@ -90,6 +90,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
   async function analyzeOne(game,progress,maxMoves=8,source='imported'){
     const replay=new Chess();replay.loadPgn(game.pgn,{strict:false});const allMoves=replay.history({verbose:true});
     const name=el('chessUser').value.trim().toLowerCase();
+    if(source!=='academy'&&!name)throw new Error('Skriv inn Chess.com-brukernavnet ditt før personlig analyse, slik at vi vurderer dine trekk og ikke motstanderens.');
     const white=game.white.trim().toLowerCase(),black=game.black.trim().toLowerCase();
     // Never attribute another player's mistakes to the account being coached.
     if(source!=='academy'&&name&&white!==name&&black!==name)throw new Error('Partiet tilhører ikke Chess.com-brukeren '+name+'. Velg riktig brukernavn før personlig analyse.');
@@ -172,7 +173,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10,selectedSource);
-      showFindings(result);el('analysisStatus').textContent=`Ferdig: ${result.findings.length} forbedringspunkter. ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
+      showFindings(result);el('analysisStatus').textContent=`Utvalgsanalyse ferdig: ${result.findings.length} forbedringspunkter fra inntil 10 av dine trekk (ikke fullstendig partianalyse). ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
     }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
   };
   el('analyzeBatch').onclick=async()=>{
@@ -186,7 +187,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
         if(!stopBatch){completed++;found+=result.findings.length;batchCursor=i+1;saveArchive();el('batchSummary').textContent=`${batchCursor} av ${games.length} partier gjennomgått. ${found} nye forbedringspunkter i denne økten. Se «Din utvikling» for samlet læringsplan.`;}
       }
       el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Ferdig med ${completed} partier. Du kan fortsette med neste gruppe.`;
-      if(batchCursor>=games.length)el('analysisStatus').textContent='Alle importerte partier er gjennomgått. Tren på forbedringspunktene under «Din utvikling».';
+      if(batchCursor>=games.length)el('analysisStatus').textContent='Utvalgte trekk i alle importerte partier er gjennomgått (ikke fullstendig analyse av hvert trekk). Tren på forbedringspunktene under «Din utvikling».';
     }catch(e){el('analysisStatus').textContent='Batchanalysen stoppet: '+e.message}
     finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
   };
