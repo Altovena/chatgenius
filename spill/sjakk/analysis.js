@@ -193,7 +193,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
         }
       }
       el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Utvalgsanalyse ferdig: ${completed} partier analysert, ${failed} hoppet over. Inntil 6 av dine trekk per parti. Du kan fortsette med neste gruppe.`;
-      if(batchCursor>=games.length)el('analysisStatus').textContent='Arkivet er behandlet: ${completed} partier analysert i siste gruppe, ${failed} hoppet over. Dette er en utvalgsanalyse, ikke fullstendig analyse av hvert trekk. Tren på forbedringspunktene under «Din utvikling».';
+      if(batchCursor>=games.length)el('analysisStatus').textContent=`Arkivet er behandlet: ${completed} partier analysert i siste gruppe, ${failed} hoppet over. Dette er en utvalgsanalyse, ikke fullstendig analyse av hvert trekk. Tren på forbedringspunktene under «Din utvikling».`;
     }catch(e){el('analysisStatus').textContent='Batchanalysen stoppet: '+e.message}
     finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
   };
