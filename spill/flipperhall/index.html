@@ -199,7 +199,7 @@ function bridgeContact(){if(mode!==0)return;
   if(dragonGateReady&&open&&ball.x>186&&ball.x<275&&ball.y>365&&ball.y<419&&ball.vy<0)activateFeature();
 }
 function updateArms(){for(const side of ['left','right']){const before=angles[side],target=flips[side]?1:0;angles[side]+=Math.max(-.24,Math.min(.24,(target-before)*.42));armVelocity[side]=angles[side]-before}}
-function flipperGeo(side){const left=side==='left',p={x:left?119:341,y:691},a=left?-.22-angles.left*.70:Math.PI+.22+angles.right*.70;return {p,x2:p.x+Math.cos(a)*83,y2:p.y+Math.sin(a)*83,a,side}}
+function flipperGeo(side){const left=side==='left',lower=mode>=3,p={x:left?119:341,y:lower?697:691},base=lower?.08:-.22,sweep=lower?.88:.70,length=lower?96:83,a=left?base-angles.left*sweep:Math.PI-base+angles.right*sweep;return {p,x2:p.x+Math.cos(a)*length,y2:p.y+Math.sin(a)*length,a,side}}
 function simulate(){if(!launched||paused||!playing)return;for(let step=0;step<2;step++){
   // The plunger carries the ball safely up its own guide, then feeds the playfield.
   if(shooterLane){ball.x=414;ball.y-=8.5;if(ball.y<=132){shooterLane=false;ball.x=381;ball.y=132;ball.vx=-6.1;ball.vy=2.5}continue}
@@ -309,7 +309,7 @@ function drawPremiumStage(){if(mode<3)return;ctx.save();
   ctx.restore()
 }
 function drawMechanicalFlipper(side,upper=false){
-  const f=upper?upperGeo(side):flipperGeo(side),length=upper?48:83,thick=upper?12:17,m=modes[mode];
+  const f=upper?upperGeo(side):flipperGeo(side),length=upper?48:mode>=3?96:83,thick=upper?12:17,m=modes[mode];
   const a=Math.atan2(f.y2-f.p.y,f.x2-f.p.x);ctx.save();ctx.translate(f.p.x,f.p.y);ctx.rotate(a);
   ctx.shadowColor='#000e';ctx.shadowBlur=12;ctx.shadowOffsetY=8;
   roundRect(-2,-thick*.72,length+5,thick*1.44,thick*.65,'#11151c','#03070b');
