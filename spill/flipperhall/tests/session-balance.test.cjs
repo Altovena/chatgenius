@@ -91,3 +91,14 @@ test('Jungle Temple first descent remains playable without guaranteed side drain
   assert.ok(controlled.score!==noInput.score||controlled.firstDrainFrame!==noInput.firstDrainFrame,
     'Flipper input should influence the Jungle Temple ball path');
 });
+
+test('Abyssal Depths no longer falls through center on the first descent',()=>{
+  const idle=runSession(4,'idle');
+  const reactive=runSession(4,'reactive');
+  assert.ok(idle.firstDrainFrame===null||idle.firstDrainFrame>=340,
+    'First Abyssal ball should reach lower playfield with a fair chance to respond');
+  assert.ok(reactive.firstDrainFrame===null||reactive.firstDrainFrame>=340,
+    'Reactive flipper play should not cause an unavoidable initial drain');
+  assert.ok(idle.score!==reactive.score||idle.firstDrainFrame!==reactive.firstDrainFrame,
+    'Flipper input must influence Abyssal game outcome');
+});
