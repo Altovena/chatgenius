@@ -875,14 +875,14 @@ function showPracticeSessionSummary(){
     const total=previous.reduce((sum,x)=>sum+x.correct+x.wrong,0);
     if(total){
       const compare=document.createElement('p');compare.className='muted';
-      compare.textContent=`Riktigprosent: ${attempts.length?Math.round(correct/attempts.length*100):0} %. Forrige ${previous.length} økter: ${Math.round(previous.reduce((sum,x)=>sum+x.correct,0)/total*100)} %.`;
+      compare.textContent=`Riktigprosent: ${correct+wrong?Math.round(correct/(correct+wrong)*100):0} %. Forrige ${previous.length} økter: ${Math.round(previous.reduce((sum,x)=>sum+x.correct,0)/total*100)} %.`;
       root.appendChild(compare);
     }
   }
   const reminder=document.createElement('p');reminder.className='muted';
   reminder.textContent=wrong?'Stillinger med feil blir prioritert ved neste repetisjon.':'Ingen registrerte feilforsøk i denne økten.';
   root.appendChild(reminder);
-  if(attempts.length){
+  if(correct+wrong){
     stats.practiceSessions ||= [];
     const sessionId=`${session.started}:${session.keys.join('~')}`;
     if(stats.practiceSessions.some(entry=>entry.sessionId===sessionId))return;
