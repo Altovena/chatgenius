@@ -257,6 +257,28 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(/^[\\w-]{2,30}$/.test(value))localStorage.setItem('freddyChessComUsername',value);
     else if(!value)localStorage.removeItem('freddyChessComUsername');
   });
+  // Chess.com is opened as its own trusted site. Never read or advise on a live game.
+  let awaitingChessReturn=false;
+  const autoFetch=el('autoFetchChessGames');
+  try{autoFetch.checked=localStorage.getItem('freddyChessAutoFetch')!=='false'}catch{}
+  autoFetch.addEventListener('change',()=>{try{localStorage.setItem('freddyChessAutoFetch',String(autoFetch.checked))}catch{}});
+  el('playChessCom').onclick=()=>{
+    const name=chessName.value.trim();
+    if(!/^[\\w-]{2,30}$/.test(name)){status('Skriv inn Chess.com-brukernavnet ditt først.');chessName.focus();return}
+    awaitingChessReturn=true;
+    try{localStorage.setItem('freddyChessComUsername',name)}catch{}
+    const opened=window.open('https://www.chess.com/play/online','_blank','noopener,noreferrer');
+    if(!opened)status('Nettleseren blokkerte ny fane. Tillat popup for å åpne Chess.com.');
+    else status('Chess.com er åpnet. Kom tilbake etter at partiet er ferdig for å hente det.');
+  };
+  window.addEventListener('focus',()=>{
+    if(!awaitingChessReturn)return;
+    awaitingChessReturn=false;
+    if(autoFetch.checked&&!el('fetchGames').disabled){
+      status('Velkommen tilbake! Ser etter ferdige partier i Chess.com-arkivet …');
+      el('fetchGames').click();
+    }else status('Velkommen tilbake. Trykk «Hent siste partier» når kampen er avsluttet.');
+  });
   updateBatchControls();
   return {analyzeFinishedGame};
 }
