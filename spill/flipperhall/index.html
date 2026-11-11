@@ -154,6 +154,7 @@ let bridgePhase=0,bridgeHits=0,upperLamps=[false,false,false];
 let featureCooldown=0,dragonGateReady=false,turboCharges=0,portalJumps=0,featureFlash=0;
 let leftSaveCooldown=0,rightSaveCooldown=0;
 let bumperHitTicks=[],targetHitTicks=[],slowBallTicks=0;
+let trapSamples=0,trapMinX=Infinity,trapMaxX=-Infinity,trapMinY=Infinity,trapMaxY=-Infinity;
 let transportRide=null,transportCooldown=0,dropHits=[false,false,false],multiplierTicks=0,dropResetTicks=0;
 function startTransport(kind){if(transportCooldown>0||transportRide)return;transportCooldown=135;transportRide={kind,t:0,startX:ball.x,startY:ball.y};addPoints(kind==='tunnel'?650:900,kind==='tunnel'?'HEMMELIG TUNNEL':'BRO OVER BANEN');tone(kind==='tunnel'?620:790,.2)}
 function advanceTransport(){if(!transportRide)return false;const r=transportRide;r.t=Math.min(1,r.t+.026);const t=r.t;
@@ -243,6 +244,16 @@ function simulate(){if(!launched||paused||!playing)return;for(let step=0;step<2;
   // Rescue a genuinely stationary ball after several seconds, without granting points.
   if(Math.hypot(ball.vx,ball.vy)<.45)slowBallTicks++;else slowBallTicks=0;
   if(slowBallTicks>180){ball.vx=ball.x<230?2.5:-2.5;ball.vy=ball.y<400?5.5:-3.5;slowBallTicks=0}
+  // A ball can vibrate against a rail at nonzero velocity without going anywhere.
+  // Track the occupied area for roughly three seconds, then free only true traps.
+  trapSamples++;trapMinX=Math.min(trapMinX,ball.x);trapMaxX=Math.max(trapMaxX,ball.x);
+  trapMinY=Math.min(trapMinY,ball.y);trapMaxY=Math.max(trapMaxY,ball.y);
+  if(trapSamples>=360){
+    if(trapMaxX-trapMinX<24&&trapMaxY-trapMinY<24&&ball.y<650){
+      ball.vx=ball.x<230?3.8:-3.8;ball.vy=ball.y<430?5.8:-6.5;
+    }
+    trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;
+  }
   ball.vx=Math.max(-17,Math.min(17,ball.vx));ball.vy=Math.max(-20,Math.min(20,ball.vy));
   if(ball.y>811){finishBall();return}
 }}
@@ -351,7 +362,7 @@ if(ballTrail.length){ctx.save();for(const p of ballTrail){p.life-=.06;if(p.life<
 if(ball){ctx.beginPath();ctx.arc(ball.x+3,ball.y+4,ball.r+1,0,7);ctx.fillStyle='#000a';ctx.fill();let grad=ctx.createRadialGradient(ball.x-3,ball.y-4,1,ball.x,ball.y,ball.r);grad.addColorStop(0,'white');grad.addColorStop(.4,'#c7dfed');grad.addColorStop(1,'#516a7c');ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,7);ctx.fillStyle=grad;ctx.fill()}if(!launched&&playing){ctx.fillStyle='#ffe1a1';ctx.font='bold 13px system-ui';ctx.fillText('TRYKK SKYT FOR Å STARTE',225,752)}ctx.textAlign='left';}
 function frame(t){const dt=Math.min(40,t-last||16);last=t;if(playing&&!paused){updateArms();const steps=Math.max(1,Math.min(3,Math.round(dt/16)));for(let i=0;i<steps;i++)simulate()}draw();if(ticks%12===0&&playing)updateFeaturePanel();const event=document.getElementById('scoreEvent');const message=toastTime>0?toast:'';if(event.textContent!==message)event.textContent=message;if(toastTime>0)toastTime--;requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const originalStartMode=startMode;
-startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];bridgeHits=0;bridgePhase=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
+startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];bridgeHits=0;bridgePhase=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
 
 // Allow the walkable arcade hall to open one selected pinball machine directly.
 const requestedMachine=new URLSearchParams(window.location.search).get('machine');
