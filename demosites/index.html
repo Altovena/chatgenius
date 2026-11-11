@@ -116,6 +116,13 @@
     .builder-capability-note { padding:12px 14px; border:1px solid #b45309; border-radius:10px; background:rgba(180,83,9,.08); margin:12px 0; font-size:.9rem; }
     .builder-step[hidden], .builder-final[hidden] { display:none; }
     .builder-wizard-progress { margin:0 0 16px; color:var(--ink-soft); font-weight:700; }
+    .builder-review { border:1px solid var(--line); border-radius:14px; background:var(--surface-strong); padding:16px; margin-bottom:16px; }
+    .builder-review h3 { margin:0 0 12px; }
+    .builder-review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+    .builder-review-item { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+    .builder-review-item strong { font-size:.82rem; color:var(--ink-soft); }
+    .builder-review-item span { line-height:1.45; overflow-wrap:anywhere; }
+    .builder-review-item button { border:0; padding:4px 0; background:transparent; color:var(--teal); text-decoration:underline; font:inherit; cursor:pointer; }
     .builder-wizard-nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin:16px 0; }
     .builder-wizard-nav button { min-height:46px; padding:10px 22px; border:1px solid var(--line); border-radius:12px; font:inherit; font-weight:700; cursor:pointer; }
     .builder-wizard-nav button:last-child { background:var(--teal); color:white; }
@@ -258,6 +265,17 @@
             </div>
           </fieldset>
           <div class="builder-final" id="builder-final">
+          <section class="builder-review" aria-label="Gjennomgå valgene dine">
+            <h3>Dette har du valgt</h3>
+            <div class="builder-review-grid">
+              <div class="builder-review-item"><strong>Formål</strong><span id="builder-review-purpose"></span><button type="button" data-review-step="0">Endre formål</button></div>
+              <div class="builder-review-item"><strong>Virksomhet</strong><span id="builder-review-business"></span><button type="button" data-review-step="1">Endre virksomhet</button></div>
+              <div class="builder-review-item"><strong>Oppbygning</strong><span id="builder-review-structure"></span><button type="button" data-review-step="2">Endre oppbygning</button></div>
+              <div class="builder-review-item"><strong>Visuell profil</strong><span id="builder-review-profile"></span><button type="button" data-review-step="3">Endre profil</button></div>
+              <div class="builder-review-item"><strong>Design</strong><span id="builder-review-design"></span><button type="button" data-review-step="4">Endre design</button></div>
+            </div>
+            <p class="muted" style="margin:12px 0 0">Ingen betaling nå. Prøvesiden er gratis og tilgjengelig i fire dager.</p>
+          </section>
           <div class="order-grid" style="margin-top:12px">
             <label class="full">Språk på nettsiden
               <select name="site_language" aria-label="Språk på nettsiden">
@@ -360,6 +378,7 @@
         wizardIndex = Math.max(0, Math.min(index, wizardSteps.length - 1));
         wizardSteps.forEach(function (step, i) { step.hidden = i !== wizardIndex; });
         document.getElementById("builder-wizard-progress").textContent = "Trinn " + (wizardIndex + 1) + " av " + wizardSteps.length + (wizardIndex === wizardSteps.length - 1 ? " · Gjennomgå og lag prøveside" : "");
+        if (wizardIndex === wizardSteps.length - 1) updateReviewSummary();
         document.getElementById("order-error").style.display = "none";
         if (shouldScroll !== false) document.getElementById("builder-wizard-progress").scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -474,6 +493,22 @@
         return { purposes: purposes, structure: structure, pages: structure === "onepage" ? pages.map(function (p) { return p + " (seksjon)"; }) : pages, cta: cta,
           audience: String(data.get("target_audience") || "").trim(), market: String(data.get("market") || "").trim(), goal: String(data.get("primary_goal") || "").trim(), inspiration: String(data.get("inspiration_urls") || "").trim() };
       }
+      function updateReviewSummary() {
+        var data = new FormData(form);
+        var plan = buildPlan(data);
+        var purposeLabels = Array.from(form.querySelectorAll('input[name="site_purpose"]:checked')).map(function (input) { return input.parentElement.textContent.trim(); });
+        var structureLabels = { onepage: "Én side", multipage: "Ønske om undersider (prøvesiden blir én side)" };
+        var selectedDesign = form.querySelector('input[name="design_layout"]:checked');
+        var designLabels = { auto: "AI anbefaler", cinematic: "Cinematic", bento: "Bento", atelier: "Atelier" };
+        document.getElementById("builder-review-purpose").textContent = purposeLabels.join(", ") || "Systemet anbefaler";
+        document.getElementById("builder-review-business").textContent = String(data.get("site_or_name") || "").trim() || "Ikke oppgitt";
+        document.getElementById("builder-review-structure").textContent = structureLabels[plan.structure] || "AI anbefaler";
+        document.getElementById("builder-review-profile").textContent = data.has("brand_profile_enabled") ? "Egne farger og profilregler" : "Systemet velger visuell profil";
+        document.getElementById("builder-review-design").textContent = designLabels[selectedDesign ? selectedDesign.value : "auto"] || "AI anbefaler";
+      }
+      document.querySelectorAll("[data-review-step]").forEach(function (button) {
+        button.addEventListener("click", function () { showWizardStep(Number(button.getAttribute("data-review-step"))); });
+      });
       function showPlan() {
         var plan = buildPlan(new FormData(form));
         var pages = document.getElementById("builder-plan-pages");
@@ -529,7 +564,7 @@
         var steps = ["Leser nettsiden din…","Velger bransje og design…","Skriver tekster…","Kontrollerer bilder og lager hero…","Setter sammen prøvesiden…","Gjør siden live…"];
         var stepIndex = 0; progressText.textContent = steps[0]; progressBar.style.width = "10%";
         var ticker = setInterval(function () { stepIndex = Math.min(stepIndex + 1, steps.length - 1); progressText.textContent = steps[stepIndex]; progressBar.style.width = (10 + (stepIndex / (steps.length - 1)) * 78) + "%"; }, 9000);
-        fetch(API_BASE + "/api/saas/demosites/request", {
+        fetch("/api/demosites-request", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
             company_name: parsed.companyName, customer_email: email,
             customer_phone: String(data.get("customer_phone") || "").trim() || undefined,
