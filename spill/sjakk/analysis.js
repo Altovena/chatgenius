@@ -251,10 +251,10 @@ export function setupAnalysis(engine,onPractice,onFindings){
   // Husk Chess.com-brukernavnet på enheten mellom besøk.
   const chessName=el('chessUser');
   const storedName=localStorage.getItem('freddyChessComUsername')||'';
-  if(!chessName.value&&/^[\\w-]{2,30}$/.test(storedName))chessName.value=storedName;
+  if(!chessName.value&&/^[\w-]{2,30}$/.test(storedName))chessName.value=storedName;
   chessName.addEventListener('change',()=>{
     const value=chessName.value.trim();
-    if(/^[\\w-]{2,30}$/.test(value))localStorage.setItem('freddyChessComUsername',value);
+    if(/^[\w-]{2,30}$/.test(value))localStorage.setItem('freddyChessComUsername',value);
     else if(!value)localStorage.removeItem('freddyChessComUsername');
   });
   // Chess.com is opened as its own trusted site. Never read or advise on a live game.
@@ -262,14 +262,14 @@ export function setupAnalysis(engine,onPractice,onFindings){
   const autoFetch=el('autoFetchChessGames');
   try{autoFetch.checked=localStorage.getItem('freddyChessAutoFetch')!=='false'}catch{}
   autoFetch.addEventListener('change',()=>{try{localStorage.setItem('freddyChessAutoFetch',String(autoFetch.checked))}catch{}});
-  el('playChessCom').onclick=()=>{
-    const name=chessName.value.trim();
-    if(!/^[\\w-]{2,30}$/.test(name)){status('Skriv inn Chess.com-brukernavnet ditt først.');chessName.focus();return}
+  el('playChessCom').addEventListener('click',()=>{
     awaitingChessReturn=true;
-    try{localStorage.setItem('freddyChessComUsername',name)}catch{}
-    const link=document.createElement('a');link.href='https://www.chess.com/play/online';link.target='_blank';link.rel='noopener noreferrer';link.click();
-    status('Chess.com åpnes i en ny fane. Kom tilbake etter at partiet er ferdig for å hente det.');
-  };
+    const name=chessName.value.trim();
+    if(/^[\w-]{2,30}$/.test(name)){
+      try{localStorage.setItem('freddyChessComUsername',name)}catch{}
+    }
+    status('Chess.com åpnes i ny fane. Når du kommer tilbake, kan vi hente ferdige partier.');
+  });
   window.addEventListener('focus',()=>{
     if(!awaitingChessReturn)return;
     awaitingChessReturn=false;
