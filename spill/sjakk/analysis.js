@@ -157,7 +157,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     findings.sort((a,b)=>(b.forcedMate?100000:b.loss)-(a.forcedMate?100000:a.loss));
     const practicePositions=findings.map(f=>({fen:f.fen,from:f.from,to:f.to,skill:'Egne partier',source,topic:f.topic,loss:f.loss,forcedMate:f.forcedMate,opponentReply:f.opponentReply,played:f.actual,title:`${source==='academy'?'Mot datamaskinen':'Chess.com'} · trekk ${f.moveNo}`,prompt:`Du spilte ${f.actual}. Finn selv et bedre trekk. Hva overså du?`,explain:`Du spilte ${f.actual}. Stockfish foretrekker ${f.best}. ${f.opponentReply?`Et mulig sterkt svar fra motstanderen etter ditt trekk er ${f.opponentReply}. `:''}${f.explanation}`}));
     if(!stopBatch&&skipped<indices.length)onFindings?.({gameId:String(fingerprint>>>0),topics:findings.map(f=>f.topic),count:findings.length,positions:practicePositions,source,date:game.date,white:game.white,black:game.black,checked:indices.length-skipped,analysisVersion:4});
-    return {findings,practicePositions,skipped};
+    return {findings,practicePositions,skipped,checked:indices.length-skipped,selectedMoves:indices.length,totalOwnMoves:ownMoves.length};
   }
   function showFindings(result){
     const root=el('analysisResults');root.replaceChildren();
@@ -175,7 +175,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Grundig analyse: trekk ${k} av ${total} …`,Infinity,selectedSource);
       showFindings(result);
-      el('analysisStatus').textContent=`Alle dine trekk gjennomgått med korte Stockfish-søk: ${result.findings.length} forbedringspunkter. ${result.skipped?`${result.skipped} stillinger kunne ikke vurderes.`:''} Dette er ikke en dybdeanalyse på turneringsnivå.`;
+      el('analysisStatus').textContent=`${result.checked} av ${result.totalOwnMoves} egne trekk vurdert med korte Stockfish-søk: ${result.findings.length} forbedringspunkter. ${result.skipped?`${result.skipped} stillinger kunne ikke vurderes.`:''} Dette er ikke en dybdeanalyse på turneringsnivå.`;
     }catch(error){el('analysisStatus').textContent='Grundig analyse stoppet: '+error.message}
     finally{busy=false;el('analyzeFullGame').disabled=!selected;el('analyzeGame').disabled=!selected;updateBatchControls()}
   };
@@ -185,7 +185,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeFullGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10,selectedSource);
-      showFindings(result);el('analysisStatus').textContent=`Utvalgsanalyse ferdig: ${result.findings.length} forbedringspunkter fra inntil 10 av dine trekk (ikke fullstendig partianalyse). ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
+      showFindings(result);el('analysisStatus').textContent=`Utvalgsanalyse ferdig: ${result.findings.length} forbedringspunkter. ${result.checked} av ${result.totalOwnMoves} egne trekk vurdert (${result.selectedMoves} valgt ut). Dette er ikke en fullstendig partianalyse. ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
     }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=!selected;el('analyzeFullGame').disabled=!selected;updateBatchControls()}
   };
   el('analyzeBatch').onclick=async()=>{
