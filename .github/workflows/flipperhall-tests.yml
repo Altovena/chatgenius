@@ -1,0 +1,29 @@
+name: Flipperhall regression tests
+
+on:
+  pull_request:
+    paths:
+      - 'spill/flipperhall/**'
+      - '.github/workflows/flipperhall-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'spill/flipperhall/**'
+      - '.github/workflows/flipperhall-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinball-regression:
+    name: Verify pinball launches and flipper balance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check launch paths and flipper geometry
+        run: node --test spill/flipperhall/tests/launch.test.cjs
