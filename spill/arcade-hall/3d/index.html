@@ -80,6 +80,17 @@ main{position:absolute;inset:0}canvas{display:block;width:100%;height:100%;touch
 .arcade-cabinet[data-shell="galaxy"]::before{background:radial-gradient(circle at 70% 35%,var(--glow),transparent 30%),linear-gradient(145deg,#322b62,#080e20)}
 .arcade-cabinet[data-shell="electric"]::before{background:repeating-linear-gradient(65deg,#111a31 0 10px,var(--glow) 11px 13px,#1b2a45 15px 25px)}
 .arcade-cabinet.pinball .coin-door{bottom:0;height:7%;left:38%;width:24%}
+/* Lightweight CRT attract-mode shimmer; compositor-only animation, no video requests. */
+.arcade-cabinet:not(.pinball) .screen::after{content:"";position:absolute;inset:-75% 0 0;z-index:1;pointer-events:none;opacity:.42;background:linear-gradient(180deg,transparent 0 35%,#d5fffc22 47%,#ffffff55 50%,#a9f5ff18 53%,transparent 65%);animation:crt-attract 6.5s linear infinite;transform:translateY(-50%)}
+.arcade-cabinet:nth-child(3n) .screen::after{animation-delay:-2.1s}
+.arcade-cabinet:nth-child(3n + 1) .screen::after{animation-delay:-4.3s}
+@keyframes crt-attract{0%,12%{transform:translateY(-60%)}76%,100%{transform:translateY(105%)}}
+.arcade-cabinet.pinball .panel{isolation:isolate;background:linear-gradient(90deg,#d1f4ff5c 0 3%,transparent 4% 96%,#d1f4ff5c 97%),radial-gradient(ellipse at 50% 20%,#f4f9ff88 0 2%,transparent 4%),repeating-linear-gradient(145deg,#93deed55 0 5px,transparent 6px 15px),radial-gradient(circle at 50% 40%,var(--glow),#121c4e 60%,#070b1a)}
+.arcade-cabinet.pinball .pinball-bats{position:absolute;left:0;right:0;bottom:21%;height:25%;pointer-events:none}
+.arcade-cabinet.pinball .pinball-bats::before,.arcade-cabinet.pinball .pinball-bats::after{content:"";position:absolute;top:10%;width:35%;height:42%;border:1px solid #fff8;border-radius:60% 30% 30% 60%;background:linear-gradient(#fff9e4,#ed637c 45%,#9e2447);box-shadow:0 0 7px #fbc9d899}
+.arcade-cabinet.pinball .pinball-bats::before{left:14%;transform:rotate(23deg);transform-origin:left center}
+.arcade-cabinet.pinball .pinball-bats::after{right:14%;transform:rotate(-23deg);transform-origin:right center}
+@media(prefers-reduced-motion:reduce){.arcade-cabinet .screen::after{animation:none!important;opacity:.18!important;transform:translateY(0)!important}}
 .arcade-cabinet[hidden]{display:none!important}
 .arcade-cabinet:hover,.arcade-cabinet:focus-visible{filter:brightness(1.24);outline:2px solid #fff;outline-offset:2px}
 </style>
@@ -140,7 +151,7 @@ function boxFront(g){
  pick.push({g,bounds,dist,diff});
  if(dist<1.6&&diff<.72){ctx.font='900 '+clamp(size*.1,11,18)+'px system-ui';ctx.fillStyle='#b5ffec';ctx.fillText('▶ SPILL',p.x,top-12)}
 }
-const cabinets=games.map((g,i)=>{const el=document.createElement('button');el.dataset.shell=['stripes','racing','galaxy','electric'][i%4];el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'')+(g.side===1?' side-right':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"></span><span class="coin-door" aria-hidden="true"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
+const cabinets=games.map((g,i)=>{const el=document.createElement('button');el.dataset.shell=['stripes','racing','galaxy','electric'][i%4];el.type='button';el.className='arcade-cabinet'+(g.url.includes('/flipperhall/')?' pinball':'')+(g.side===1?' side-right':'');el.style.setProperty('--glow',g.color||'#75ffe8');el.setAttribute('aria-label','Gå til '+g.name);el.innerHTML='<span class="marquee"></span><span class="screen"></span><span class="panel"><span class="pinball-bats" aria-hidden="true"></span></span><span class="coin-door" aria-hidden="true"></span>';el.children[0].textContent=g.name;el.children[1].textContent=g.icon;el.addEventListener('click',()=>select(g));$('cabinet-layer').appendChild(el);return {g,el}});
 function renderCabinets(){
  const h=canvas.height,w=canvas.width,scaleX=canvas.clientWidth/w,scaleY=canvas.clientHeight/h;
  for(const {g,el} of cabinets){
