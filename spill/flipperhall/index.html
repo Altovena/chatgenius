@@ -202,7 +202,7 @@ function updateArms(){for(const side of ['left','right']){const before=angles[si
 function flipperGeo(side){const left=side==='left',lower=mode>=3,p={x:left?119:341,y:lower?697:691},base=lower?.08:-.22,sweep=lower?.88:.70,length=lower?89:83,a=left?base-angles.left*sweep:Math.PI-base+angles.right*sweep;return {p,x2:p.x+Math.cos(a)*length,y2:p.y+Math.sin(a)*length,a,side}}
 function simulate(){if(!launched||paused||!playing)return;for(let step=0;step<2;step++){
   // The plunger carries the ball safely up its own guide, then feeds the playfield.
-  if(shooterLane){ball.x=414;ball.y-=8.5;if(ball.y<=132){shooterLane=false;ball.x=381;ball.y=132;ball.vx=-6.1;ball.vy=2.5}continue}
+  if(shooterLane){ball.x=414;ball.y-=8.5;if(ball.y<=132){shooterLane=false;if(mode===4){ball.x=369;ball.y=104;ball.vx=-3.9;ball.vy=-5.8}else{ball.x=381;ball.y=132;ball.vx=-6.1;ball.vy=2.5}}continue}
   if(advanceTransport())continue;
   if(advanceRamp())continue;
   ticks++;if(bridgeHitCooldown>0)bridgeHitCooldown--;if(featureCooldown>0)featureCooldown--;if(leftSaveCooldown>0)leftSaveCooldown--;if(rightSaveCooldown>0)rightSaveCooldown--;if(transportCooldown>0)transportCooldown--;if(multiplierTicks>0){multiplierTicks--;if(multiplierTicks===0){dropHits=[false,false,false];updateMission()}}const previousY=ball.y;ball.vy+=[.102,.117,.106,.100,.099,.112][mode];ball.vx*=.999;ball.vy*=.999;ball.x+=ball.vx*.5;ball.y+=ball.vy*.5;
