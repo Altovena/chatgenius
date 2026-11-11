@@ -42,3 +42,13 @@ test('Last three machines keep a playable flipper gap',()=>{
   assert.match(flipper,/length=lower\?89:83/);
   assert.match(html,/if\(mode<3&&ball\.vy>0&&ball\.y>616/);
 });
+
+test('Mobile mission HUD is visible and updated together with desktop progress',()=>{
+  for(const id of ['mobileMission','mobileMissionText','mobileMissionPercent','mobileMissionFill']){
+    assert.ok(html.includes('id="'+id+'"'), 'Missing mobile progress node '+id);
+  }
+  assert.match(html,/\.mobile-mission\{display:none\}/);
+  assert.match(html,/@media\(max-width:760px\)\{\s*\.mobile-mission\{display:flex/);
+  assert.match(html,/getElementById\('mobileMissionFill'\)\.style\.width=percent\+'%'/);
+  assert.match(html,/getElementById\('mobileMissionText'\)\.textContent=/);
+});
