@@ -900,7 +900,7 @@ function startOwnPractice(positions,resumeIndex=0,resuming=false){
   const started=continuing&&Number.isFinite(saved.started)?saved.started:Date.now();
   practiceSessionStart={started,keys:[...new Set(keys)]};
   analysisPractice=positions;analysisPracticeIndex=resumeIndex;analysisReturnTab='progress';trainingOrigin='analysis';
-  stats.ownQueue={keys,index:resumeIndex,started,correct:continuing?(saved.correct||0):0,wrong:continuing?(saved.wrong||0):0};
+  stats.ownQueue={keys,index:resumeIndex,started,correct:continuing?(Number.isInteger(saved.correct)?saved.correct:undefined):0,wrong:continuing?(Number.isInteger(saved.wrong)?saved.wrong:undefined):0};
   persist();loadPuzzle();setTab('train');
 }
 $('coachFive').onclick=()=>{
