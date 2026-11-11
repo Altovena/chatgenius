@@ -267,9 +267,8 @@ export function setupAnalysis(engine,onPractice,onFindings){
     if(!/^[\\w-]{2,30}$/.test(name)){status('Skriv inn Chess.com-brukernavnet ditt først.');chessName.focus();return}
     awaitingChessReturn=true;
     try{localStorage.setItem('freddyChessComUsername',name)}catch{}
-    const opened=window.open('https://www.chess.com/play/online','_blank','noopener,noreferrer');
-    if(!opened)status('Nettleseren blokkerte ny fane. Tillat popup for å åpne Chess.com.');
-    else status('Chess.com er åpnet. Kom tilbake etter at partiet er ferdig for å hente det.');
+    const link=document.createElement('a');link.href='https://www.chess.com/play/online';link.target='_blank';link.rel='noopener noreferrer';link.click();
+    status('Chess.com åpnes i en ny fane. Kom tilbake etter at partiet er ferdig for å hente det.');
   };
   window.addEventListener('focus',()=>{
     if(!awaitingChessReturn)return;
