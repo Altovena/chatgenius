@@ -150,7 +150,7 @@ function advanceRamp(){if(!rampRide)return false;const r=rampRide;r.t=Math.min(1
   ballTrail.push({x:ball.x,y:ball.y,life:1});if(ballTrail.length>10)ballTrail.shift();
   if(r.t>=1){rampRide=null;ball.vx=r.special?-3:mirror*2.1;ball.vy=3.3;upperLamps[2]=true;toast=r.special?'DRAGERAMPEN FULLFØRT':'RAMP COMPLETE!';toastTime=65}
   return true}
-let bridgePhase=0,bridgeHits=0,upperLamps=[false,false,false];
+let bridgePhase=0,bridgeHits=0,bridgeHitCooldown=0,upperLamps=[false,false,false];
 let featureCooldown=0,dragonGateReady=false,turboCharges=0,portalJumps=0,featureFlash=0;
 let leftSaveCooldown=0,rightSaveCooldown=0;
 let bumperHitTicks=[],targetHitTicks=[],slowBallTicks=0;
@@ -194,7 +194,7 @@ function bridgeContact(){if(mode!==0)return;
   bridgePhase=(bridgePhase+.008)%(Math.PI*2);const open=Math.sin(bridgePhase)>0.4;
   if(!open&&ball.x>191&&ball.x<269&&ball.y>378&&ball.y<394&&ball.vy<0){
     ball.y=395;ball.vy=Math.abs(ball.vy)*.78;ball.vx+=(ball.x<230?-1:1)*1.4;
-    bridgeHits++;if(bridgeHits%3===0){addPoints(750,'LØFTEBRO');upperLamps[2]=true;dragonGateReady=true}updateFeaturePanel()
+    if(bridgeHitCooldown===0){bridgeHits++;bridgeHitCooldown=50;if(bridgeHits%3===0){addPoints(750,'LØFTEBRO');upperLamps[2]=true;dragonGateReady=true}updateFeaturePanel()}
   }
   if(dragonGateReady&&open&&ball.x>186&&ball.x<275&&ball.y>365&&ball.y<419&&ball.vy<0)activateFeature();
 }
@@ -205,7 +205,7 @@ function simulate(){if(!launched||paused||!playing)return;for(let step=0;step<2;
   if(shooterLane){ball.x=414;ball.y-=8.5;if(ball.y<=132){shooterLane=false;ball.x=381;ball.y=132;ball.vx=-6.1;ball.vy=2.5}continue}
   if(advanceTransport())continue;
   if(advanceRamp())continue;
-  ticks++;if(featureCooldown>0)featureCooldown--;if(leftSaveCooldown>0)leftSaveCooldown--;if(rightSaveCooldown>0)rightSaveCooldown--;if(transportCooldown>0)transportCooldown--;if(multiplierTicks>0){multiplierTicks--;if(multiplierTicks===0){dropHits=[false,false,false];updateMission()}}const previousY=ball.y;ball.vy+=[.102,.117,.106,.100,.099,.112][mode];ball.vx*=.999;ball.vy*=.999;ball.x+=ball.vx*.5;ball.y+=ball.vy*.5;
+  ticks++;if(bridgeHitCooldown>0)bridgeHitCooldown--;if(featureCooldown>0)featureCooldown--;if(leftSaveCooldown>0)leftSaveCooldown--;if(rightSaveCooldown>0)rightSaveCooldown--;if(transportCooldown>0)transportCooldown--;if(multiplierTicks>0){multiplierTicks--;if(multiplierTicks===0){dropHits=[false,false,false];updateMission()}}const previousY=ball.y;ball.vy+=[.102,.117,.106,.100,.099,.112][mode];ball.vx*=.999;ball.vy*=.999;ball.x+=ball.vx*.5;ball.y+=ball.vy*.5;
   if(ball.x<38){ball.x=38;ball.vx=Math.abs(ball.vx)*.82}if(ball.x>421){ball.x=421;ball.vx=-Math.abs(ball.vx)*.82}if(ball.y<37){ball.y=37;ball.vy=Math.abs(ball.vy)*.82}
   segments.forEach(s=>collideSegment(...s[0],...s[1]));
   const course=layout();course.walls.forEach(s=>collideSegment(...s[0],...s[1]));
@@ -363,7 +363,7 @@ if(ball){ctx.beginPath();ctx.arc(ball.x+3,ball.y+4,ball.r+1,0,7);ctx.fillStyle='
 let physicsAccumulator=0;
 function frame(t){const dt=last?Math.min(64,Math.max(0,t-last)):16;last=t;if(playing&&!paused){physicsAccumulator+=dt;let steps=0;while(physicsAccumulator>=16.667&&steps<4){updateArms();simulate();physicsAccumulator-=16.667;steps++}if(steps===4)physicsAccumulator=0}else physicsAccumulator=0;draw();if(ticks%12===0&&playing)updateFeaturePanel();const event=document.getElementById('scoreEvent');const message=toastTime>0?toast:'';if(event.textContent!==message)event.textContent=message;if(toastTime>0)toastTime--;requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const originalStartMode=startMode;
-startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];bridgeHits=0;bridgePhase=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
+startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];bridgeHits=0;bridgePhase=0;bridgeHitCooldown=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
 
 // Allow the walkable arcade hall to open one selected pinball machine directly.
 const requestedMachine=new URLSearchParams(window.location.search).get('machine');
