@@ -51,7 +51,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
     }
     return result;
   }
-  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];const own=el('chessUser').value.trim().toLowerCase();const side=selected.white.trim().toLowerCase()===own?'hvit':selected.black.trim().toLowerCase()===own?'svart':'ikke identifisert';el('analysisMeta').textContent=`Chess.com · ${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · Dine trekk: ${side}`;el('analyzeGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
+  function choose(i){selectedSource='imported';resetFinishedExtras();selected=games[i];const own=el('chessUser').value.trim().toLowerCase();const side=selected.white.trim().toLowerCase()===own?'hvit':selected.black.trim().toLowerCase()===own?'svart':'ikke identifisert';el('analysisMeta').textContent=`Chess.com · ${selected.white} – ${selected.black} · ${selected.moves} halvtrekk · Dine trekk: ${side}`;el('analyzeGame').disabled=false;el('analyzeFullGame').disabled=false;el('analysisResults').replaceChildren();el('analysisStatus').textContent='Velg «Analyser partiet» for å finne læringsmuligheter.';renderGames()}
   function renderGames(){
     const root=el('importedGames');root.replaceChildren();
     const start=page*PAGE_SIZE;
@@ -167,18 +167,30 @@ export function setupAnalysis(engine,onPractice,onFindings){
       const button=document.createElement('button');button.className='secondary';button.textContent='Tren på denne stillingen →';button.onclick=()=>onPractice(result.practicePositions,i);card.appendChild(button);root.appendChild(card);
     });
   }
+  el('analyzeFullGame').onclick=async()=>{
+    if(!selected||busy)return;
+    if(!engine.ready){el('analysisStatus').textContent='Vent til Stockfish er klar.';return}
+    resetFinishedExtras();busy=true;stopBatch=false;
+    el('analyzeFullGame').disabled=true;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
+    try{
+      const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Grundig analyse: trekk ${k} av ${total} …`,Infinity,selectedSource);
+      showFindings(result);
+      el('analysisStatus').textContent=`Alle dine trekk gjennomgått med korte Stockfish-søk: ${result.findings.length} forbedringspunkter. ${result.skipped?`${result.skipped} stillinger kunne ikke vurderes.`:''} Dette er ikke en dybdeanalyse på turneringsnivå.`;
+    }catch(error){el('analysisStatus').textContent='Grundig analyse stoppet: '+error.message}
+    finally{busy=false;el('analyzeFullGame').disabled=!selected;el('analyzeGame').disabled=!selected;updateBatchControls()}
+  };
   el('analyzeGame').onclick=async()=>{
     if(!selected||busy)return;if(!engine.ready){el('analysisStatus').textContent='Stockfish starter fortsatt. Vent litt og prøv igjen.';return}
     resetFinishedExtras();
-    busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeBatch').disabled=true;
+    busy=true;stopBatch=false;el('analyzeGame').disabled=true;el('analyzeFullGame').disabled=true;el('analyzeBatch').disabled=true;
     try{
       const result=await analyzeOne(selected,(k,total)=>el('analysisStatus').textContent=`Analyserer trekk ${k} av ${total} …`,10,selectedSource);
       showFindings(result);el('analysisStatus').textContent=`Utvalgsanalyse ferdig: ${result.findings.length} forbedringspunkter fra inntil 10 av dine trekk (ikke fullstendig partianalyse). ${result.skipped?'Noen stillinger ble hoppet over fordi motoren svarte for sent.':''}`;
-    }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=false;updateBatchControls()}
+    }catch(e){el('analysisStatus').textContent='Analysen stoppet: '+e.message}finally{busy=false;el('analyzeGame').disabled=!selected;el('analyzeFullGame').disabled=!selected;updateBatchControls()}
   };
   el('analyzeBatch').onclick=async()=>{
     if(busy||!games.length||batchCursor>=games.length)return;if(!engine.ready){el('analysisStatus').textContent='Vent til Stockfish er klar.';return}
-    busy=true;stopBatch=false;el('analyzeBatch').disabled=true;el('analyzeGame').disabled=true;el('stopBatch').hidden=false;
+    busy=true;stopBatch=false;el('analyzeBatch').disabled=true;el('analyzeGame').disabled=true;el('analyzeFullGame').disabled=true;el('stopBatch').hidden=false;
     const end=Math.min(games.length,batchCursor+10),start=batchCursor;let completed=0,found=0,failed=0;
     try{
       for(let i=start;i<end&&!stopBatch;i++){
@@ -195,7 +207,7 @@ export function setupAnalysis(engine,onPractice,onFindings){
       el('analysisStatus').textContent=stopBatch?'Analysen er satt på pause. Trykk «Analyser neste 10» for å fortsette.':`Utvalgsanalyse ferdig: ${completed} partier analysert, ${failed} hoppet over. Inntil 6 av dine trekk per parti. Du kan fortsette med neste gruppe.`;
       if(batchCursor>=games.length)el('analysisStatus').textContent=`Arkivet er behandlet: ${completed} partier analysert i siste gruppe, ${failed} hoppet over. Dette er en utvalgsanalyse, ikke fullstendig analyse av hvert trekk. Tren på forbedringspunktene under «Din utvikling».`;
     }catch(e){el('analysisStatus').textContent='Batchanalysen stoppet: '+e.message}
-    finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=false}
+    finally{busy=false;stopBatch=false;el('stopBatch').hidden=true;updateBatchControls();el('analyzeGame').disabled=!selected;el('analyzeFullGame').disabled=!selected}
   };
   el('stopBatch').onclick=()=>{stopBatch=true;el('analysisStatus').textContent='Stopper etter pågående stilling …'};
   async function analyzeFinishedGame(pgn){
