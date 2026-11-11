@@ -82,3 +82,12 @@ for(const [machine,name] of [[3,'Jungle Temple'],[4,'Abyssal Depths'],[5,'Clockw
     });
   }
 }
+
+test('Jungle Temple first descent remains playable without guaranteed side drain',()=>{
+  const noInput=runSession(3,'idle');
+  const controlled=runSession(3,'reactive');
+  assert.ok(noInput.firstDrainFrame===null||noInput.firstDrainFrame>=400,
+    'Jungle must not consistently lose the first ball immediately at the left edge');
+  assert.ok(controlled.score!==noInput.score||controlled.firstDrainFrame!==noInput.firstDrainFrame,
+    'Flipper input should influence the Jungle Temple ball path');
+});
