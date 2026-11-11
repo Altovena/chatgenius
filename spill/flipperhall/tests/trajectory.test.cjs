@@ -9,7 +9,7 @@ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
 const source=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(source,'Game script should exist');
 function makeElement(){
-  return {style:{},classList:{add(){},remove(){},toggle(){}},
+  return {style:{setProperty(){}},classList:{add(){},remove(){},toggle(){}},
     appendChild(){},replaceWith(){},addEventListener(){},setPointerCapture(){},
     querySelector(){return makeElement()},querySelectorAll(){return []},
     textContent:'',innerHTML:'',offsetWidth:100};
