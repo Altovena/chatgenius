@@ -26,4 +26,4 @@ jobs:
         with:
           node-version: '22'
       - name: Check launch paths and flipper geometry
-        run: node --test spill/flipperhall/tests/*.test.cjs
+        run: node --test spill/flipperhall/tests/*.test.cjs spill/flipperhall/experiments/volcano-reactor/engine.test.cjs
