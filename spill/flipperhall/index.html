@@ -465,7 +465,7 @@ function drawPremiumBumper(c,i,m){
 }
 function drawPremiumTarget(x,y,i,m){
   ctx.save();ctx.translate(x,y);ctx.rotate(i*.5);
-  const live=(targetHitTicks[i]||0)>0,flash=live?1:0;
+  const live=targetHitTicks[i]!==undefined&&ticks-targetHitTicks[i]<18,flash=live?1:0;
   ctx.shadowColor=live?m.b:'#000b';ctx.shadowBlur=live?19:7;ctx.shadowOffsetY=live?0:4;
   roundRect(-12,-13,24,26,5,'#0a1320','#b5c5d1');ctx.shadowBlur=0;ctx.shadowOffsetY=0;
   const g=ctx.createLinearGradient(-9,-11,9,12);g.addColorStop(0,'#f7fbf9');g.addColorStop(.25,m.b);g.addColorStop(.7,m.a);g.addColorStop(1,'#172838');
