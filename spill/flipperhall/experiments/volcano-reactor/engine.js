@@ -151,7 +151,8 @@ function step(g){
       g.trapFrames=0;g.trapMinX=Infinity;g.trapMaxX=-Infinity;g.trapMinY=Infinity;g.trapMaxY=-Infinity;
     }
     b.vx=clamp(b.vx,-17,17);b.vy=clamp(b.vy,-20,20);
-    if(b.y>805)loseBall(g);
+    // Physical side outlanes prevent indefinite cradling against the side rails.
+    if(b.y>805||(b.y>690&&(b.x<110||b.x>350)))loseBall(g);
   }
   return g;
 }
