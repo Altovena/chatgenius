@@ -62,3 +62,12 @@ test('Cosmic portal requires a return to the lower field before recharge',()=>{
   assert.match(html,/featureCooldown===0&&portalChain<1/);
   assert.match(html,/portalChain=0;tilt=0/);
 });
+
+test('Rendered flipper board keeps the same proportions as its physics canvas',()=>{
+  const canvas=html.match(/<canvas id="board" width="(\d+)" height="(\d+)"/);
+  const css=html.match(/\bcanvas\{[^}]*aspect-ratio:(\d+)\/(\d+)/);
+  assert.ok(canvas,'Expected physics canvas width and height');
+  assert.ok(css,'Expected explicit canvas CSS aspect ratio');
+  assert.equal(Number(canvas[1])*Number(css[2]),Number(canvas[2])*Number(css[1]),
+    'CSS must not compress or stretch the 460×800 physical playfield');
+});
