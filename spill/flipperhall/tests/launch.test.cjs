@@ -52,3 +52,13 @@ test('Mobile mission HUD is visible and updated together with desktop progress',
   assert.match(html,/getElementById\('mobileMissionFill'\)\.style\.width=percent\+'%'/);
   assert.match(html,/getElementById\('mobileMissionText'\)\.textContent=/);
 });
+
+test('iPhone stage size uses stable small viewport units',()=>{
+  assert.match(html,/\.board-wrap\{width:min\(100%,calc\(\(100svh - 200px\)\*\.575\)\);max-width:440px\}/,
+    'Mobile stage must not resize as Safari address bar moves');
+});
+test('Cosmic portal requires a return to the lower field before recharge',()=>{
+  assert.match(html,/if\(ball\.y>590\)portalChain=0/);
+  assert.match(html,/featureCooldown===0&&portalChain<1/);
+  assert.match(html,/portalChain=0;tilt=0/);
+});
