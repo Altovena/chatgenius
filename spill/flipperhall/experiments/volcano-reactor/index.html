@@ -14,34 +14,57 @@ main{max-width:1000px;margin:auto;padding:16px 15px 114px}a{color:#ffcc88}header
 </div></section><aside class="panel"><div class="stats"><div class="stat"><small>POENG</small><b id="score">0</b></div><div class="stat"><small>BALL</small><b id="ball">1 / 3</b></div></div>
 <div class="status" id="status" role="status">KLAR FOR UTSKYTING</div><div class="mission"><b>REAKTOROPPDRAGET</b>
 <p>1. Treff trykkventil A og B i høyre renne.<br>2. Reaktorporten åpner fysisk.<br>3. Treff kjernen innen tiden går ut!</p>
-<div>Ventil A: <strong id="valveA">Åpen</strong> · Ventil B: <strong id="valveB">Åpen</strong></div><div>Reaktorport: <strong id="gate">STENGT</strong></div>
+<div>Ventil A: <strong id="valveA">Åpen</strong> · Ventil B: <strong id="valveB">Åpen</strong></div><div>Reaktorport: <strong id="gate">STENGT</strong> <span id="remaining" aria-live="off"></span></div>
 <div class="meter"><span id="meter"></span></div><div>Reaktor fullført: <strong id="mission">Nei</strong></div></div>
 <div class="options"><button id="pause">Pause</button><button id="restart">Nytt spill</button><button id="sound">🔊 Lyd på</button></div>
 <p class="hint">PC: A/← og D/→ er flippere. Mellomrom skyter. P pauser. På mobil kan begge flipperknappene holdes inne samtidig.</p></aside></div>
 </main><script src="./engine.js"></script><script>
 const E=window.VolcanoReactor,canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d');
 let game=E.newGame(),sound=true,last=0,accumulator=0,previousEvent='';
+let audio=null;
+function soundReady(){
+  if(!sound)return null;
+  try{audio??=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch{return null}
+}
+function tone(frequency=440,duration=.09){
+  const a=soundReady();if(!a)return;
+  try{const osc=a.createOscillator(),gain=a.createGain();osc.type='triangle';
+  osc.frequency.setValueAtTime(frequency,a.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(80,frequency*.7),a.currentTime+duration);
+  gain.gain.setValueAtTime(.047,a.currentTime);
+  gain.gain.exponentialRampToValueAtTime(.001,a.currentTime+duration);
+  osc.connect(gain);gain.connect(a.destination);osc.start();osc.stop(a.currentTime+duration)}catch{}
+}
+function eventSound(message){
+  if(message==='BALL IN PLAY')tone(470,.11);
+  else if(message==='REACTOR GATE OPEN')tone(800,.24);
+  else if(message==='VOLCANO REACTOR ACTIVATED!')tone(940,.30);
+  else if(message==='REACTOR PRESSURE RESET')tone(230,.16);
+  else if(message.startsWith('PRESSURE VALVE'))tone(650,.14);
+  else if(message==='GAME OVER')tone(180,.28);
+}
+
 const buttons=[...document.querySelectorAll('[data-key]')];let activeKeys=new Set();
 const DOM=id=>document.getElementById(id);
 function release(){activeKeys.clear();E.setFlippers(game,false,false);buttons.forEach(el=>el.classList.remove('held'))}
 function setKey(k,on){
   if(on)activeKeys.add(k);else activeKeys.delete(k);
   E.setFlippers(game,activeKeys.has('left'),activeKeys.has('right'));
-  if(on&&k==='launch')E.launch(game);
-  if(on&&k==='nudge')E.nudge(game);
+  if(on&&k==='launch'){soundReady();E.launch(game)}
+  if(on&&k==='nudge'){soundReady();E.nudge(game)}
 }
 buttons.forEach(btn=>{
   const key=btn.dataset.key;
-  btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!game.playing||game.paused)return;btn.setPointerCapture(e.pointerId);btn.classList.add('held');setKey(key,true)});
+  btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!game.playing||game.paused)return;soundReady();btn.setPointerCapture(e.pointerId);btn.classList.add('held');setKey(key,true)});
   for(const type of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(type,e=>{e.preventDefault();btn.classList.remove('held');setKey(key,false)});
 });
 const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'launch',KeyN:'nudge'};
-window.addEventListener('keydown',e=>{if(e.code==='KeyP'){e.preventDefault();if(e.repeat)return;togglePause();return}const k=keys[e.code];if(!k)return;e.preventDefault();if(!e.repeat)setKey(k,true)});
+window.addEventListener('keydown',e=>{if(e.code==='KeyP'){e.preventDefault();if(e.repeat)return;togglePause();return}const k=keys[e.code];if(!k)return;e.preventDefault();if(!e.repeat){soundReady();setKey(k,true)}});
 window.addEventListener('keyup',e=>{const k=keys[e.code];if(k){e.preventDefault();setKey(k,false)}});
 function togglePause(){if(game.ended)return;if(game.paused)E.resume(game);else{release();E.pause(game)}DOM('pause').textContent=game.paused?'Fortsett':'Pause'}
 DOM('pause').onclick=togglePause;
 DOM('restart').onclick=()=>{release();game=E.newGame();previousEvent='';accumulator=0;DOM('pause').textContent='Pause'};
-DOM('sound').onclick=()=>{sound=!sound;DOM('sound').textContent=sound?'🔊 Lyd på':'🔇 Lyd av'};
+DOM('sound').onclick=()=>{sound=!sound;if(sound)soundReady();DOM('sound').textContent=sound?'🔊 Lyd på':'🔇 Lyd av'};
 function background(){release();if(!game.paused)E.pause(game);DOM('pause').textContent='Fortsett'}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)background()});
 window.addEventListener('blur',background);window.addEventListener('pagehide',background);
@@ -75,10 +98,10 @@ function update(){
  DOM('ball').textContent=game.ballNo+' / 3';DOM('status').textContent=game.lastEvent;
  DOM('valveA').textContent=game.valves[0]?'Aktivert':'Ikke aktivert';
  DOM('valveB').textContent=game.valves[1]?'Aktivert':'Ikke aktivert';
- DOM('gate').textContent=game.gateOpen?'ÅPEN':'STENGT';
- DOM('meter').style.width=(game.gateOpen?100*game.gateTicks/450:0)+'%';
+ DOM('gate').textContent=game.gateOpen?'ÅPEN':'STENGT';DOM('remaining').textContent=game.gateOpen?' · '+(game.gateTicks/120).toFixed(1)+' s igjen':'';
+ DOM('meter').style.width=(game.gateOpen?100*game.gateTicks/900:0)+'%';
  DOM('mission').textContent=game.missionComplete?'Ja – '+game.coreHits+' kjerne-treff':'Nei';
- previousEvent=game.lastEvent;
+ if(previousEvent!==game.lastEvent){eventSound(game.lastEvent);previousEvent=game.lastEvent;}
 }
 function frame(t){
  const delta=last?Math.min(60,t-last):16.67;last=t;
