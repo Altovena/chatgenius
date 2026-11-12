@@ -69,7 +69,7 @@ function runSession(machine,control){
   `;
   return vm.runInContext(command,sandbox,{timeout:12000});
 }
-for(const [machine,name] of [[3,'Jungle Temple'],[4,'Abyssal Depths'],[5,'Clockwork Carnival']]){
+for(const [machine,name] of [[0,'Castle Chaos'],[1,'Neon Velocity'],[2,'Cosmic Odyssey'],[3,'Jungle Temple'],[4,'Abyssal Depths'],[5,'Clockwork Carnival']]){
   for(const pattern of ['idle','alternating','reactive']){
     test(name+' / '+pattern+' completes safe playfield entry',()=>{
       const result=runSession(machine,pattern);
@@ -101,4 +101,17 @@ test('Abyssal Depths no longer falls through center on the first descent',()=>{
     'Reactive flipper play should not cause an unavoidable initial drain');
   assert.ok(idle.score!==reactive.score||idle.firstDrainFrame!==reactive.firstDrainFrame,
     'Flipper input must influence Abyssal game outcome');
+});
+
+test('Neon Velocity cannot cradle the ball indefinitely without input',()=>{
+  const idle=runSession(1,'idle');
+  assert.equal(idle.ended,true,'Idle Neon should eventually lose all three balls');
+  assert.equal(idle.drains,3,'Idle Neon should use exactly three balls');
+  assert.ok(idle.firstDrainFrame>=200,'Neon launch must remain fair');
+});
+test('Cosmic Odyssey portal cannot loop forever without player action',()=>{
+  const idle=runSession(2,'idle');
+  assert.equal(idle.ended,true,'Idle Cosmic should eventually lose all three balls');
+  assert.equal(idle.drains,3,'Idle Cosmic should use exactly three balls');
+  assert.ok(idle.firstDrainFrame>=200,'Cosmic first ball should reach upper course');
 });
