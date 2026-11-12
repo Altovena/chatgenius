@@ -89,7 +89,7 @@ function triggerValve(g,index){
   if(!g.launched||g.valves[index])return false;
   g.valves[index]=true;event(g,index===0?'PRESSURE VALVE A':'PRESSURE VALVE B',350);
   if(g.valves.every(Boolean)&&!g.gateOpen){
-    g.gateOpen=true;g.gateTicks=450;event(g,'REACTOR GATE OPEN',900);
+    g.gateOpen=true;g.gateTicks=900;event(g,'REACTOR GATE OPEN',900);
   }
   return true;
 }
