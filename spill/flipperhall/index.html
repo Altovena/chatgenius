@@ -29,7 +29,7 @@
 .mission-meter{margin:10px 0 14px}.mission-meter-caption{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.07em;color:#dbe8f1;margin-bottom:6px}.mission-meter-track{height:9px;border:1px solid #ffffff35;border-radius:10px;background:#050d19;overflow:hidden}.mission-meter-fill{height:100%;width:0%;background:linear-gradient(90deg,#6feeff,#fce0a0);border-radius:10px;transition:width .22s}.mission-meter.completed .mission-meter-fill{background:linear-gradient(90deg,#9cffcd,#fff3a1)}.feature-panel{margin-top:14px;border:1px solid #ffffff25;border-radius:14px;background:#0715279e;padding:13px 14px}.feature-panel strong{display:block;font-size:13px;letter-spacing:.08em;color:#ffe4af}.feature-panel p{margin:7px 0!important;font-size:13px;line-height:1.35!important}.feature-track{height:6px;border-radius:8px;background:#ffffff20;overflow:hidden}.feature-fill{height:100%;width:0;background:linear-gradient(90deg,#f5a85a,#ffe8a9);transition:width .18s}.feature-panel.ready{border-color:#ffd78e80;box-shadow:0 0 14px #ffca6e16}.feature-panel.ready strong{color:#aaffce}
 @media(max-width:760px){.score-event{order:4;flex-basis:100%;max-width:none;text-align:center;font-size:10px;min-height:11px;line-height:11px}}
 html{-webkit-text-size-adjust:100%}html,body{overscroll-behavior-y:none}.game.active{touch-action:pan-y}.controlbar,.controlbar button{overscroll-behavior:contain;-webkit-tap-highlight-color:transparent}.controlbar button{touch-action:none}.game.active canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-@media(max-width:760px){.board-wrap{width:min(100%,calc((100dvh - 200px)*.575));max-width:440px}.controlbar button{min-height:62px}.toolbar{position:relative;z-index:1}}
+@media(max-width:760px){.board-wrap{width:min(100%,calc((100svh - 200px)*.575));max-width:440px}.controlbar button{min-height:62px}.toolbar{position:relative;z-index:1}}
 .intro.no-art{grid-template-columns:1fr;max-width:740px;min-height:390px}.intro.no-art .intro-content{text-align:center}
 .machine-card:nth-child(4){background:radial-gradient(ellipse at 50% 25%,#6a9d433b,transparent 60%),linear-gradient(130deg,#263926,#101a19)}
 .machine-card:nth-child(5){background:radial-gradient(ellipse at 50% 25%,#35ebef2f,transparent 60%),linear-gradient(130deg,#10405c,#0b1a33)}
@@ -105,7 +105,7 @@ function tone(freq=440,d=.05){if(!soundOn)return;try{audio??=new (window.AudioCo
 document.getElementById('sound').onclick=e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'🔊 Lyd på':'🔇 Lyd av'};
 function startMode(i){mode=i;const m=modes[i];document.getElementById('gallery').classList.add('hidden');document.getElementById('game').classList.add('active');document.getElementById('modeName').textContent=m.name;document.getElementById('mission').textContent=m.mission;try{best=Number(localStorage.getItem('pinbest'+mode)||0)}catch{best=0}score=0;ballNumber=1;playing=true;paused=false;ended=false;combo=0;resetBall();hideOverlay();updateHud();document.getElementById('pause').textContent='Pause';window.scrollTo({top:0,behavior:'smooth'});last=performance.now()}
 let shooterLane=false;
-function resetBall(){ball={x:414,y:698,vx:0,vy:0,r:7};launched=false;shooterLane=false;tilt=0;rampRide=null;ballTrail=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity}
+function resetBall(){ball={x:414,y:698,vx:0,vy:0,r:7};launched=false;shooterLane=false;portalChain=0;tilt=0;rampRide=null;ballTrail=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity}
 function updateHud(){document.getElementById('score').textContent=score.toLocaleString('nb-NO');document.getElementById('ballCount').textContent=ballNumber+' / 3';document.getElementById('best').textContent=best.toLocaleString('nb-NO')}
 let missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};
 function missionText(){const s=missionState;if(s.done)return '🏆 Oppdrag fullført!';if(mode===0)return `Ramper: ${Number(s.left)+Number(s.right)} av 2`;if(mode===1)return `Bumpere: ${Math.min(5,s.bumpers)}/5 · Rampe: ${s.left||s.right?'✓':'0/1'}`;if(mode===2)return `Øvre bane: ${Math.min(3,s.upper)}/3`;return `Blinkere: ${dropHits.filter(Boolean).length}/3 · Tunnel: ${s.tunnel?'✓':'–'} · Bro: ${s.bridge?'✓':'–'}`}
@@ -176,7 +176,7 @@ function advanceRamp(){if(!rampRide)return false;const r=rampRide;r.t=Math.min(1
   if(r.t>=1){rampRide=null;ball.vx=r.special?-3:mirror*2.1;ball.vy=3.3;upperLamps[2]=true;toast=r.special?'DRAGERAMPEN FULLFØRT':'RAMP COMPLETE!';toastTime=65}
   return true}
 let bridgePhase=0,bridgeHits=0,bridgeHitCooldown=0,upperLamps=[false,false,false];
-let featureCooldown=0,dragonGateReady=false,turboCharges=0,portalJumps=0,featureFlash=0;
+let featureCooldown=0,dragonGateReady=false,turboCharges=0,portalJumps=0,portalChain=0,featureFlash=0;
 let leftSaveCooldown=0,rightSaveCooldown=0;
 let bumperHitTicks=[],targetHitTicks=[],slowBallTicks=0;
 let trapSamples=0,trapMinX=Infinity,trapMaxX=-Infinity,trapMinY=Infinity,trapMaxY=-Infinity;
@@ -265,9 +265,20 @@ function simulate(){if(!launched||paused||!playing)return;for(let step=0;step<2;
   }
   if(course.upper){upperFlipperContact('left');upperFlipperContact('right')}bridgeContact();
   if(mode===1&&ball.x>198&&ball.x<268&&ball.y>390&&ball.y<455&&ball.vy>0)activateFeature();
-  if(mode===2&&Math.hypot(ball.x-230,ball.y-272)<38&&featureCooldown===0)activateFeature();
+  // The portal recharges only after the ball returns to the lower field.
+  // Resting upper-deck flippers let a slow ball roll off instead of pinning it.
+  if(mode===2){
+    if(ball.y>590)portalChain=0;
+    if(Math.hypot(ball.x-230,ball.y-272)<38&&featureCooldown===0&&portalChain<1){portalChain++;activateFeature()}
+    if(ball.y>300&&ball.y<385&&Math.hypot(ball.vx,ball.vy)<3){
+      if(ball.x>270&&ball.x<365&&!flips.right)ball.vx+=.15;
+      else if(ball.x>90&&ball.x<190&&!flips.left)ball.vx-=.15;
+    }
+  }
   // Rescue a genuinely stationary ball after several seconds, without granting points.
   if(Math.hypot(ball.vx,ball.vy)<.45)slowBallTicks++;else slowBallTicks=0;
+  // A resting right flipper in Neon must not cradle a ball indefinitely.
+  if(mode===1&&!flips.right&&ball.y>650&&ball.x>330&&ball.x<405&&Math.hypot(ball.vx,ball.vy)<3)ball.vx+=.28;
   if(slowBallTicks>180){ball.vx=ball.x<230?2.5:-2.5;ball.vy=ball.y<400?5.5:-3.5;slowBallTicks=0}
   // A ball can vibrate against a rail at nonzero velocity without going anywhere.
   // Track the occupied area for roughly three seconds, then free only true traps.
@@ -521,7 +532,7 @@ if(ball){ctx.beginPath();ctx.arc(ball.x+3,ball.y+4,ball.r+1,0,7);ctx.fillStyle='
 let physicsAccumulator=0;
 function frame(t){const dt=last?Math.min(64,Math.max(0,t-last)):16;last=t;if(playing&&!paused){physicsAccumulator+=dt;let steps=0;while(physicsAccumulator>=16.667&&steps<4){updateArms();simulate();physicsAccumulator-=16.667;steps++}if(steps===4)physicsAccumulator=0}else physicsAccumulator=0;draw();if(ticks%12===0&&playing)updateFeaturePanel();const event=document.getElementById('scoreEvent');const message=toastTime>0?toast:'';if(event.textContent!==message)event.textContent=message;if(toastTime>0)toastTime--;requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const originalStartMode=startMode;
-startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];celebrationTicks=0;celebrationLabel='';lastMissionSteps=0;bridgeHits=0;bridgePhase=0;bridgeHitCooldown=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
+startMode=function(i){document.getElementById('intro').classList.remove('active');missionState={left:false,right:false,bumpers:0,upper:0,done:false,tunnel:false,bridge:false};transportRide=null;transportCooldown=0;dropHits=[false,false,false];multiplierTicks=0;dropResetTicks=0;originalStartMode(i);updateMission();angles.left=0;angles.right=0;flips.left=false;flips.right=false;lastStrike.left=-100;lastStrike.right=-100;upperLamps=[false,false,false];celebrationTicks=0;celebrationLabel='';lastMissionSteps=0;bridgeHits=0;bridgePhase=0;bridgeHitCooldown=0;featureCooldown=0;dragonGateReady=false;turboCharges=0;portalJumps=0;portalChain=0;featureFlash=0;leftSaveCooldown=0;rightSaveCooldown=0;bumperHitTicks=[];targetHitTicks=[];slowBallTicks=0;trapSamples=0;trapMinX=Infinity;trapMaxX=-Infinity;trapMinY=Infinity;trapMaxY=-Infinity;updateFeaturePanel();const el=document.getElementById('game');el.classList.remove('entering');void el.offsetWidth;el.classList.add('entering');setTimeout(()=>el.classList.remove('entering'),780)};
 
 // Allow the walkable arcade hall to open one selected pinball machine directly.
 const requestedMachine=new URLSearchParams(window.location.search).get('machine');
