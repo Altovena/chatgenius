@@ -51,6 +51,7 @@ function harness(){
   vm.runInContext('startMode(3);soundOn=false;',sandbox,{timeout:2500});
   const state=()=>vm.runInContext('({left:flips.left,right:flips.right,paused,playing})',sandbox);
   return {state,node,controlButtons,document,documentEvents,windowEvents,
+    run:(code)=>vm.runInContext(code,sandbox,{timeout:2500}),
     button:(control)=>controlButtons.find(b=>b.dataset.control===control)};
 }
 test('Both flippers work simultaneously and an interrupted touch releases only its flipper',()=>{
@@ -109,4 +110,57 @@ test('Losing pointer capture always releases the flipper',()=>{
   left.dispatch('lostpointercapture');
   assert.equal(h.state().left,false);
   assert.equal(left.classList.contains('pressed'),false);
+});
+
+test('Last ball releases held flippers before showing the game-over overlay',()=>{
+  const h=harness(),left=h.button('left'),right=h.button('right');
+  left.dispatch('pointerdown');right.dispatch('pointerdown');
+  h.run('ballNumber=3;score=325;finishBall();');
+  const state=h.run('({ended,playing,paused,ballNumber,score})');
+  assert.equal(state.ended,true);
+  assert.equal(state.playing,false);
+  assert.equal(state.paused,true);
+  assert.equal(h.state().left,false);
+  assert.equal(h.state().right,false);
+  assert.equal(left.classList.contains('pressed'),false);
+  assert.equal(right.classList.contains('pressed'),false);
+  assert.match(h.node('overlayText').textContent,/325/);
+});
+test('Spill igjen starts a clean new game without stale controls or effects',()=>{
+  const h=harness(),left=h.button('left');
+  left.dispatch('pointerdown');
+  h.run("ballNumber=3;score=5000;toast='GAMMEL MELDING';toastTime=90;hitFlash=24;bumperGlow[0]=12;physicsAccumulator=28;finishBall();");
+  h.node('resume').onclick();
+  const state=h.run('({ended,playing,paused,ballNumber,score,launched,toast,toastTime,hitFlash,physicsAccumulator,bumperGlow})');
+  assert.equal(state.ended,false);
+  assert.equal(state.playing,true);
+  assert.equal(state.paused,false);
+  assert.equal(state.ballNumber,1);
+  assert.equal(state.score,0);
+  assert.equal(state.launched,false);
+  assert.equal(state.toast,'');
+  assert.equal(state.toastTime,0);
+  assert.equal(state.hitFlash,0);
+  assert.equal(state.physicsAccumulator,0);
+  assert.ok(state.bumperGlow.every(n=>n===0));
+  assert.equal(left.classList.contains('pressed'),false);
+  assert.equal(h.state().left,false);
+  assert.equal(h.node('scoreEvent').textContent,'');
+  left.dispatch('pointerdown');
+  assert.equal(h.state().left,true,'Controls should work normally in new game');
+});
+test('Switching machines clears pressed controls and old visual notifications',()=>{
+  const h=harness(),right=h.button('right');
+  right.dispatch('pointerdown');
+  h.run("toast='FORRIGE MASKIN';toastTime=35;hitFlash=9;score=410;startMode(5);");
+  const state=h.run('({mode,score,ballNumber,toastTime,hitFlash,playing,paused})');
+  assert.equal(state.mode,5);
+  assert.equal(state.score,0);
+  assert.equal(state.ballNumber,1);
+  assert.equal(state.toastTime,0);
+  assert.equal(state.hitFlash,0);
+  assert.equal(state.playing,true);
+  assert.equal(state.paused,false);
+  assert.equal(h.state().right,false);
+  assert.equal(right.classList.contains('pressed'),false);
 });
