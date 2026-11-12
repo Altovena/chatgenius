@@ -25,7 +25,7 @@ function element(control){
   node.dispatch=(type)=>{assert.ok(handlers[type],'Missing '+type+' listener');handlers[type]({pointerId:9,preventDefault(){},code:'',repeat:false})};
   return node;
 }
-function harness(){
+function harness(storage=new Map()){
   const nodes=new Map();
   const controlButtons=['left','right','tilt','launch'].map(element);
   const node=id=>{if(!nodes.has(id))nodes.set(id,element());return nodes.get(id)};
@@ -42,7 +42,7 @@ function harness(){
   };
   const sandbox={
     window:win,document,URLSearchParams,console,Math,performance:{now:()=>0},
-    localStorage:{getItem:()=>null,setItem(){}},
+    localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,String(value))},
     Image:class{constructor(){this.complete=false;this.naturalWidth=0}},
     requestAnimationFrame(){},setTimeout(){},clearTimeout(){}
   };
@@ -50,7 +50,7 @@ function harness(){
   vm.runInContext(source,sandbox,{timeout:2500,filename:'flipperhall/index.html'});
   vm.runInContext('startMode(3);soundOn=false;',sandbox,{timeout:2500});
   const state=()=>vm.runInContext('({left:flips.left,right:flips.right,paused,playing})',sandbox);
-  return {state,node,controlButtons,document,documentEvents,windowEvents,
+  return {state,node,controlButtons,document,documentEvents,windowEvents,storage,
     run:(code)=>vm.runInContext(code,sandbox,{timeout:2500}),
     button:(control)=>controlButtons.find(b=>b.dataset.control===control)};
 }
@@ -197,4 +197,42 @@ test('Hidden arcade does not repaint its playfield while the active game still c
   `);
   assert.equal(counts.hiddenCount,0,'No canvas work in the arcade/gallery');
   assert.equal(counts.visibleCount,1,'Canvas must still render when the game is shown');
+});
+
+test('Best scores persist on replay, stay independent for each machine, and survive a reload',()=>{
+  const persisted=new Map(),h=harness(persisted);
+  h.run("startMode(0);addPoints(350,'MÅL');");
+  assert.equal(h.run('score'),350);
+  assert.equal(h.run('best'),350);
+  assert.equal(persisted.get('pinbest0'),'350');
+  h.run('startMode(0)');
+  assert.equal(h.run('score'),0,'Replay must reset score');
+  assert.equal(h.run('best'),350,'Replay must keep personal best');
+  h.run("startMode(1);addPoints(500,'MÅL');");
+  assert.equal(h.run('best'),500);
+  assert.equal(persisted.get('pinbest1'),'500');
+  h.run('startMode(0)');
+  assert.equal(h.run('best'),350,'Other machine must not replace this record');
+  const nextVisit=harness(persisted);
+  nextVisit.run('startMode(0)');
+  assert.equal(nextVisit.run('best'),350,'Record must survive opening the game again');
+  nextVisit.run('startMode(1)');
+  assert.equal(nextVisit.run('best'),500);
+});
+test('Desktop keyboard pause clears held flippers; resume does not repeat stale presses',()=>{
+  const h=harness();
+  const send=(type,code)=>{let prevented=false;h.windowEvents[type]({code,repeat:false,preventDefault(){prevented=true}});return prevented};
+  assert.equal(send('keydown','KeyA'),true);
+  assert.equal(h.state().left,true);
+  assert.equal(send('keydown','KeyP'),true);
+  assert.equal(h.state().paused,true);
+  assert.equal(h.state().left,false);
+  send('keyup','KeyA');
+  h.node('resume').onclick();
+  assert.equal(h.state().paused,false);
+  assert.equal(h.state().left,false);
+  send('keydown','ArrowLeft');
+  assert.equal(h.state().left,true);
+  send('keyup','ArrowLeft');
+  assert.equal(h.state().left,false);
 });
