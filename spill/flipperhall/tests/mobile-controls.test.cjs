@@ -164,3 +164,37 @@ test('Switching machines clears pressed controls and old visual notifications',(
   assert.equal(h.state().right,false);
   assert.equal(right.classList.contains('pressed'),false);
 });
+
+test('Safari pagehide releases controls and pauses until explicitly resumed',()=>{
+  const h=harness(),left=h.button('left'),right=h.button('right');
+  left.dispatch('pointerdown');right.dispatch('pointerdown');
+  assert.equal(h.state().left,true);assert.equal(h.state().right,true);
+  h.windowEvents.pagehide();
+  assert.equal(h.state().paused,true);
+  assert.equal(h.state().left,false);assert.equal(h.state().right,false);
+  assert.equal(left.classList.contains('pressed'),false);
+  assert.equal(right.classList.contains('pressed'),false);
+  // Browsers may fire blur and pagehide for the same navigation.
+  h.windowEvents.blur();
+  assert.equal(h.state().paused,true,'Duplicate lifecycle signals must not unpause the game');
+  h.node('resume').onclick();
+  assert.equal(h.state().paused,false);
+  right.dispatch('pointerdown');
+  assert.equal(h.state().right,true,'A new press should work after returning');
+});
+test('Hidden arcade does not repaint its playfield while the active game still can',()=>{
+  const h=harness();
+  const counts=h.run(`
+    let qaDrawCounter=0;
+    draw=()=>{qaDrawCounter++};
+    playing=false;paused=true;
+    document.getElementById('game').classList.remove('active');
+    frame(16);
+    const hiddenCount=qaDrawCounter;
+    document.getElementById('game').classList.add('active');
+    frame(32);
+    ({hiddenCount,visibleCount:qaDrawCounter});
+  `);
+  assert.equal(counts.hiddenCount,0,'No canvas work in the arcade/gallery');
+  assert.equal(counts.visibleCount,1,'Canvas must still render when the game is shown');
+});
