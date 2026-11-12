@@ -19,7 +19,7 @@ test('Valves are unique goals, not repeatable free points',()=>{
   assert.equal(g.gateOpen,false);
   assert.equal(VR.triggerValve(g,1),true);
   assert.equal(g.gateOpen,true);
-  assert.equal(g.gateTicks,450);
+  assert.equal(g.gateTicks,900);
   assert.equal(g.score,score+350+900);
 });
 test('Only an open reactor gate permits core bonus and mission completion',()=>{
@@ -87,3 +87,21 @@ for(const pattern of ['idle','alternating','reactive']){
     console.log('VOLCANO',JSON.stringify({pattern,launched,lowerVisits,ball:g.ballNo,score:g.score,ended:g.ended}));
   });
 }
+
+test('Core can be hit by an actual moving ball through the open reactor gate',()=>{
+  const g=VR.newGame();VR.launch(g);g.shooter=false;
+  VR.triggerValve(g,0);VR.triggerValve(g,1);
+  g.ball={x:230,y:322,vx:0,vy:-10,r:7};
+  for(let n=0;n<120&&g.coreHits===0;n++)VR.step(g);
+  assert.equal(g.coreHits,1,'Real moving ball must be able to reach the reactor core');
+  assert.equal(g.missionComplete,true);
+  assert.equal(g.gateOpen,false,'Scoring should close the gate');
+});
+test('An open gate gives the player a 7.5-second physics-time window',()=>{
+  const g=VR.newGame();VR.launch(g);VR.triggerValve(g,0);VR.triggerValve(g,1);
+  assert.equal(g.gateTicks,900,'900 substeps at 120 Hz equals 7.5 seconds');
+  g.shooter=false;g.ball={x:400,y:500,vx:0,vy:0,r:7};
+  for(let n=0;n<50;n++)VR.step(g);
+  assert.equal(g.gateTicks,800);
+  assert.equal(g.gateOpen,true);
+});
