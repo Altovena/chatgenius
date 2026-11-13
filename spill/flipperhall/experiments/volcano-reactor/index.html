@@ -22,6 +22,48 @@ main{max-width:1000px;margin:auto;padding:16px 15px 114px}a{color:#ffcc88}header
 const E=window.VolcanoReactor,canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d');
 let game=E.newGame(),sound=true,last=0,accumulator=0,previousEvent='';
 let audio=null;
+const reduceMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const effects={valves:[0,0],gate:0,core:0,sparks:[],frame:0,previousValves:[false,false],previousGate:false,previousCoreHits:0};
+function resetEffects(){
+  effects.valves=[0,0];effects.gate=0;effects.core=0;effects.sparks=[];
+  effects.frame=0;effects.previousValves=[false,false];effects.previousGate=false;effects.previousCoreHits=0;
+}
+function sparkBurst(x,y,count,color,seed=0){
+  if(reduceMotion)return;
+  for(let i=0;i<count;i++){
+    const angle=i*Math.PI*2/count+seed,vel=1.8+(i%4)*.75;
+    effects.sparks.push({x,y,vx:Math.cos(angle)*vel,vy:Math.sin(angle)*vel-1,life:36+i%11,color});
+  }
+  if(effects.sparks.length>90)effects.sparks=effects.sparks.slice(-90);
+}
+function observeEffects(){
+  for(let i=0;i<2;i++){
+    if(game.valves[i]&&!effects.previousValves[i]){
+      effects.valves[i]=46;sparkBurst(E.VALVES[i].x,E.VALVES[i].y,16,'#9dffb8',i*.2);
+      if(i===0||!game.gateOpen)tone(650,.14);
+    }
+    effects.previousValves[i]=game.valves[i];
+  }
+  if(game.gateOpen&&!effects.previousGate){
+    effects.gate=65;sparkBurst((E.GATE.ax+E.GATE.bx)/2,E.GATE.ay,28,'#ffd080');
+  }
+  effects.previousGate=game.gateOpen;
+  if(game.coreHits>effects.previousCoreHits){
+    effects.core=120;
+    sparkBurst(E.CORE.x,E.CORE.y,45,'#ffcf5e');
+    sparkBurst(E.CORE.x,E.CORE.y,24,'#fff6cf',Math.PI/12);
+  }
+  effects.previousCoreHits=game.coreHits;
+}
+function advanceEffects(){
+  if(game.paused||game.ended)return;
+  effects.frame++;
+  effects.valves=effects.valves.map(t=>Math.max(0,t-1));
+  effects.gate=Math.max(0,effects.gate-1);
+  effects.core=Math.max(0,effects.core-1);
+  for(const p of effects.sparks){p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life--}
+  effects.sparks=effects.sparks.filter(p=>p.life>0);
+}
 function soundReady(){
   if(!sound)return null;
   try{audio??=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch{return null}
@@ -63,7 +105,7 @@ window.addEventListener('keydown',e=>{if(e.code==='KeyP'){e.preventDefault();if(
 window.addEventListener('keyup',e=>{const k=keys[e.code];if(k){e.preventDefault();setKey(k,false)}});
 function togglePause(){if(game.ended)return;if(game.paused)E.resume(game);else{release();E.pause(game)}DOM('pause').textContent=game.paused?'Fortsett':'Pause'}
 DOM('pause').onclick=togglePause;
-DOM('restart').onclick=()=>{release();game=E.newGame();previousEvent='';accumulator=0;DOM('pause').textContent='Pause'};
+DOM('restart').onclick=()=>{release();game=E.newGame();resetEffects();previousEvent='';accumulator=0;DOM('pause').textContent='Pause'};
 DOM('sound').onclick=()=>{sound=!sound;if(sound)soundReady();DOM('sound').textContent=sound?'🔊 Lyd på':'🔇 Lyd av'};
 function background(){release();if(!game.paused)E.pause(game);DOM('pause').textContent='Fortsett'}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)background()});
@@ -78,18 +120,64 @@ function board(){
  ctx.font='bold 11px system-ui';ctx.fillText('PRESSURE  ·  REACTOR  ·  CORE',230,92);ctx.restore();
  for(const r of E.RAILS){line(...r,14,'#100c13');line(...r,8,'#b36d49');line(...r,3,'#ffce8b')}
  for(const b of E.BUMPERS){circle(b,b.r+5,'#3f292e','#ff9b69');circle(b,b.r-3,'#ff7d33','#ffdd9c');circle(b,6,'#ffdcaf')}
- for(let i=0;i<E.VALVES.length;i++){const c=E.VALVES[i],lit=game.valves[i];circle(c,c.r+5,'#2c1a1a','#c47b54');circle(c,c.r-2,lit?'#75eb9b':'#fb6e3e',lit?'#e6ffe9':'#ffdf89');ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#1c1715';ctx.fillText(i?'B':'A',c.x,c.y+4)}
+ for(let i=0;i<E.VALVES.length;i++){
+   const c=E.VALVES[i],lit=game.valves[i],pulse=effects.valves[i];
+   if(pulse>0&&!reduceMotion){ctx.save();ctx.globalAlpha=pulse/46*.65;
+     ctx.beginPath();ctx.arc(c.x,c.y,c.r+9+(46-pulse)*.65,0,Math.PI*2);
+     ctx.lineWidth=5;ctx.strokeStyle='#95ffac';ctx.stroke();ctx.restore()}
+   ctx.save();ctx.shadowColor=lit?'#8bff9a':'#ff6138';ctx.shadowBlur=lit?19:5;
+   circle(c,c.r+5,'#2c1a1a',lit?'#c4ffe0':'#c47b54');
+   circle(c,c.r-2,lit?'#75eb9b':'#fb6e3e',lit?'#e6ffe9':'#ffdf89');ctx.restore();
+   ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#1c1715';
+   ctx.fillText(i?'B':'A',c.x,c.y+4)
+ }
  const open=game.gateOpen;
  // This drawn segment is identical to the physics gate and vanishes while open.
- if(open){line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,3,'#7ef6ac77')}
- else{line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,15,'#1b0b0a');line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,9,'#ff4b28');line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,3,'#ffce88')}
- circle(E.CORE,E.CORE.r+8,'#330e17','#ff5d33');circle(E.CORE,E.CORE.r,open?'#fadc73':'#4b2a2d','#ffae57');
+ if(open){
+   // Two door halves slide away from the *actual* collision segment when it opens.
+   // During opening, keep halves outside the 95px-long central passage: visuals never block a passable route.
+   const t=reduceMotion?1:Math.min(1,(65-effects.gate)/22);
+   const travel=27+35*t;
+   const y=E.GATE.ay,center=(E.GATE.ax+E.GATE.bx)/2;
+   ctx.save();ctx.shadowColor='#7effb6';ctx.shadowBlur=17;
+   line(E.GATE.ax-travel,y,E.GATE.ax-7,y,8,'#ad6142');
+   line(E.GATE.bx+7,y,E.GATE.bx+travel,y,8,'#ad6142');
+   line(E.GATE.ax,y,E.GATE.bx,y,2,'#7ef6ac55');
+   ctx.restore();
+   ctx.fillStyle='#bcffcf';ctx.textAlign='center';ctx.font='900 11px system-ui';
+   ctx.fillText('PORT ÅPEN',center,y+35);
+ }else{
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,15,'#1b0b0a');
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,9,'#ff4b28');
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,3,'#ffce88')
+ }
+ ctx.save();
+ const corePulse=effects.core>0&&!reduceMotion?1+Math.sin(effects.frame*.27)*.14:1;
+ if(effects.core>0){
+   ctx.globalAlpha=reduceMotion?1:Math.min(1,effects.core/40);
+   ctx.shadowColor='#ffde74';ctx.shadowBlur=38;
+   circle(E.CORE,E.CORE.r+13*corePulse,'#e9a32b9c','#fff9b5');
+ }
+ ctx.globalAlpha=1;
+ circle(E.CORE,E.CORE.r+8,'#330e17','#ff5d33');
+ circle(E.CORE,E.CORE.r,open?'#fadc73':'#4b2a2d','#ffae57');
+ ctx.restore();
  ctx.font='800 10px system-ui';ctx.fillStyle='#fff1d5';ctx.textAlign='center';ctx.fillText('CORE',E.CORE.x,E.CORE.y+4);
  for(const side of ['left','right']){const f=E.flipper(game,side);line(f.x1+3,f.y1+4,f.x2+3,f.y2+4,25,'#090a0d');line(f.x1,f.y1,f.x2,f.y2,21,'#8c372d');line(f.x1,f.y1,f.x2,f.y2,13,'#f5a060');line(f.x1,f.y1,f.x2,f.y2,4,'#ffe5bd')}
  // Outlanes are actually open in physics and highlighted on the playfield.
  line(44,690,107,690,2,'#e93f50');line(353,690,416,690,2,'#e93f50');
  ctx.font='800 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#fa846c';ctx.fillText('OUTLANE',70,728);ctx.fillText('OUTLANE',390,728);
+ for(const p of effects.sparks){ctx.save();ctx.globalAlpha=Math.max(0,p.life/47);
+   circle(p,1.5+p.life/25,p.color);ctx.restore()}
  if(game.ball){circle({x:game.ball.x+3,y:game.ball.y+4},game.ball.r+2,'#05060b');circle(game.ball,game.ball.r,'#e0edf3','#fff')}
+ if(effects.core>0){
+   const alpha=reduceMotion?1:Math.min(1,effects.core/25);
+   ctx.save();ctx.globalAlpha=alpha;
+   ctx.fillStyle='#2c1018ef';ctx.strokeStyle='#ffdf7c';ctx.lineWidth=3;
+   ctx.fillRect(67,368,326,59);ctx.strokeRect(67,368,326,59);
+   ctx.textAlign='center';ctx.font='900 20px system-ui';ctx.fillStyle='#fff4cb';
+   ctx.fillText('REAKTOREN AKTIVERT!',230,406);ctx.restore();
+ }
  if(!game.launched&&game.playing){ctx.font='900 14px system-ui';ctx.fillStyle='#fff2c4';ctx.fillText('TRYKK SKYT FOR Å STARTE',230,769)}
  if(game.paused||game.ended){ctx.fillStyle='#050612bf';ctx.fillRect(48,310,364,140);ctx.font='900 28px system-ui';ctx.fillStyle='#ffe4b2';ctx.fillText(game.ended?'SPILLET ER OVER':'PAUSE',230,373);ctx.font='14px system-ui';ctx.fillText(game.ended?'Trykk NYTT SPILL':'Trykk FORTSETT',230,409)}
 }
@@ -106,7 +194,7 @@ function update(){
 function frame(t){
  const delta=last?Math.min(60,t-last):16.67;last=t;
  if(game.playing&&!game.paused){accumulator+=delta;let steps=0;while(accumulator>=16.667&&steps<4){E.step(game);accumulator-=16.667;steps++}if(steps===4)accumulator=0}else accumulator=0;
- board();update();requestAnimationFrame(frame);
+ observeEffects();advanceEffects();board();update();requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 </script></body></html>
