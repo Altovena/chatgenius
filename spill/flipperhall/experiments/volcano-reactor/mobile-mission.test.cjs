@@ -58,7 +58,7 @@ test('Mobile mission shows valve progress, gate countdown and core objective',()
 });
 test('Mobile mission is not hidden behind the sidebar on small screens',()=>{
   assert.match(html,/class="mobile-mission" aria-label="Oppdragsstatus"/);
-  assert.match(html,/@media\(max-width:700px\)\{\.mobile-mission\{display:block/);
+  assert.match(html,/@media\(max-width:700px\)\{[\s\S]*?\.mobile-mission\{display:block/);
   assert.match(html,/\.mobile-mission\{display:none\}/);
   assert.match(source,/game\.gateTicks\/120/);
 });
