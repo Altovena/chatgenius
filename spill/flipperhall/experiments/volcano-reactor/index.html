@@ -3,12 +3,27 @@
 <title>Volcano Reactor – Flipperhall 1.1 prototype</title>
 <style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 5%,#81371d,#150e1b 54%,#080b12);font:15px system-ui,-apple-system,sans-serif;color:#f9eacb;min-height:100svh}
-main{max-width:1000px;margin:auto;padding:16px 15px 114px}a{color:#ffcc88}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}h1{font-size:clamp(25px,4vw,39px);margin:12px 0 3px;letter-spacing:.02em}h1 em{font-size:12px;font-weight:500;font-style:normal;letter-spacing:.1em;color:#ffc47e;display:block;margin-top:5px}.warning{background:#7d4c2555;border:1px solid #fcb65e69;padding:9px 12px;border-radius:10px;font-size:12px}.workspace{display:grid;grid-template-columns:minmax(250px,430px) minmax(220px,1fr);align-items:start;gap:20px;margin-top:16px}.board{position:relative;max-width:430px;border:8px solid #755747;border-radius:25px;padding:7px;background:#0a0e16;box-shadow:0 18px 55px #0009}canvas{display:block;width:100%;height:auto;aspect-ratio:460/800;touch-action:none;background:#170f16;border-radius:13px}.panel{border:1px solid #b57c5566;border-radius:14px;padding:16px;background:#180e17c9}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#341b23;border-radius:9px;padding:9px}.stat b{display:block;color:#ffe5b5;font-size:21px}.stat small{font-size:11px;color:#e0af88}.status{font-weight:800;margin:15px 0;padding:12px 8px;text-align:center;border-radius:9px;background:#523124}.mission{font-size:13px;line-height:1.7}.mission b{color:#ffc56d}.controlbar{display:grid;grid-template-columns:1fr 1fr 72px 72px;gap:7px;max-width:430px;margin:13px 0}.controlbar button,.options button{border:1px solid #ffd09b80;border-radius:12px;background:linear-gradient(#6a3b2c,#35202a);color:#fff0d6;font-weight:800;min-height:58px;font-size:12px;padding:7px;touch-action:none;user-select:none;-webkit-user-select:none}.controlbar button:active,.controlbar button.held{background:linear-gradient(#ffcd83,#e27034);color:#241313}.controlbar button.launch{background:linear-gradient(#b8551e,#673016)}.options{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.options button{min-height:40px;padding:8px 15px}.hint{color:#e4b49c;font-size:12px;line-height:1.5}.meter{height:10px;border-radius:50px;overflow:hidden;background:#34191f;margin:8px 0}.meter span{height:100%;display:block;width:0;background:linear-gradient(90deg,#ff673d,#ffcc72);transition:width .15s}
-@media(max-width:700px){.workspace{display:block}.panel{margin-top:16px}.board{margin:auto;width:min(100%,calc((100svh - 215px)*.575));max-width:420px;padding:5px;border-width:5px}.controlbar{position:fixed;z-index:10;left:0;right:0;bottom:0;margin:0;width:100%;max-width:none;padding:8px 8px max(9px,env(safe-area-inset-bottom));background:linear-gradient(0deg,#140d17 72%,#140d17d9);grid-template-columns:2fr 2fr .8fr .8fr}.controlbar button{min-height:62px}}
+main{max-width:1000px;margin:auto;padding:16px 15px 114px}a{color:#ffcc88}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}h1{font-size:clamp(25px,4vw,39px);margin:12px 0 3px;letter-spacing:.02em}h1 em{font-size:12px;font-weight:500;font-style:normal;letter-spacing:.1em;color:#ffc47e;display:block;margin-top:5px}.warning{background:#7d4c2555;border:1px solid #fcb65e69;padding:9px 12px;border-radius:10px;font-size:12px}.workspace{display:grid;grid-template-columns:minmax(250px,430px) minmax(220px,1fr);align-items:start;gap:20px;margin-top:16px}.board{position:relative;max-width:430px;border:8px solid #755747;border-radius:25px;padding:7px;background:#0a0e16;box-shadow:0 18px 55px #0009}canvas{display:block;width:100%;height:auto;aspect-ratio:460/800;touch-action:none;background:#170f16;border-radius:13px}.panel{border:1px solid #b57c5566;border-radius:14px;padding:16px;background:#180e17c9}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#341b23;border-radius:9px;padding:9px}.stat b{display:block;color:#ffe5b5;font-size:21px}.stat small{font-size:11px;color:#e0af88}.status{font-weight:800;margin:15px 0;padding:12px 8px;text-align:center;border-radius:9px;background:#523124}.mission{font-size:13px;line-height:1.7}.mission b{color:#ffc56d}.controlbar{display:grid;grid-template-columns:1fr 1fr 72px 72px;gap:7px;max-width:430px;margin:13px 0}.controlbar button,.options button{border:1px solid #ffd09b80;border-radius:12px;background:linear-gradient(#6a3b2c,#35202a);color:#fff0d6;font-weight:800;min-height:58px;font-size:12px;padding:7px;touch-action:none;user-select:none;-webkit-user-select:none}.controlbar button:active,.controlbar button.held{background:linear-gradient(#ffcd83,#e27034);color:#241313}.controlbar button.launch{background:linear-gradient(#b8551e,#673016)}.options{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.options button{min-height:40px;padding:8px 15px}.hint{color:#e4b49c;font-size:12px;line-height:1.5}.mobile-mission{display:none}
+.mobile-mission .mission-stage{font-weight:900;font-size:12px;letter-spacing:.03em}
+.mobile-steps{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px;margin-top:6px}
+.mobile-step{border:1px solid #9e705672;background:#261a20;border-radius:8px;padding:6px 3px;text-align:center;font-size:11px;font-weight:800}
+.mobile-step.complete{background:#19402d;border-color:#64dda4;color:#ccffe2}
+.mobile-step.open{background:#684022;border-color:#ffca79;color:#ffefbd}
+.mobile-mission .gate-clock{font-variant-numeric:tabular-nums;font-weight:900}
+.meter{height:10px;border-radius:50px;overflow:hidden;background:#34191f;margin:8px 0}.meter span{height:100%;display:block;width:0;background:linear-gradient(90deg,#ff673d,#ffcc72);transition:width .15s}
+@media(max-width:700px){.mobile-mission{display:block;width:min(100%,430px);margin:0 auto 8px;padding:7px 9px;background:#20131b;border:1px solid #ba7e546d;border-radius:10px}.workspace{display:block}.panel{margin-top:16px}.board{margin:auto;width:min(100%,calc((100svh - 215px)*.575));max-width:420px;padding:5px;border-width:5px}.controlbar{position:fixed;z-index:10;left:0;right:0;bottom:0;margin:0;width:100%;max-width:none;padding:8px 8px max(9px,env(safe-area-inset-bottom));background:linear-gradient(0deg,#140d17 72%,#140d17d9);grid-template-columns:2fr 2fr .8fr .8fr}.controlbar button{min-height:62px}}
 </style></head><body>
 <main><header><div><h1>🌋 VOLCANO REACTOR <em>FLIPPERHALL 1.1 · ISOLERT PROTOTYPE</em></h1></div><a href="../../">Tilbake til Flipperhallen</a></header>
 <p class="warning">Eksperimentell forhåndsvisning. Ikke koblet til de seks eksisterende maskinene eller rekorder i Flipperhall 1.0.</p>
-<div class="workspace"><section><div class="board"><canvas id="playfield" width="460" height="800" aria-label="Spillbar Volcano Reactor-bane"></canvas></div>
+<div class="workspace"><section>
+<div class="mobile-mission" aria-label="Oppdragsstatus" role="group">
+  <div class="mission-stage" id="mobileStage">Steg 1: Treff begge trykkventilene</div>
+  <div class="mobile-steps">
+    <div class="mobile-step" id="mobileValveA">A · <span>0</span></div>
+    <div class="mobile-step" id="mobileValveB">B · <span>0</span></div>
+    <div class="mobile-step" id="mobileGate">PORT · <span class="gate-clock">STENGT</span></div>
+  </div>
+</div><div class="board"><canvas id="playfield" width="460" height="800" aria-label="Spillbar Volcano Reactor-bane"></canvas></div>
 <div class="controlbar">
 <button data-key="left">◀ VENSTRE</button><button data-key="right">HØYRE ▶</button><button data-key="nudge">DYTT</button><button data-key="launch" class="launch">SKYT</button>
 </div></section><aside class="panel"><div class="stats"><div class="stat"><small>POENG</small><b id="score">0</b></div><div class="stat"><small>BALL</small><b id="ball">1 / 3</b></div></div>
@@ -189,6 +204,18 @@ function update(){
  DOM('gate').textContent=game.gateOpen?'ÅPEN':'STENGT';DOM('remaining').textContent=game.gateOpen?' · '+(game.gateTicks/120).toFixed(1)+' s igjen':'';
  DOM('meter').style.width=(game.gateOpen?100*game.gateTicks/900:0)+'%';
  DOM('mission').textContent=game.missionComplete?'Ja – '+game.coreHits+' kjerne-treff':'Nei';
+ const va=DOM('mobileValveA'),vb=DOM('mobileValveB'),mg=DOM('mobileGate');
+ va.classList.toggle('complete',game.valves[0]);vb.classList.toggle('complete',game.valves[1]);
+ mg.classList.toggle('open',game.gateOpen);
+ va.querySelector('span').textContent=game.valves[0]?'✓':'0';
+ vb.querySelector('span').textContent=game.valves[1]?'✓':'0';
+ mg.querySelector('span').textContent=game.gateOpen?(game.gateTicks/120).toFixed(1)+' s':'STENGT';
+ const stage=game.ended?'Spillet er over – start et nytt parti':
+   game.missionComplete?'🏆 Reaktor fullført! Aktiver ventilene igjen':
+   game.gateOpen?'Steg 2: Treff REAKTORKJERNEN!':
+   game.valves[0]||game.valves[1]?'Steg 1: Finn den siste trykkventilen':
+   'Steg 1: Treff begge trykkventilene';
+ DOM('mobileStage').textContent=stage;
  if(previousEvent!==game.lastEvent){eventSound(game.lastEvent);previousEvent=game.lastEvent;}
 }
 function frame(t){
