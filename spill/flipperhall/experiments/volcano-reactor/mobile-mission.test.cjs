@@ -68,3 +68,23 @@ test('HUD changes cannot advance physical time or award points',()=>{
   for(let i=0;i<50;i++)h.update();
   assert.deepEqual({score:h.game.score,tick:h.game.tick,gate:h.game.gateTicks},before);
 });
+
+test('Small portrait screens reserve space for header, HUD and fixed flipper controls',()=>{
+  assert.match(html,/@media\(max-width:700px\)/);
+  assert.match(html,/\.workspace\{display:block;margin-top:6px\}/);
+  assert.match(html,/\.mobile-mission\{display:block/);
+  assert.match(html,/\.warning\{display:none\}/);
+  assert.match(html,/\.board\{margin:auto;width:min\(100%,calc\(\(100svh - 230px\)\*\.575\)\)/);
+  assert.match(html,/max-height:620px/);
+  assert.match(html,/\.controlbar\{position:fixed/);
+  const estimates=[568,667,844].map(height=>{
+    const reserved=height<=620?210:230;
+    const boardWidth=(height-reserved)*.575;
+    const boardHeight=boardWidth*800/460+10;
+    return {height,boardWidth,boardHeight,remaining:height-boardHeight};
+  });
+  for(const e of estimates){
+    assert.ok(e.boardWidth>160, 'Board must remain playable on '+e.height+'px screens');
+    assert.ok(e.remaining>=195, 'Leave space for header, mission HUD and bottom controls: '+JSON.stringify(e));
+  }
+});
