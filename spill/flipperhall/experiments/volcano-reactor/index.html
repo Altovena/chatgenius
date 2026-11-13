@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Volcano Reactor – Flipperhall 1.1 prototype</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 5%,#81371d,#150e1b 54%,#080b12);font:15px system-ui,-apple-system,sans-serif;color:#f9eacb;min-height:100svh}
+main{max-width:1000px;margin:auto;padding:16px 15px 114px}a{color:#ffcc88}header{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}h1{font-size:clamp(25px,4vw,39px);margin:12px 0 3px;letter-spacing:.02em}h1 em{font-size:12px;font-weight:500;font-style:normal;letter-spacing:.1em;color:#ffc47e;display:block;margin-top:5px}.warning{background:#7d4c2555;border:1px solid #fcb65e69;padding:9px 12px;border-radius:10px;font-size:12px}.workspace{display:grid;grid-template-columns:minmax(250px,430px) minmax(220px,1fr);align-items:start;gap:20px;margin-top:16px}.board{position:relative;max-width:430px;border:8px solid #755747;border-radius:25px;padding:7px;background:#0a0e16;box-shadow:0 18px 55px #0009}canvas{display:block;width:100%;height:auto;aspect-ratio:460/800;touch-action:none;background:#170f16;border-radius:13px}.panel{border:1px solid #b57c5566;border-radius:14px;padding:16px;background:#180e17c9}.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#341b23;border-radius:9px;padding:9px}.stat b{display:block;color:#ffe5b5;font-size:21px}.stat small{font-size:11px;color:#e0af88}.status{font-weight:800;margin:15px 0;padding:12px 8px;text-align:center;border-radius:9px;background:#523124}.mission{font-size:13px;line-height:1.7}.mission b{color:#ffc56d}.controlbar{display:grid;grid-template-columns:1fr 1fr 72px 72px;gap:7px;max-width:430px;margin:13px 0}.controlbar button,.options button{border:1px solid #ffd09b80;border-radius:12px;background:linear-gradient(#6a3b2c,#35202a);color:#fff0d6;font-weight:800;min-height:58px;font-size:12px;padding:7px;touch-action:none;user-select:none;-webkit-user-select:none}.controlbar button:active,.controlbar button.held{background:linear-gradient(#ffcd83,#e27034);color:#241313}.controlbar button.launch{background:linear-gradient(#b8551e,#673016)}.options{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.options button{min-height:40px;padding:8px 15px}.hint{color:#e4b49c;font-size:12px;line-height:1.5}.mobile-mission{display:none}
+.mobile-mission .mission-stage{font-weight:900;font-size:12px;letter-spacing:.03em}
+.mobile-steps{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:6px;margin-top:6px}
+.mobile-step{border:1px solid #9e705672;background:#261a20;border-radius:8px;padding:6px 3px;text-align:center;font-size:11px;font-weight:800}
+.mobile-step.complete{background:#19402d;border-color:#64dda4;color:#ccffe2}
+.mobile-step.open{background:#684022;border-color:#ffca79;color:#ffefbd}
+.mobile-mission .gate-clock{font-variant-numeric:tabular-nums;font-weight:900}
+.meter{height:10px;border-radius:50px;overflow:hidden;background:#34191f;margin:8px 0}.meter span{height:100%;display:block;width:0;background:linear-gradient(90deg,#ff673d,#ffcc72);transition:width .15s}
+@media(max-width:700px){
+  main{padding:6px 8px 100px}
+  header{padding:5px 2px;gap:6px}
+  header h1{font-size:clamp(19px,5.3vw,27px);margin:3px 0 0}
+  header h1 em{font-size:10px;margin-top:1px;letter-spacing:.04em}
+  header a{font-size:12px;white-space:nowrap}
+  .warning{display:none}
+  .workspace{display:block;margin-top:6px}
+  .mobile-mission{display:block;width:min(100%,430px);margin:0 auto 6px;padding:5px 8px;background:#20131b;border:1px solid #ba7e546d;border-radius:10px}
+  .mobile-steps{margin-top:4px}
+  .mobile-step{padding:5px 3px}
+  .panel{margin-top:16px}
+  /* Reserve 230px of viewport height for compact header, mission HUD, controls and safe-area. */
+  .board{margin:auto;width:min(100%,calc((100svh - 230px)*.575));max-width:420px;padding:5px;border-width:5px}
+  .controlbar{position:fixed;z-index:10;left:0;right:0;bottom:0;margin:0;width:100%;max-width:none;padding:8px 8px max(9px,env(safe-area-inset-bottom));background:linear-gradient(0deg,#140d17 72%,#140d17d9);grid-template-columns:2fr 2fr .8fr .8fr}
+  .controlbar button{min-height:62px}
+}
+@media(max-width:700px) and (max-height:620px){
+  .board{width:min(100%,calc((100svh - 210px)*.575))}
+  .mobile-step{padding:3px 2px}
+  .mobile-mission{margin-bottom:4px}
+}
+</style></head><body>
+<main><header><div><h1>🌋 VOLCANO REACTOR <em>FLIPPERHALL 1.1 · ISOLERT PROTOTYPE</em></h1></div><a href="../../">Tilbake til Flipperhallen</a></header>
+<p class="warning">Eksperimentell forhåndsvisning. Ikke koblet til de seks eksisterende maskinene eller rekorder i Flipperhall 1.0.</p>
+<div class="workspace"><section>
+<div class="mobile-mission" aria-label="Oppdragsstatus" role="group">
+  <div class="mission-stage" id="mobileStage">Steg 1: Treff begge trykkventilene</div>
+  <div class="mobile-steps">
+    <div class="mobile-step" id="mobileValveA">A · <span>0</span></div>
+    <div class="mobile-step" id="mobileValveB">B · <span>0</span></div>
+    <div class="mobile-step" id="mobileGate">PORT · <span class="gate-clock">STENGT</span></div>
+  </div>
+</div><div class="board"><canvas id="playfield" width="460" height="800" aria-label="Spillbar Volcano Reactor-bane"></canvas></div>
+<div class="controlbar">
+<button data-key="left">◀ VENSTRE</button><button data-key="right">HØYRE ▶</button><button data-key="nudge">DYTT</button><button data-key="launch" class="launch">SKYT</button>
+</div></section><aside class="panel"><div class="stats"><div class="stat"><small>POENG</small><b id="score">0</b></div><div class="stat"><small>BALL</small><b id="ball">1 / 3</b></div></div>
+<div class="status" id="status" role="status">KLAR FOR UTSKYTING</div><div class="mission"><b>REAKTOROPPDRAGET</b>
+<p>1. Treff trykkventil A og B i høyre renne.<br>2. Reaktorporten åpner fysisk.<br>3. Treff kjernen innen tiden går ut!</p>
+<div>Ventil A: <strong id="valveA">Åpen</strong> · Ventil B: <strong id="valveB">Åpen</strong></div><div>Reaktorport: <strong id="gate">STENGT</strong> <span id="remaining" aria-live="off"></span></div>
+<div class="meter"><span id="meter"></span></div><div>Reaktor fullført: <strong id="mission">Nei</strong></div></div>
+<div class="options"><button id="pause">Pause</button><button id="restart">Nytt spill</button><button id="sound">🔊 Lyd på</button></div>
+<p class="hint">PC: A/← og D/→ er flippere. Mellomrom skyter. P pauser. På mobil kan begge flipperknappene holdes inne samtidig.</p></aside></div>
+</main><script src="./engine.js"></script><script>
+const E=window.VolcanoReactor,canvas=document.getElementById('playfield'),ctx=canvas.getContext('2d');
+let game=E.newGame(),sound=true,last=0,accumulator=0,previousEvent='';
+let audio=null;
+const reduceMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+const effects={valves:[0,0],gate:0,core:0,sparks:[],frame:0,previousValves:[false,false],previousGate:false,previousCoreHits:0};
+function resetEffects(){
+  effects.valves=[0,0];effects.gate=0;effects.core=0;effects.sparks=[];
+  effects.frame=0;effects.previousValves=[false,false];effects.previousGate=false;effects.previousCoreHits=0;
+}
+function sparkBurst(x,y,count,color,seed=0){
+  if(reduceMotion)return;
+  for(let i=0;i<count;i++){
+    const angle=i*Math.PI*2/count+seed,vel=1.8+(i%4)*.75;
+    effects.sparks.push({x,y,vx:Math.cos(angle)*vel,vy:Math.sin(angle)*vel-1,life:36+i%11,color});
+  }
+  if(effects.sparks.length>90)effects.sparks=effects.sparks.slice(-90);
+}
+function observeEffects(){
+  for(let i=0;i<2;i++){
+    if(game.valves[i]&&!effects.previousValves[i]){
+      effects.valves[i]=46;sparkBurst(E.VALVES[i].x,E.VALVES[i].y,16,'#9dffb8',i*.2);
+      if(i===0||!game.gateOpen)tone(650,.14);
+    }
+    effects.previousValves[i]=game.valves[i];
+  }
+  if(game.gateOpen&&!effects.previousGate){
+    effects.gate=65;sparkBurst((E.GATE.ax+E.GATE.bx)/2,E.GATE.ay,28,'#ffd080');
+  }
+  effects.previousGate=game.gateOpen;
+  if(game.coreHits>effects.previousCoreHits){
+    effects.core=120;
+    sparkBurst(E.CORE.x,E.CORE.y,45,'#ffcf5e');
+    sparkBurst(E.CORE.x,E.CORE.y,24,'#fff6cf',Math.PI/12);
+  }
+  effects.previousCoreHits=game.coreHits;
+}
+function advanceEffects(){
+  if(game.paused||game.ended)return;
+  effects.frame++;
+  effects.valves=effects.valves.map(t=>Math.max(0,t-1));
+  effects.gate=Math.max(0,effects.gate-1);
+  effects.core=Math.max(0,effects.core-1);
+  for(const p of effects.sparks){p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life--}
+  effects.sparks=effects.sparks.filter(p=>p.life>0);
+}
+function soundReady(){
+  if(!sound)return null;
+  try{audio??=new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();return audio}catch{return null}
+}
+function tone(frequency=440,duration=.09){
+  const a=soundReady();if(!a)return;
+  try{const osc=a.createOscillator(),gain=a.createGain();osc.type='triangle';
+  osc.frequency.setValueAtTime(frequency,a.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(80,frequency*.7),a.currentTime+duration);
+  gain.gain.setValueAtTime(.047,a.currentTime);
+  gain.gain.exponentialRampToValueAtTime(.001,a.currentTime+duration);
+  osc.connect(gain);gain.connect(a.destination);osc.start();osc.stop(a.currentTime+duration)}catch{}
+}
+function eventSound(message){
+  if(message==='BALL IN PLAY')tone(470,.11);
+  else if(message==='REACTOR GATE OPEN')tone(800,.24);
+  else if(message==='VOLCANO REACTOR ACTIVATED!')tone(940,.30);
+  else if(message==='REACTOR PRESSURE RESET')tone(230,.16);
+  else if(message.startsWith('PRESSURE VALVE'))tone(650,.14);
+  else if(message==='GAME OVER')tone(180,.28);
+}
+
+const buttons=[...document.querySelectorAll('[data-key]')];let activeKeys=new Set();
+const DOM=id=>document.getElementById(id);
+function release(){activeKeys.clear();E.setFlippers(game,false,false);buttons.forEach(el=>el.classList.remove('held'))}
+function setKey(k,on){
+  if(on)activeKeys.add(k);else activeKeys.delete(k);
+  E.setFlippers(game,activeKeys.has('left'),activeKeys.has('right'));
+  if(on&&k==='launch'){soundReady();E.launch(game)}
+  if(on&&k==='nudge'){soundReady();E.nudge(game)}
+}
+buttons.forEach(btn=>{
+  const key=btn.dataset.key;
+  btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!game.playing||game.paused)return;soundReady();btn.setPointerCapture(e.pointerId);btn.classList.add('held');setKey(key,true)});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(type,e=>{e.preventDefault();btn.classList.remove('held');setKey(key,false)});
+});
+const keys={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'launch',KeyN:'nudge'};
+window.addEventListener('keydown',e=>{if(e.code==='KeyP'){e.preventDefault();if(e.repeat)return;togglePause();return}const k=keys[e.code];if(!k)return;e.preventDefault();if(!e.repeat){soundReady();setKey(k,true)}});
+window.addEventListener('keyup',e=>{const k=keys[e.code];if(k){e.preventDefault();setKey(k,false)}});
+function togglePause(){if(game.ended)return;if(game.paused)E.resume(game);else{release();E.pause(game)}DOM('pause').textContent=game.paused?'Fortsett':'Pause'}
+DOM('pause').onclick=togglePause;
+DOM('restart').onclick=()=>{release();game=E.newGame();resetEffects();previousEvent='';accumulator=0;DOM('pause').textContent='Pause'};
+DOM('sound').onclick=()=>{sound=!sound;if(sound)soundReady();DOM('sound').textContent=sound?'🔊 Lyd på':'🔇 Lyd av'};
+function background(){release();if(!game.paused)E.pause(game);DOM('pause').textContent='Fortsett'}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)background()});
+window.addEventListener('blur',background);window.addEventListener('pagehide',background);
+function line(x1,y1,x2,y2,width,color){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineWidth=width;ctx.strokeStyle=color;ctx.lineCap='round';ctx.stroke()}
+function circle(c,r,color,stroke){ctx.beginPath();ctx.arc(c.x,c.y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();if(stroke){ctx.lineWidth=3;ctx.strokeStyle=stroke;ctx.stroke()}}
+function board(){
+ ctx.fillStyle='#16101a';ctx.fillRect(0,0,460,800);
+ const glow=ctx.createRadialGradient(215,225,50,205,260,510);glow.addColorStop(0,'#a82c1b90');glow.addColorStop(.55,'#392124');glow.addColorStop(1,'#110d17');ctx.fillStyle=glow;ctx.fillRect(20,20,420,745);
+ for(let i=0;i<22;i++){const x=65+(i*73)%330,y=85+(i*91)%535;circle({x,y},i%3===0?3:1.4,'#ff743b88')}
+ ctx.save();ctx.textAlign='center';ctx.font='bold 21px system-ui';ctx.fillStyle='#ffbf85';ctx.fillText('V O L C A N O',230,73);
+ ctx.font='bold 11px system-ui';ctx.fillText('PRESSURE  ·  REACTOR  ·  CORE',230,92);ctx.restore();
+ for(const r of E.RAILS){line(...r,14,'#100c13');line(...r,8,'#b36d49');line(...r,3,'#ffce8b')}
+ for(const b of E.BUMPERS){circle(b,b.r+5,'#3f292e','#ff9b69');circle(b,b.r-3,'#ff7d33','#ffdd9c');circle(b,6,'#ffdcaf')}
+ for(let i=0;i<E.VALVES.length;i++){
+   const c=E.VALVES[i],lit=game.valves[i],pulse=effects.valves[i];
+   if(pulse>0&&!reduceMotion){ctx.save();ctx.globalAlpha=pulse/46*.65;
+     ctx.beginPath();ctx.arc(c.x,c.y,c.r+9+(46-pulse)*.65,0,Math.PI*2);
+     ctx.lineWidth=5;ctx.strokeStyle='#95ffac';ctx.stroke();ctx.restore()}
+   ctx.save();ctx.shadowColor=lit?'#8bff9a':'#ff6138';ctx.shadowBlur=lit?19:5;
+   circle(c,c.r+5,'#2c1a1a',lit?'#c4ffe0':'#c47b54');
+   circle(c,c.r-2,lit?'#75eb9b':'#fb6e3e',lit?'#e6ffe9':'#ffdf89');ctx.restore();
+   ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#1c1715';
+   ctx.fillText(i?'B':'A',c.x,c.y+4)
+ }
+ const open=game.gateOpen;
+ // This drawn segment is identical to the physics gate and vanishes while open.
+ if(open){
+   // Two door halves slide away from the *actual* collision segment when it opens.
+   // During opening, keep halves outside the 95px-long central passage: visuals never block a passable route.
+   const t=reduceMotion?1:Math.min(1,(65-effects.gate)/22);
+   const travel=27+35*t;
+   const y=E.GATE.ay,center=(E.GATE.ax+E.GATE.bx)/2;
+   ctx.save();ctx.shadowColor='#7effb6';ctx.shadowBlur=17;
+   line(E.GATE.ax-travel,y,E.GATE.ax-7,y,8,'#ad6142');
+   line(E.GATE.bx+7,y,E.GATE.bx+travel,y,8,'#ad6142');
+   line(E.GATE.ax,y,E.GATE.bx,y,2,'#7ef6ac55');
+   ctx.restore();
+   ctx.fillStyle='#bcffcf';ctx.textAlign='center';ctx.font='900 11px system-ui';
+   ctx.fillText('PORT ÅPEN',center,y+35);
+ }else{
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,15,'#1b0b0a');
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,9,'#ff4b28');
+   line(E.GATE.ax,E.GATE.ay,E.GATE.bx,E.GATE.by,3,'#ffce88')
+ }
+ ctx.save();
+ const corePulse=effects.core>0&&!reduceMotion?1+Math.sin(effects.frame*.27)*.14:1;
+ if(effects.core>0){
+   ctx.globalAlpha=reduceMotion?1:Math.min(1,effects.core/40);
+   ctx.shadowColor='#ffde74';ctx.shadowBlur=38;
+   circle(E.CORE,E.CORE.r+13*corePulse,'#e9a32b9c','#fff9b5');
+ }
+ ctx.globalAlpha=1;
+ circle(E.CORE,E.CORE.r+8,'#330e17','#ff5d33');
+ circle(E.CORE,E.CORE.r,open?'#fadc73':'#4b2a2d','#ffae57');
+ ctx.restore();
+ ctx.font='800 10px system-ui';ctx.fillStyle='#fff1d5';ctx.textAlign='center';ctx.fillText('CORE',E.CORE.x,E.CORE.y+4);
+ for(const side of ['left','right']){const f=E.flipper(game,side);line(f.x1+3,f.y1+4,f.x2+3,f.y2+4,25,'#090a0d');line(f.x1,f.y1,f.x2,f.y2,21,'#8c372d');line(f.x1,f.y1,f.x2,f.y2,13,'#f5a060');line(f.x1,f.y1,f.x2,f.y2,4,'#ffe5bd')}
+ // Outlanes are actually open in physics and highlighted on the playfield.
+ line(44,690,107,690,2,'#e93f50');line(353,690,416,690,2,'#e93f50');
+ ctx.font='800 12px system-ui';ctx.textAlign='center';ctx.fillStyle='#fa846c';ctx.fillText('OUTLANE',70,728);ctx.fillText('OUTLANE',390,728);
+ for(const p of effects.sparks){ctx.save();ctx.globalAlpha=Math.max(0,p.life/47);
+   circle(p,1.5+p.life/25,p.color);ctx.restore()}
+ if(game.ball){circle({x:game.ball.x+3,y:game.ball.y+4},game.ball.r+2,'#05060b');circle(game.ball,game.ball.r,'#e0edf3','#fff')}
+ if(effects.core>0){
+   const alpha=reduceMotion?1:Math.min(1,effects.core/25);
+   ctx.save();ctx.globalAlpha=alpha;
+   ctx.fillStyle='#2c1018ef';ctx.strokeStyle='#ffdf7c';ctx.lineWidth=3;
+   ctx.fillRect(67,368,326,59);ctx.strokeRect(67,368,326,59);
+   ctx.textAlign='center';ctx.font='900 20px system-ui';ctx.fillStyle='#fff4cb';
+   ctx.fillText('REAKTOREN AKTIVERT!',230,406);ctx.restore();
+ }
+ if(!game.launched&&game.playing){ctx.font='900 14px system-ui';ctx.fillStyle='#fff2c4';ctx.fillText('TRYKK SKYT FOR Å STARTE',230,769)}
+ if(game.paused||game.ended){ctx.fillStyle='#050612bf';ctx.fillRect(48,310,364,140);ctx.font='900 28px system-ui';ctx.fillStyle='#ffe4b2';ctx.fillText(game.ended?'SPILLET ER OVER':'PAUSE',230,373);ctx.font='14px system-ui';ctx.fillText(game.ended?'Trykk NYTT SPILL':'Trykk FORTSETT',230,409)}
+}
+function update(){
+ DOM('score').textContent=game.score.toLocaleString('nb-NO');
+ DOM('ball').textContent=game.ballNo+' / 3';DOM('status').textContent=game.lastEvent;
+ DOM('valveA').textContent=game.valves[0]?'Aktivert':'Ikke aktivert';
+ DOM('valveB').textContent=game.valves[1]?'Aktivert':'Ikke aktivert';
+ DOM('gate').textContent=game.gateOpen?'ÅPEN':'STENGT';DOM('remaining').textContent=game.gateOpen?' · '+(game.gateTicks/120).toFixed(1)+' s igjen':'';
+ DOM('meter').style.width=(game.gateOpen?100*game.gateTicks/900:0)+'%';
+ DOM('mission').textContent=game.missionComplete?'Ja – '+game.coreHits+' kjerne-treff':'Nei';
+ const va=DOM('mobileValveA'),vb=DOM('mobileValveB'),mg=DOM('mobileGate');
+ va.classList.toggle('complete',game.valves[0]);vb.classList.toggle('complete',game.valves[1]);
+ mg.classList.toggle('open',game.gateOpen);
+ va.querySelector('span').textContent=game.valves[0]?'✓':'0';
+ vb.querySelector('span').textContent=game.valves[1]?'✓':'0';
+ mg.querySelector('span').textContent=game.gateOpen?(game.gateTicks/120).toFixed(1)+' s':'STENGT';
+ const stage=game.ended?'Spillet er over – start et nytt parti':
+   game.missionComplete?'🏆 Reaktor fullført! Aktiver ventilene igjen':
+   game.gateOpen?'Steg 2: Treff REAKTORKJERNEN!':
+   game.valves[0]||game.valves[1]?'Steg 1: Finn den siste trykkventilen':
+   'Steg 1: Treff begge trykkventilene';
+ DOM('mobileStage').textContent=stage;
+ if(previousEvent!==game.lastEvent){eventSound(game.lastEvent);previousEvent=game.lastEvent;}
+}
+function frame(t){
+ const delta=last?Math.min(60,t-last):16.67;last=t;
+ if(game.playing&&!game.paused){accumulator+=delta;let steps=0;while(accumulator>=16.667&&steps<4){E.step(game);accumulator-=16.667;steps++}if(steps===4)accumulator=0}else accumulator=0;
+ observeEffects();advanceEffects();board();update();requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></body></html>
