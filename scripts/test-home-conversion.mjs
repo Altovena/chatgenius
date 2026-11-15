@@ -46,3 +46,18 @@ test('Lab preserves original games and apps routes',()=>{
   assert.match(lab,/href="\/apper\/"/);
   assert.match(lab,/href="\/spill\/sjakk\/"/);
 });
+
+test('homepage prices match the live DemoSites pricing markup',()=>{
+  for (const [packageName,start,monthly] of [
+    ['Basis','4 900','490'],
+    ['Standard','7 900','990'],
+    ['Premium','14 900','1 990']
+  ]) {
+    assert.match(home,new RegExp(packageName+'[\\s\\S]{0,190}'+start+' kr[\\s\\S]{0,150}'+monthly+' kr\\/mnd'));
+    assert.ok(demosites.includes(start+' kr + '+monthly+' kr/mnd'),packageName+' differs from DemoSites');
+  }
+});
+test('homepage public share image is not the old VM2026 artwork',()=>{
+  assert.match(home, /property="og:image"/);
+  assert.doesNotMatch(home, /vm2026\.jpg/);
+});
