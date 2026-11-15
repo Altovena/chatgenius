@@ -1,0 +1,27 @@
+name: DemoSites design catalog validation
+on:
+  pull_request:
+    paths:
+      - 'demosites/index.html'
+      - 'nettsider/index.html'
+      - 'apper/index.html'
+      - 'scripts/test-demosites-layouts.mjs'
+      - '.github/workflows/demosites-layouts.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'demosites/index.html'
+      - 'nettsider/index.html'
+      - 'apper/index.html'
+      - 'scripts/test-demosites-layouts.mjs'
+      - '.github/workflows/demosites-layouts.yml'
+jobs:
+  layout-catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/test-demosites-layouts.mjs
