@@ -559,5 +559,15 @@
     })();
   </script>
   <script src="/assets/design-2027.js" defer></script>
+
+  <script>
+    // Carry the company name from the homepage into the existing DemoSites wizard.
+    (() => {
+      const company = new URLSearchParams(window.location.search).get('company');
+      if (!company) return;
+      const field = document.querySelector('#order-form [name="site_or_name"]');
+      if (field && !field.value) field.value = company.slice(0, 180);
+    })();
+  </script>
 </body>
 </html>

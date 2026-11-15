@@ -1,0 +1,56 @@
+/* ChatGenius studio homepage: brand-first, all styles scoped to studio-home. */
+.studio-home{background:#0d0f11;color:#f6f5f1}
+.studio-home .site-header{background:rgba(15,18,23,.93);border-bottom:1px solid rgba(255,255,255,.09)}
+.studio-home .site-nav a{white-space:nowrap}
+.studio-hero{max-width:1330px;margin:auto;padding:112px 28px 106px;display:grid;grid-template-columns:1.04fr .96fr;gap:65px;align-items:center;min-height:680px}
+.studio-hero h1{font-size:clamp(3rem,5.8vw,6.3rem);line-height:1.02;letter-spacing:-.055em;margin:0 0 31px;font-weight:800;max-width:680px}
+.studio-hero h1 span{color:#9de6e0}
+.studio-intro{font-size:clamp(1.1rem,1.8vw,1.38rem);line-height:1.62;color:#ecf0ef;max-width:620px}
+.studio-subintro{font-size:1.03rem;color:#aebfc5;max-width:600px;margin:12px 0 29px}
+.studio-hero-actions{display:flex;flex-wrap:wrap;gap:12px}
+.studio-hero-foot{color:#aebfc5;font-size:.85rem;margin-top:25px}
+.studio-hero-work{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:270px 205px;gap:14px;min-width:0}
+.studio-showcase{display:block;position:relative;overflow:hidden;background:#213443;border:1px solid #435764;border-radius:20px;text-decoration:none;color:white!important;isolation:isolate}
+.studio-showcase-large{grid-column:1/-1}
+.studio-showcase img{width:100%;height:100%;display:block;object-fit:cover;opacity:.84;transition:transform .4s ease}
+.studio-showcase:hover img{transform:scale(1.04)}
+.studio-showcase::after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,rgba(4,12,18,.96));z-index:0}
+.studio-showcase span{position:absolute;bottom:18px;left:20px;right:18px;z-index:1}
+.studio-showcase strong,.studio-showcase small{display:block}
+.studio-showcase strong{font-size:1.08rem}
+.studio-showcase small{text-transform:uppercase;letter-spacing:.12em;font-size:.65rem;color:#aff7e5;margin-bottom:3px}
+.studio-section{max-width:1260px;margin:auto;padding:95px 28px}
+.studio-section h2,.studio-altovena h2{font-size:clamp(2.2rem,4vw,4rem);line-height:1.13;letter-spacing:-.04em;margin:0 0 24px}
+.studio-section-lead{max-width:750px;color:#b7c7cd;font-size:1.08rem;margin-bottom:35px}
+.studio-story,.studio-approach,.studio-person{display:grid;grid-template-columns:1fr 1fr;gap:74px;align-items:start}
+.studio-story{border-top:1px solid rgba(255,255,255,.15);border-bottom:1px solid rgba(255,255,255,.15)}
+.studio-story-text p,.studio-approach p,.studio-person p{color:#c6d3d8;font-size:1.1rem;line-height:1.8;margin-top:0}
+.studio-product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.studio-product-card{display:flex;flex-direction:column;padding:30px 25px;min-height:345px;background:#18252e;border:1px solid #3b4d59;border-radius:24px;color:#f6f7f7!important;text-decoration:none;transition:transform .2s,border-color .2s}
+.studio-product-card:hover{transform:translateY(-5px);border-color:#91e0d7}
+.studio-card-index{font-size:.7rem;letter-spacing:.12em;color:#9de6e0;font-weight:800}
+.studio-product-icon{font-size:3rem;line-height:1.4;color:#d3efe8;margin:16px 0 2px}
+.studio-product-card h3{font-size:1.45rem;line-height:1.25;margin:4px 0 10px}
+.studio-product-card p{color:#bfcbd2;font-size:.95rem;line-height:1.7;margin:0 0 22px}
+.studio-card-link{font-size:.9rem;color:#a5f3e5;font-weight:700;margin-top:auto}
+.studio-approach{background:linear-gradient(120deg,rgba(53,74,78,.14),transparent);border-radius:32px}
+.studio-inline-link{color:#a5f3e5!important;font-weight:750;text-decoration:none}
+.studio-inline-link:hover{text-decoration:underline}
+.studio-heading-row{display:flex;justify-content:space-between;gap:25px;align-items:center}
+.studio-mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:30px}
+.studio-mini-grid a{display:block;border-top:1px solid #576875;padding:20px 6px;color:inherit;text-decoration:none}
+.studio-mini-grid strong{font-size:1.13rem;display:block}
+.studio-mini-grid span{display:block;color:#b8c9d0;margin-top:8px}
+.studio-qualifier{color:#9fb5bf;font-size:.84rem;margin-top:15px}
+.studio-altovena{display:grid;grid-template-columns:.85fr 1.15fr;gap:70px;align-items:center;background:#171f2a;padding:95px max(28px,calc((100vw - 1204px)/2));border-top:1px solid #34434e;border-bottom:1px solid #34434e}
+.studio-altovena-brand{border-radius:25px;border:1px solid #465360;padding:55px 25px;text-align:center;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:15px;font-weight:800;letter-spacing:.06em;font-size:clamp(1rem,2vw,1.5rem)}
+.studio-altovena-brand i{color:#9de6e0;font-style:normal}
+.studio-altovena p:not(.conversion-eyebrow){color:#c4d0d8;line-height:1.8;font-size:1.06rem}
+.studio-person{border-bottom:1px solid #34434e}
+.studio-person a{color:#9de6e0!important}
+.studio-final{background:linear-gradient(110deg,#173939,#192839)}
+.studio-home .conversion-cta h2{max-width:900px;margin:0 auto 20px}
+@media(max-width:1100px){.studio-hero{gap:28px}.studio-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.studio-hero-work{grid-template-rows:230px 165px}}
+@media(max-width:840px){.studio-hero{grid-template-columns:1fr;padding-top:70px;gap:42px}.studio-story,.studio-approach,.studio-person,.studio-altovena{grid-template-columns:1fr;gap:20px}.studio-altovena{padding:75px 28px}.studio-hero-work{grid-template-rows:240px 175px}.studio-mini-grid{grid-template-columns:1fr}.studio-heading-row{align-items:start;flex-direction:column}.studio-home .site-header{height:auto;flex-wrap:wrap}.studio-home .site-nav{display:flex;flex-wrap:wrap;justify-content:center;order:3;width:100%;gap:2px}.studio-home .site-nav a{font-size:.8rem;padding:7px 9px}}
+@media(max-width:520px){.studio-hero{padding:56px 18px 70px}.studio-hero-work{grid-template-rows:195px 155px;gap:9px}.studio-showcase span{bottom:11px;left:12px;right:9px}.studio-showcase strong{font-size:.83rem}.studio-showcase small{font-size:.6rem}.studio-section{padding:65px 18px}.studio-product-grid{grid-template-columns:1fr}.studio-product-card{min-height:265px}.studio-altovena{padding:65px 18px}.studio-hero-actions .button{width:100%}}
+@media(prefers-reduced-motion:reduce){.studio-showcase img,.studio-product-card{transition:none}.studio-showcase:hover img,.studio-product-card:hover{transform:none}}

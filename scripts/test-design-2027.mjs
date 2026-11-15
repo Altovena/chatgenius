@@ -7,9 +7,9 @@ const css = fs.readFileSync("assets/design-2027.css", "utf8");
 const js = fs.readFileSync("assets/design-2027.js", "utf8");
 
 test("homepage pilot loads the scoped 2027 design system", () => {
-  assert.match(html, /<body class="home-2027">/);
-  assert.match(html, /href="assets\/design-2027\.css"/);
-  assert.match(html, /src="assets\/design-2027\.js"/);
+  assert.match(html, /<body class="home-2027 home-conversion studio-home">/);
+  assert.match(html, /href="\/assets\/design-2027\.css"/);
+  assert.match(html, /src="\/assets\/design-2027\.js"/);
   assert.match(css, /body\.home-2027/);
 });
 
@@ -98,7 +98,7 @@ const localizedHomePages = ["fr/index.html", "es/index.html", "de/index.html", "
 test("localized homepages share the 2027 visual system without changing language content", () => {
   for (const file of localizedHomePages) {
     const page = fs.readFileSync(file, "utf8");
-    assert.match(page, /<body class="design-2027 home-2027">/);
+    assert.match(page, /<body class="home-2027 home-conversion studio-home">/);
     assert.match(page, /href="\/assets\/design-2027\.css"/);
     assert.match(page, /src="\/assets\/design-2027\.js"/);
     assert.match(page, /<html lang="(?:fr|es|de|ru)">/);

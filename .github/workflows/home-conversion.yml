@@ -1,0 +1,29 @@
+name: ChatGenius homepage conversion checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'lab/**'
+      - 'demosites/**'
+      - 'assets/home-conversion.css'
+      - 'scripts/test-home-conversion.mjs'
+      - '.github/workflows/home-conversion.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'lab/**'
+      - 'demosites/**'
+      - 'assets/home-conversion.css'
+      - 'scripts/test-home-conversion.mjs'
+      - '.github/workflows/home-conversion.yml'
+jobs:
+  links-and-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/test-home-conversion.mjs
