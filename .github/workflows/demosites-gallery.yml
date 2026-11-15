@@ -1,0 +1,23 @@
+name: DemoSites showcase fallback validation
+on:
+  pull_request:
+    paths:
+      - 'demosites/index.html'
+      - 'scripts/test-demosites-gallery.mjs'
+      - '.github/workflows/demosites-gallery.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'demosites/index.html'
+      - 'scripts/test-demosites-gallery.mjs'
+      - '.github/workflows/demosites-gallery.yml'
+jobs:
+  gallery-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/test-demosites-gallery.mjs
