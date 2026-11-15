@@ -275,16 +275,21 @@ test("manual-standard content pages expose enough structure to answer and route"
 });
 
 
-test("localized homepages keep current ChatGenius positioning", () => {
+test("localized homepages reflect ChatGenius studio positioning and Altovena link", () => {
   const expected = {
-    "fr/index.html": [/Systèmes IA pour les entreprises/i, /RealtyFlow\/Nexus/, /Applications, démos et produits/i],
-    "es/index.html": [/Sistemas de IA para empresas/i, /RealtyFlow\/Nexus/, /Apps, demos y productos/i],
-    "de/index.html": [/KI-Systeme für Unternehmen/i, /RealtyFlow\/Nexus/, /Apps, Demos und Produkte/i],
-    "ru/index.html": [/ИИ-системы для бизнеса/i, /RealtyFlow\/Nexus/, /Приложения, демо и продукты/i],
+    "fr/index.html": [/Nous transformons les idées/, /produits numériques/, /ALTOVENA/],
+    "es/index.html": [/Convertimos ideas/, /productos digitales/, /ALTOVENA/],
+    "de/index.html": [/Wir machen Ideen/, /digitalen Produkten/, /ALTOVENA/],
+    "ru/index.html": [/Превращаем идеи/, /цифровые продукты/, /ALTOVENA/],
   };
   for (const [file, patterns] of Object.entries(expected)) {
     const html = fs.readFileSync(file, "utf8");
-    for (const pattern of patterns) assert.match(html, pattern, file + " missing localized positioning");
+    for (const pattern of patterns) assert.match(html, pattern, file + " missing studio positioning");
+    assert.match(html, /href="\/nettsider\/"/, file + " must link to website offering");
+    assert.match(html, /href="\/spill\/"/, file + " must link to games");
+    assert.match(html, /href="\/apper\/"/, file + " must link to apps");
+    assert.match(html, /href="\/skreddersydde-ai-systemer\/"/, file + " must link to custom software");
+    assert.match(html, /href="https:\/\/altovena.com\/"/, file + " must link to professional brand");
   }
 });
 
