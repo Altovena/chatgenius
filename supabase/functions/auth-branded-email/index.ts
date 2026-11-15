@@ -38,15 +38,18 @@ Deno.serve(async req=>{
   }
   let apiKey;
   try{apiKey=required("RESEND_API_KEY")}catch{return json(503,"Email provider not configured")}
-  for(const email of emails){
-    let response;
-    try{
-      response=await fetch("https://api.resend.com/emails",{
-        method:"POST",headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-        body:JSON.stringify(email)
-      });
-    }catch{return json(502,"Email provider unreachable")}
-    if(!response.ok)return json(502,"Email provider rejected message");
-  }
+  // For secure email change, submit both confirmations in one atomic
+  // provider batch. If validation fails, neither message gets accepted.
+  // No logging of OTPs, recipient addresses, or provider response bodies.
+  const endpoint=emails.length>1
+    ?"https://api.resend.com/emails/batch":"https://api.resend.com/emails";
+  let response;
+  try{
+    response=await fetch(endpoint,{
+      method:"POST",headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
+      body:JSON.stringify(emails.length>1?emails:emails[0])
+    });
+  }catch{return json(502,"Email provider unreachable")}
+  if(!response.ok)return json(502,"Email provider rejected message");
   return new Response("{}",{status:200,headers:{"content-type":"application/json"}});
 });

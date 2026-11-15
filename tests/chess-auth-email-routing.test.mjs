@@ -5,7 +5,7 @@ const redirect="https://www.chatgenius.pro/spill/sjakk/?chessAccount=1";
 const from="Freddys Sjakkakademi <innlogging@chatgenius.pro>";
 const payload=(type="magiclink")=>({
  user:{email:"chess@example.org",new_email:"other@example.org"},
- email_data:{email_action_type:type,token_hash:"private-hash",token_hash_new:"current-hash",redirect_to:redirect}
+ email_data:{email_action_type:type,token:"12345678",token_hash:"private-hash",token_hash_new:"current-hash",redirect_to:redirect}
 });
 test("Only exact ChatGenius Chess callbacks are assigned the chess brand",()=>{
  assert.equal(chessRedirect(redirect),true);
@@ -39,7 +39,7 @@ test("Chess magic-link email has a verifiable correct redirect and domain identi
  assert.ok(email.html.includes("&amp;redirect_to="));
 });
 test("Each supported Auth action is branded without silently changing receiver",()=>{
- for(const type of ["signup","invite","magiclink","recovery","reauthentication"]){
+ for(const type of ["signup","invite","magiclink","recovery"]){
   const [email]=prepareChessMessages(payload(type),{from});
   assert.equal(email.to[0],"chess@example.org");
   assert.equal(email.from,from);
@@ -59,4 +59,31 @@ test("Reject unsupported actions and missing verified sender before email delive
  assert.throws(()=>prepareChessMessages(payload("wrong"),{from}));
  assert.throws(()=>prepareChessMessages({...payload(),email_data:{...payload().email_data,redirect_to:"https://evil.test/"}},{from}));
  assert.throws(()=>verificationLink({hash:"hash",type:"magiclink",redirect:"https://evil.test"}));
+});
+
+test("Reauthentication sends numeric OTP, not a broken Supabase verification link",()=>{
+ const [email]=prepareChessMessages(payload("reauthentication"),{from});
+ assert.equal(email.to[0],"chess@example.org");
+ assert.match(email.text,/12345678/);
+ assert.match(email.html,/12345678/);
+ assert.doesNotMatch(email.text,/https:\/\//);
+ assert.throws(()=>prepareChessMessages({
+  ...payload("reauthentication"),
+  email_data:{...payload("reauthentication").email_data,token:"not-a-code"}
+ },{from}),/Invalid reauthentication code/);
+});
+test("Sender must be verified ChatGenius domain, never Art or a lookalike",()=>{
+ assert.throws(()=>prepareChessMessages(payload(),{from:"Art <contact@art.example>"}),/verified domain/);
+ assert.throws(()=>prepareChessMessages(payload(),{from:"Fake <innlogging@chatgenius.pro.evil.tld>"}),/verified domain/);
+ const [message]=prepareChessMessages(payload(),{from});
+ assert.equal(message.from,from);
+});
+test("Server handler batches two email-change verifications, not two independent requests",async()=>{
+ const fs=await import("node:fs");
+ const handler=fs.readFileSync(new URL("../supabase/functions/auth-branded-email/index.ts",import.meta.url),"utf8");
+ assert.match(handler,/https:\/\/api\.resend\.com\/emails\/batch/);
+ assert.match(handler,/emails\.length>1\?emails:emails\[0\]/);
+ assert.doesNotMatch(handler,/for\(const email of emails\)/);
+ assert.match(handler,/AUTH_EMAIL_HOOK_ENABLED/);
+ assert.match(handler,/new Webhook\(secret\)\.verify/);
 });
