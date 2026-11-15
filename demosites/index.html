@@ -120,12 +120,30 @@
     .builder-wizard-nav button { min-height:46px; padding:10px 22px; border:1px solid var(--line); border-radius:12px; font:inherit; font-weight:700; cursor:pointer; }
     .builder-wizard-nav button:last-child { background:var(--teal); color:white; }
   </style>
+<style>
+/* Distinct schematic thumbnails for the three established classic layouts. */
+.cg-classic-heading{margin-top:42px}
+.cg-classic-gallery{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.cg-classic-gallery .showcase-card:first-child{grid-column:auto!important}
+.cg-design-graphic,.cg-design-gallery-graphic{display:flex;gap:7px;align-items:stretch;overflow:hidden;background:#e9eff0;padding:13px}
+.cg-design-graphic{height:115px}.cg-design-gallery-graphic{height:190px}
+.cg-design-split span:first-child{flex:1;background:linear-gradient(#234e55 20%,#b1d3d2 20% 30%,#dbe8e5 30%);border-radius:5px}
+.cg-design-split span:last-child{flex:1;background:linear-gradient(120deg,#233a46,#529b90 58%,#e2ac78);border-radius:5px}
+.cg-design-fullbleed{position:relative;background:linear-gradient(110deg,#11353e,#32817d,#d5a16d);align-items:end}
+.cg-design-fullbleed span{width:60%;height:33%;background:linear-gradient(#fff 0 10%,transparent 10% 28%,#fff9 28% 42%,transparent 42% 65%,#d8e5e8 65%);opacity:.85}
+.cg-design-editorial{background:#ede8df;gap:12px}
+.cg-design-editorial span:first-child{flex:1.3;background:linear-gradient(#353b3c 0 12%,transparent 12% 22%,#353b3c 22% 29%,transparent 29% 50%,#b7bbb5 50% 53%,transparent 53%)}
+.cg-design-editorial span:nth-child(2){flex:1;background:linear-gradient(130deg,#c59d7d,#f3d4b9)}
+.cg-design-editorial span:last-child{flex:.35;background:linear-gradient(#858986,#dad4cb)}
+.cg-design-classic strong,.cg-design-classic small{display:block;margin-top:7px}
+@media(max-width:900px){.cg-classic-gallery{grid-template-columns:1fr!important}}
+</style>
 </head>
 <body class="design-2027 commercial-2027">
   <header class="site-header">
     <a class="brand" href="/" aria-label="ChatGenius.pro hjem"><img src="../logo.jpeg" alt="" width="40" height="40"><span>ChatGenius.pro</span></a>
     <nav class="site-nav" aria-label="Hovedmeny">
-      <a href="#showcase">Demoer</a><a href="#start">Lag prøveside</a><a href="#guide">Steg for steg</a><a href="#packages">Priser</a>
+      <a href="/nettsider/">Nettsider</a><a href="#showcase">Design og demoer</a><a href="#start">Lag nettside</a><a href="#guide">Slik fungerer det</a><a href="#packages">Priser</a>
     </nav>
     <div class="header-right"><select class="lang-switch" aria-label="Språk / Language"></select><a class="header-action" href="#start">Lag prøvesiden min</a></div>
   </header>
@@ -136,7 +154,7 @@
         <p class="eyebrow">Gratis prøveside fra ChatGenius.pro</p>
         <h1 id="landing-title">Se den nye nettsiden din — før du betaler en krone.</h1>
         <p>Skriv inn nettadressen eller bedriftsnavnet. Systemet analyserer virksomheten, velger riktig bransje, skriver innhold og finner et godt hero-bilde. Finnes det ikke et godt bilde, lager AI-en et nytt. Du får en ferdig side som er live i fire dager.</p>
-        <div class="hero-actions"><a class="button button-primary" href="#start">Lag prøvesiden min nå</a><a class="button button-secondary" href="#showcase">Se fem ekte demoer</a><a class="button button-secondary" href="/demosites/demo/">Se 15 sek produktdemo</a></div>
+        <div class="hero-actions"><a class="button button-primary" href="#start">Lag prøvesiden min nå</a><a class="button button-secondary" href="#showcase">Se alle designene</a><a class="button button-secondary" href="/demosites/demo/">Se 15 sek produktdemo</a></div>
         <div class="trust-row"><span>0 kr å prøve</span><span>Ingen binding</span><span>Sikker betaling med Stripe</span><span>Hosting og SSL inkludert</span></div>
       </div>
       <div class="landing-panel" aria-label="Nøkkeltall">
@@ -147,7 +165,7 @@
     </section>
 
     <section id="showcase" class="sales-section" aria-labelledby="showcase-title">
-      <div class="section-heading"><p class="eyebrow">Ekte DemoSites</p><h2 id="showcase-title">Fem moderne uttrykk — samme enkle kjøpsprosess</h2><p>Demoene under er permanente, fiktive eksempler bygget av det samme systemet som lager kundesidene. Åpne dem i full størrelse og test på mobil.</p></div>
+      <div class="section-heading"><p class="eyebrow">Ekte DemoSites</p><h2 id="showcase-title">Åtte layoutvalg – fem Signature-design og tre klassiske</h2><p>De fem Signature-demoene er fiktive eksempler fra designmotoren. Lenger ned finner du også de tre klassiske layoutene. Velg et uttrykk og test det i full størrelse på mobil eller PC.</p></div>
       <div class="showcase-grid">
         <article class="showcase-card">
           <div class="browser-bar"><i></i><i></i><i></i><span>Nordlys Tannklinikk · Cinematic</span></div>
@@ -174,6 +192,12 @@
           <img class="showcase-shot" loading="lazy" src="https://image.thum.io/get/width/1400/crop/850/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-panorama-2026" alt="Skjermbilde av Panorama DemoSite for tak og fasade">
           <div class="showcase-copy"><h3>Panorama</h3><p>Bred, arkitektonisk og tillitsskapende presentasjon for bygg, eiendom, tak og fasade.</p><div class="showcase-tags"><span>Bygg</span><span>Arkitektur</span><span>Bred hero</span></div><a class="button button-secondary" href="https://realtyflow.chatgenius.pro/demosites/preview/showcase-panorama-2026?present=1" target="_blank" rel="noopener">Åpne Panorama-demo</a></div>
         </article>
+      </div>
+      <div class="section-heading cg-classic-heading"><p class="eyebrow">Tre flere layoutvalg</p><h3>Klassiske uttrykk – samme innhold, andre komposisjoner</h3><p>Disse bruker vårt eksisterende Cinematic-eksempel som innhold, men viser tre andre layouttyper. De er variasjoner av én demo, ikke tre nye kundecaser.</p></div>
+      <div class="showcase-grid cg-classic-gallery">
+        <article class="showcase-card"><div class="cg-design-gallery-graphic cg-design-split" aria-hidden="true"><span></span><span></span></div><div class="showcase-copy"><h3>Klassisk split</h3><p>To kolonner med tekst og bilde. Godt for tydelig innhold og en praktisk bedriftsnettside.</p><a class="button button-secondary" href="https://realtyflow.chatgenius.pro/demosites/preview/showcase-cinematic-2026?layout=split&amp;style=modern&amp;present=1" target="_blank" rel="noopener">Åpne split-varianten</a></div></article>
+        <article class="showcase-card"><div class="cg-design-gallery-graphic cg-design-fullbleed" aria-hidden="true"><span></span></div><div class="showcase-copy"><h3>Fullskjerm bilde</h3><p>Fotografiet tar plass, mens budskap og kontaktvalg står tydelig over motivet.</p><a class="button button-secondary" href="https://realtyflow.chatgenius.pro/demosites/preview/showcase-cinematic-2026?layout=fullbleed&amp;style=warm&amp;present=1" target="_blank" rel="noopener">Åpne fullskjerm-varianten</a></div></article>
+        <article class="showcase-card"><div class="cg-design-gallery-graphic cg-design-editorial" aria-hidden="true"><span></span><span></span><span></span></div><div class="showcase-copy"><h3>Magasin</h3><p>Redaksjonell layout med stor typografi, luft og rom for historie og innhold.</p><a class="button button-secondary" href="https://realtyflow.chatgenius.pro/demosites/preview/showcase-cinematic-2026?layout=editorial&amp;style=elegant&amp;present=1" target="_blank" rel="noopener">Åpne magasin-varianten</a></div></article>
       </div>
     </section>
 
@@ -255,6 +279,11 @@
               <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-cinematic-2026" alt="Cinematic layout med stort fotografi"><input type="radio" name="design_layout" value="cinematic"><strong>A – Cinematic</strong><small>Filmisk og eksklusiv</small></label>
               <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-bento-2026" alt="Bento layout med modulære seksjoner"><input type="radio" name="design_layout" value="bento"><strong>B – Bento</strong><small>Moderne og salgsorientert</small></label>
               <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-atelier-2026" alt="Atelier layout med redaksjonell komposisjon"><input type="radio" name="design_layout" value="atelier"><strong>C – Atelier</strong><small>Kreativ og raffinert</small></label>
+              <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-kinetic-2026" alt="Kinetic – energisk teknologiuttrykk"><input type="radio" name="design_layout" value="kinetic"><strong>D – Kinetic</strong><small>Dynamisk og energisk</small></label>
+              <label class="builder-design-card"><img loading="lazy" src="https://image.thum.io/get/width/600/crop/380/noanimate/https://realtyflow.chatgenius.pro/demosites/preview/showcase-panorama-2026" alt="Panorama – bred arkitektonisk komposisjon"><input type="radio" name="design_layout" value="panorama"><strong>E – Panorama</strong><small>Bred og arkitektonisk</small></label>
+              <label class="builder-design-card cg-design-classic"><div class="cg-design-graphic cg-design-split" aria-hidden="true"><span></span><span></span></div><input type="radio" name="design_layout" value="split"><strong>F – Klassisk split</strong><small>Bilde og tekst side om side</small></label>
+              <label class="builder-design-card cg-design-classic"><div class="cg-design-graphic cg-design-fullbleed" aria-hidden="true"><span></span></div><input type="radio" name="design_layout" value="fullbleed"><strong>G – Fullskjerm bilde</strong><small>Visuelt og direkte</small></label>
+              <label class="builder-design-card cg-design-classic"><div class="cg-design-graphic cg-design-editorial" aria-hidden="true"><span></span><span></span><span></span></div><input type="radio" name="design_layout" value="editorial"><strong>H – Magasin</strong><small>Redaksjonelt og minimalistisk</small></label>
             </div>
           </fieldset>
           <div class="builder-final" id="builder-final">
