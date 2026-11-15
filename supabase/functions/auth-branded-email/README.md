@@ -64,3 +64,13 @@ Referanser:
 - https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook
 - https://supabase.com/docs/guides/auth/auth-smtp
 - https://github.com/Altovena/chatgenius/issues/137
+
+## Kontrollert mot Supabase-dokumentasjonen 15.11.2026
+
+- `reauthentication` må sende `email_data.token` som en **engangskode**, ikke lage en vanlig `/auth/v1/verify`-URL.
+- `email_change` har reversert hash-navngiving med sikker bekreftelse. Begge e-postene leveres samlet via Resend `POST /emails/batch`; feil i validering skal stoppe hele batchen.
+- `CHESS_AUTH_FROM` begrenses av koden til `@chatgenius.pro` – dette beviser **ikke** at DNS/Resend har verifisert domenet. Det må kontrolleres separat.
+- Det delte Supabase-prosjektet kan sende ytterligere varsler, inkludert `email` og sikkerhetsvarsler. Denne prototypen implementerer ikke dem. En global hook er **ikke trygg å aktivere** før hver aktivert handling og merkevare har en korrekt rute eller annen sikker leveringsstrategi.
+- Ingen live-e-post ble sendt. Ingen provider-secret er lagt inn i kildekode eller Vercel.
+
+Supabase oppdatert skjema: https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook
