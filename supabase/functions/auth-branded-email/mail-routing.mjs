@@ -27,6 +27,8 @@ export function classifyBrand(payload){
 }
 export function validateSender(value){
   if(!nonEmpty(value,150)||!SENDER_REGEX.test(value))throw Error("Sender configuration is missing or invalid");
+  const address=value.match(SENDER_REGEX)?.[2]?.toLowerCase();
+  if(!address||!address.endsWith("@chatgenius.pro"))throw Error("ChatGenius sender must use its verified domain");
   return value;
 }
 function verifyBaseUrl(origin){
@@ -71,6 +73,16 @@ export function prepareChessMessages(payload,{from,authOrigin=PROJECT_ORIGIN}={}
     }
   }else infos.push([original,data.token_hash]);
   return infos.map(([to,hash])=>{
+    // Reauthentication uses an 8-digit OTP, not a clickable /verify link.
+    if(type==="reauthentication"){
+      const code=data.token;
+      if(!nonEmpty(code,30)||!/^[0-9]{4,12}$/.test(code))throw Error("Invalid reauthentication code");
+      const subject=subjects.reauthentication;
+      const text="Din bekreftelseskode for Freddys Sjakkakademi er: "+code+
+        "\n\nHvis du ikke ba om dette, kan du se bort fra e-posten.";
+      const html='<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto"><h1>Freddys Sjakkakademi</h1><p>Din engangskode:</p><p style="font-size:28px;font-weight:bold;letter-spacing:4px">'+escapeHtml(code)+'</p><p>Hvis du ikke ba om dette, kan du se bort fra e-posten.</p></div>';
+      return {from,to:[to],subject,text,html};
+    }
     const url=verificationLink({hash,type,redirect:data.redirect_to,authOrigin});
     const subject=subjects[type];
     const text="Hei!\n\nDu har bedt om en bekreftelseslenke til Freddys Sjakkakademi.\n\n"+url+"\n\nHvis du ikke ba om dette, kan du se bort fra e-posten.\n\nFreddys Sjakkakademi · chatgenius.pro";
