@@ -46,3 +46,21 @@ test("new presentation does not modify core games and app runtime declarations",
  assert.match(websites,/name="company"/);
  assert.match(custom,/human-in-the-loop|Human-in-the-loop/i);
 });
+
+test("Nettsider offers five signature previews and three classic layouts",()=>{
+ const builder=read("demosites/index.html");
+ const marketing=read("nettsider/index.html");
+ const options=["cinematic","bento","atelier","kinetic","panorama","split","fullbleed","editorial"];
+ for (const id of options){
+  assert.ok(builder.includes('name="design_layout" value="'+id+'"'),"missing builder choice "+id);
+ }
+ assert.ok(builder.includes("Åtte layoutvalg"));
+ assert.ok(marketing.includes("Åtte layoutvalg"));
+ for (const id of ["cinematic","bento","atelier","kinetic","panorama"]){
+  assert.ok(builder.includes("showcase-"+id+"-2026"),"missing signature demo "+id);
+ }
+ for(const id of ["split","fullbleed","editorial"]){
+  assert.ok(builder.includes("layout="+id),"missing classic demo variant "+id);
+ }
+ assert.match(builder,/href="\/nettsider\/">Nettsider<\/a>/);
+});
