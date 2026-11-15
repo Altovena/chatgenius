@@ -1,0 +1,30 @@
+name: Chess.com username field UI
+
+on:
+  pull_request:
+    paths:
+      - 'spill/sjakk/index.html'
+      - 'spill/sjakk/board-fixes.css'
+      - 'spill/sjakk/analysis.js'
+      - 'spill/sjakk/tests/chess-username-ui.test.cjs'
+      - '.github/workflows/chess-username-ui.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'spill/sjakk/index.html'
+      - 'spill/sjakk/board-fixes.css'
+      - 'spill/sjakk/analysis.js'
+      - 'spill/sjakk/tests/chess-username-ui.test.cjs'
+      - '.github/workflows/chess-username-ui.yml'
+permissions:
+  contents: read
+jobs:
+  username-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test spill/sjakk/tests/chess-username-ui.test.cjs

@@ -118,3 +118,21 @@ body,.shell,.content,.play-layout,.training-layout,.board-card,.board-frame,.che
 .game-trend-item small{font-size:.62rem;white-space:nowrap;color:var(--muted,#9cb3aa)}
 .game-trend>.muted:last-child{display:block;margin-top:.65rem}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+
+/* Chess.com-import: make the editable username unmistakable.
+   Actions no longer squeeze the field into a row of same-looking buttons. */
+.chess-import-setup{display:flex;flex-direction:column;gap:11px;margin:8px 0 13px;padding:18px;border:1px solid #54776b;border-radius:14px;background:#152f2d}
+.chess-username-label{display:block;color:#e0f1db;font-size:15px;font-weight:800;line-height:1.4}
+.chess-username-help{margin:-4px 0 2px;color:#b1c9be;font-size:12px;line-height:1.55}
+.chess-username-entry{display:flex;align-items:center;gap:11px;min-width:0;padding:0 14px;border:2px solid #aacba8;border-radius:11px;background:#f2f7ee;box-shadow:0 0 0 3px #aed6ae20;transition:border-color .15s,box-shadow .15s}
+.chess-username-entry:focus-within{border-color:#80c78d;box-shadow:0 0 0 4px #8de4a140}
+.chess-username-icon{flex:none;color:#254337;font-size:22px}
+.chess-username-entry #chessUser{box-sizing:border-box;display:block;width:100%;min-width:0;min-height:55px;margin:0;padding:12px 0;border:0;border-radius:0;background:transparent;color:#142c25;outline:0;font:inherit;font-size:17px;font-weight:650;line-height:1.4;caret-color:#164c31}
+.chess-username-entry #chessUser::placeholder{color:#536b5e;opacity:1;font-weight:500}
+.chess-import-actions{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:10px}
+.chess-import-actions .primary,.chess-import-actions .secondary{display:flex;align-items:center;justify-content:center;min-width:0;width:100%;min-height:48px;margin:0;padding:10px 12px;text-align:center;text-decoration:none;white-space:normal;line-height:1.4}
+.chess-import-setup .chess-auto-refresh{display:flex;align-items:flex-start;gap:9px;color:#c8dfd0;font-size:12px;line-height:1.5;cursor:pointer}
+.chess-import-setup .chess-auto-refresh input{flex:none;width:17px;height:17px;margin:0;accent-color:#b9d6ad}
+@media(max-width:1150px){.chess-import-actions{grid-template-columns:1fr}}
+@media(max-width:520px){.chess-import-setup{padding:14px}.chess-username-entry #chessUser{font-size:16px}}
