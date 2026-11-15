@@ -1,0 +1,31 @@
+name: ChatGenius product hub validation
+on:
+  pull_request:
+    paths:
+      - 'spill/index.html'
+      - 'apper/index.html'
+      - 'nettsider/index.html'
+      - 'skreddersydde-ai-systemer/index.html'
+      - 'assets/product-hubs.css'
+      - 'scripts/test-product-hubs.mjs'
+      - '.github/workflows/product-hubs.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'spill/index.html'
+      - 'apper/index.html'
+      - 'nettsider/index.html'
+      - 'skreddersydde-ai-systemer/index.html'
+      - 'assets/product-hubs.css'
+      - 'scripts/test-product-hubs.mjs'
+      - '.github/workflows/product-hubs.yml'
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/test-product-hubs.mjs
