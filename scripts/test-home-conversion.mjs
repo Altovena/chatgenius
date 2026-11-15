@@ -7,7 +7,8 @@ const read = (p) => fs.readFileSync(path.join(root,p),'utf8');
 const home = read('index.html'), lab=read('lab/index.html'), demosites=read('demosites/index.html');
 const resolveFile = (url) => {
   const clean = url.split(/[?#]/)[0].replace(/^\//,'');
-  if (!clean || clean.startsWith('#')) return null;
+  if (!clean) return fs.existsSync(path.join(root,'index.html'));
+  if (clean.startsWith('#')) return null;
   const relative = clean.replace(/\/$/, '/index.html');
   return fs.existsSync(path.join(root,relative)) && fs.statSync(path.join(root,relative)).isFile();
 };
