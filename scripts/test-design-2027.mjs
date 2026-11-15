@@ -7,7 +7,7 @@ const css = fs.readFileSync("assets/design-2027.css", "utf8");
 const js = fs.readFileSync("assets/design-2027.js", "utf8");
 
 test("homepage pilot loads the scoped 2027 design system", () => {
-  assert.match(html, /<body class="home-2027">/);
+  assert.match(html, /<body class="home-2027 home-conversion">/);
   assert.match(html, /href="assets\/design-2027\.css"/);
   assert.match(html, /src="assets\/design-2027\.js"/);
   assert.match(css, /body\.home-2027/);
