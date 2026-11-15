@@ -41,7 +41,7 @@ test('all on-site links resolve to existing pages',()=>{
 });
 test('all local static assets resolve',()=>{
  for(const [name,html] of [['home',home],['nettsider',websites],['lab',lab]]){
-  const urls=[...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:svg|jpg|jpeg|png|js|css))"/g)].map(m=>m[1]);
+  const urls=[...html.matchAll(/(?:src|href)="(\/[^"]+\.(?:svg|jpg|jpeg|png|webp|js|css))"/g)].map(m=>m[1]);
   for(const url of urls)assert.ok(isFile(url),name+' missing: '+url);
  }
 });
