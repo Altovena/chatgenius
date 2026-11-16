@@ -68,7 +68,7 @@ async def audit_design(browser, name, token, params, device, options):
                 and "Aster Data Studio" in body
                 and "Momentum Trening" not in body
             )
-            result["checks"]["fictional_showcase_labeled"] = "Fiktiv eksempelbedrift" in body
+            result["checks"]["fictional_showcase_labeled"] = "fiktiv eksempelbedrift" in body.lower()
             result["checks"]["no_customer_lead_form"] = await page.locator('form').count() == 0
 
         layout_metrics = await page.evaluate("""() => ({
