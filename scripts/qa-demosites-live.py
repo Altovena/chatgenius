@@ -62,6 +62,15 @@ async def audit_design(browser, name, token, params, device, options):
         )
         if name in {"cinematic", "bento", "atelier", "kinetic", "panorama", "mosaic", "signal"}:
             result["checks"]["signature_renderer"] = root > 0
+        if name == "signal":
+            result["checks"]["independent_software_showcase"] = (
+                bool(h1) and "Data som gir retning" in h1[0]
+                and "Aster Data Studio" in body
+                and "Momentum Trening" not in body
+            )
+            result["checks"]["fictional_showcase_labeled"] = "Fiktiv eksempelbedrift" in body
+            result["checks"]["no_customer_lead_form"] = await page.locator('form').count() == 0
+
         layout_metrics = await page.evaluate("""() => ({
           viewport: window.innerWidth,
           documentWidth: document.documentElement.scrollWidth,
