@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Cinematic – designillustrasjon</title><desc id="desc">Stilisert lokalt lagret designillustrasjon av Cinematic, ikke et skjermbilde av en levende nettside.</desc>
+<rect width="1400" height="850" fill="#07131a"/>
+<defs><linearGradient id="scene" x2="1" y2="1"><stop stop-color="#0e2730"/><stop offset=".5" stop-color="#53675e"/><stop offset="1" stop-color="#d5ad8d"/></linearGradient></defs><rect x="560" y="55" width="840" height="795" fill="url(#scene)"/><circle cx="1120" cy="310" r="220" fill="#cfb49c" opacity=".35"/><path d="M700 810Q775 440 1020 390Q1280 365 1400 90V850H700Z" fill="#102b31" opacity=".7"/><path d="M0 0H950L580 850H0Z" fill="#051219" opacity=".76"/>
+<rect x="0" y="0" width="1400" height="90" fill="#07131a" opacity=".92"/>
+<text x="70" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#f5f4f0">NORDLYS TANNKLINIKK</text>
+<text x="70" y="182" font-family="Arial,sans-serif" font-size="21" letter-spacing="4" fill="#b8d6c2">FILMISK · PREMIUM</text>
+<text x="66" y="316" font-family="Georgia,serif" font-size="92" font-weight="600" fill="#f5f4f0">Et nytt</text>
+<text x="66" y="425" font-family="Georgia,serif" font-size="78" fill="#f5f4f0">smil starter her</text>
+<rect x="72" y="502" width="335" height="70" rx="8" fill="#b8d6c2"/><text x="97" y="547" font-family="Arial,sans-serif" font-size="21" fill="#07131a" font-weight="700">UTFORSK DESIGNET ↗</text>
+<rect x="0" y="808" width="1400" height="42" fill="#07131a" opacity=".93"/><text x="70" y="835" font-family="Arial,sans-serif" font-size="16" letter-spacing="3" fill="#f5f4f0">CINEMATIC / LOKAL DESIGNILLUSTRASJON</text>
+</svg>
