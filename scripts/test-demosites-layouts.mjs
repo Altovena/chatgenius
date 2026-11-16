@@ -14,9 +14,10 @@ test("every existing layout is selectable in Nettsider builder",()=>{
   assert.match(builder,/name="design_layout" value="auto"/);
   assert.match(builder,/layout_variant: String\(data\.get\("design_layout"\)/);
 });
-test("seven signatures and three classics shown without invented customer demos",()=>{
+test("seven Signature layouts and three classics accurately labeled",()=>{
   for(const id of signatures) assert.ok(builder.includes("showcase-"+id+"-2026"),id);
-  for(const id of modern)assert.ok(builder.includes("layout="+id),id);
+  assert.ok(builder.includes("layout=mosaic"));
+  assert.ok(builder.includes("showcase-signal-studio-2026?present=1"));
   for(const id of classics)assert.ok(builder.includes("layout="+id),id);
   assert.ok(builder.includes("Ti layoutvalg"));
   assert.ok(sales.includes("Ti layoutvalg"));
