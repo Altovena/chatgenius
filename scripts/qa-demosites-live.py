@@ -21,7 +21,7 @@ DESIGNS = [
     ("kinetic", "showcase-kinetic-2026", {}),
     ("panorama", "showcase-panorama-2026", {}),
     ("mosaic", "showcase-atelier-2026", {"layout": "mosaic", "style": "warm"}),
-    ("signal", "showcase-kinetic-2026", {"layout": "signal", "style": "tech"}),
+    ("signal", "showcase-signal-studio-2026", {}),
     ("split", "showcase-cinematic-2026", {"layout": "split", "style": "modern"}),
     ("fullbleed", "showcase-cinematic-2026", {"layout": "fullbleed", "style": "warm"}),
     ("editorial", "showcase-cinematic-2026", {"layout": "editorial", "style": "elegant"}),
