@@ -94,7 +94,11 @@ async def audit_catalog(browser):
         result["checks"]["successful_http"] = result["http_status"] == 200
         result["checks"]["all_ten_selectable"] = all(x in available for x in expected)
         images = await page.locator('img[src*="/assets/demosites/"]').evaluate_all(
-            "(els) => els.map(el => ({src:el.getAttribute('src'),ok:el.complete && el.naturalWidth > 0}))"
+            """async (els) => Promise.all(els.map(async el => {
+              el.loading = 'eager';
+              try { await el.decode(); } catch (_) {}
+              return {src: el.getAttribute('src'), ok: el.complete && el.naturalWidth > 0};
+            }))"""
         )
         result["thumbnail_status"] = images
         result["checks"]["local_thumbnails_load"] = bool(images) and all(x["ok"] for x in images)
