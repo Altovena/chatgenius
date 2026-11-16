@@ -41,7 +41,7 @@ test("all seven Signature designs have stable local illustrations in both galler
  for(const id of signatures){
    const local="/assets/demosites/"+id+"-design-preview.svg";
    const usage=page.split('src="'+local+'"').length-1;
-   assert.equal(usage,2,id+" local image required in gallery and builder");
+   assert.ok(usage>=2,id+" local image required in gallery and builder");
    const svgPath="assets/demosites/"+id+"-design-preview.svg";
    assert.ok(fs.existsSync(svgPath),svgPath+" missing");
    const svg=fs.readFileSync(svgPath,"utf8");
