@@ -62,6 +62,23 @@ async def audit_design(browser, name, token, params, device, options):
         )
         if name in {"cinematic", "bento", "atelier", "kinetic", "panorama", "mosaic", "signal"}:
             result["checks"]["signature_renderer"] = root > 0
+        layout_metrics = await page.evaluate("""() => ({
+          viewport: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          headingSize: document.querySelector('h1') ? parseFloat(getComputedStyle(document.querySelector('h1')).fontSize) : null,
+          ctaBottom: document.querySelector('#top a[href="#kontakt"]')?.getBoundingClientRect().bottom ?? null,
+        })""")
+        result["layout_metrics"] = layout_metrics
+        if device == "mobile":
+            result["checks"]["no_horizontal_overflow"] = layout_metrics["documentWidth"] <= layout_metrics["viewport"] + 3
+        if name == "cinematic" and device == "desktop":
+            # Catches the oversized 7.5rem H1 that broke "tannbehandling" inside the word.
+            result["checks"]["cinematic_heading_bounded"] = (
+                layout_metrics["headingSize"] is not None and layout_metrics["headingSize"] <= 96
+            )
+            result["checks"]["primary_cta_above_fold"] = (
+                layout_metrics["ctaBottom"] is not None and layout_metrics["ctaBottom"] <= 920
+            )
         # Capture even failures: visual evidence is valuable for debugging.
         await page.screenshot(path=str(image_path), animations="disabled", full_page=False)
         result["screenshot"] = image_path.name
