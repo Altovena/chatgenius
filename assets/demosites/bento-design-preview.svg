@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Bento – designillustrasjon</title><desc id="desc">Stilisert lokalt lagret designillustrasjon av Bento, ikke et skjermbilde av en levende nettside.</desc>
+<rect width="1400" height="850" fill="#edf3ec"/>
+<rect x="750" y="128" width="575" height="305" rx="44" fill="#153b35"/><path d="M845 340Q875 265 1040 264H1170Q1235 275 1255 346L1250 360H835Z" fill="#b1e3ca"/><circle cx="934" cy="356" r="33" fill="#183c34"/><circle cx="1184" cy="356" r="33" fill="#183c34"/><rect x="750" y="457" width="260" height="266" rx="36" fill="#d2e2d6"/><rect x="1034" y="457" width="291" height="266" rx="36" fill="#dfcdb2"/><circle cx="879" cy="576" r="69" stroke="#2c7968" stroke-width="23" fill="none"/><path d="M1085 650L1180 536L1237 607" stroke="#94765b" stroke-width="19" fill="none"/>
+<rect x="0" y="0" width="1400" height="90" fill="#edf3ec" opacity=".92"/>
+<text x="70" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#132722">VESTFOLD BILSERVICE</text>
+<text x="70" y="182" font-family="Arial,sans-serif" font-size="21" letter-spacing="4" fill="#327766">MODULÆR · TYDELIG</text>
+<text x="66" y="316" font-family="Georgia,serif" font-size="92" font-weight="600" fill="#132722">Bilservice.</text>
+<text x="66" y="425" font-family="Georgia,serif" font-size="78" fill="#132722">Enklere.</text>
+<rect x="72" y="502" width="335" height="70" rx="8" fill="#327766"/><text x="97" y="547" font-family="Arial,sans-serif" font-size="21" fill="#edf3ec" font-weight="700">UTFORSK DESIGNET ↗</text>
+<rect x="0" y="808" width="1400" height="42" fill="#edf3ec" opacity=".93"/><text x="70" y="835" font-family="Arial,sans-serif" font-size="16" letter-spacing="3" fill="#132722">BENTO / LOKAL DESIGNILLUSTRASJON</text>
+</svg>
