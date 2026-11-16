@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Atelier – designillustrasjon</title>
+<desc id="desc">Eksempel på Atelier sitt redaksjonelle design med varm kremfarget bakgrunn, stor serif-typografi og asymmetrisk collage av interiørmotiv.</desc>
+<defs>
+  <linearGradient id="room" x2="1" y2="1"><stop stop-color="#a89278"/><stop offset=".5" stop-color="#dbcab6"/><stop offset="1" stop-color="#756b5d"/></linearGradient>
+  <linearGradient id="scene" x2=".6" y2="1"><stop stop-color="#d1bba6"/><stop offset=".58" stop-color="#a78d75"/><stop offset="1" stop-color="#605449"/></linearGradient>
+  <linearGradient id="lamp" x2="0" y2="1"><stop stop-color="#e8d8c4"/><stop offset="1" stop-color="#ae987d"/></linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="13" stdDeviation="18" flood-color="#493e33" flood-opacity=".18"/></filter>
+  <clipPath id="photo"><rect x="755" y="170" width="557" height="555"/></clipPath>
+</defs>
+<rect width="1400" height="850" fill="#eee9df"/>
+<rect width="1400" height="74" fill="#f5f0e8"/>
+<path d="M0 74H1400" stroke="#c8c0b3"/>
+<g fill="#3c362f"><text x="66" y="49" font-family="Georgia,serif" font-size="28" letter-spacing="5">ATELIER</text>
+<text x="1044" y="46" font-family="Arial,sans-serif" font-size="16" letter-spacing="3">PROSJEKTER</text>
+<text x="1207" y="46" font-family="Arial,sans-serif" font-size="16" letter-spacing="3">KONTAKT</text></g>
+<g font-family="Arial,sans-serif" font-size="18" letter-spacing="5" fill="#80756b">
+<text x="78" y="179">INTERIØR • DESIGN • ROM</text></g>
+<text x="77" y="279" font-family="Georgia,serif" font-size="94" fill="#292520">Rom som</text>
+<text x="77" y="385" font-family="Georgia,serif" font-size="104" font-style="italic" fill="#292520">forteller</text>
+<text x="77" y="490" font-family="Georgia,serif" font-size="102" fill="#292520">historier.</text>
+<rect x="78" y="554" width="390" height="2" fill="#bba58e"/>
+<text x="79" y="608" font-family="Arial,sans-serif" font-size="22" fill="#6e6459">Vi skaper varige rom med karakter,</text>
+<text x="79" y="641" font-family="Arial,sans-serif" font-size="22" fill="#6e6459">lys og sans for personlige detaljer.</text>
+<rect x="78" y="686" width="260" height="62" fill="#292520"/>
+<text x="108" y="725" font-family="Arial,sans-serif" font-size="18" letter-spacing="2" fill="#faf5ee">SE PROSJEKTENE  ↗</text>
+<rect x="755" y="170" width="557" height="555" fill="url(#scene)" filter="url(#shadow)"/>
+<g clip-path="url(#photo)">
+<rect x="755" y="170" width="557" height="555" fill="#d4bea8"/>
+<rect x="755" y="170" width="557" height="360" fill="url(#room)"/>
+<path d="M755 525H1312V725H755Z" fill="#b5a18b"/>
+<path d="M755 538L1312 520" stroke="#8c7b6b" stroke-width="7"/>
+<rect x="793" y="206" width="185" height="222" rx="95" fill="#e8d8c4"/>
+<rect x="809" y="224" width="151" height="185" rx="74" fill="#8f9d8b"/>
+<path d="M835 400Q902 320 946 385" stroke="#c4b5a0" stroke-width="16" fill="none"/>
+<rect x="1005" y="275" width="242" height="20" fill="#a18e79"/>
+<rect x="1013" y="294" width="10" height="135" fill="#a18e79"/>
+<rect x="1232" y="294" width="10" height="135" fill="#a18e79"/>
+<rect x="1017" y="312" width="198" height="118" rx="80" fill="#d8cfc1"/>
+<rect x="1007" y="396" width="230" height="118" rx="35" fill="#c9b9a4"/>
+<rect x="997" y="490" width="25" height="115" rx="8" fill="#947d6a"/>
+<rect x="1224" y="490" width="25" height="115" rx="8" fill="#947d6a"/>
+<ellipse cx="975" cy="602" rx="235" ry="39" fill="#8b7868" opacity=".35"/>
+<rect x="810" y="604" width="385" height="26" rx="12" fill="#705a49"/>
+<path d="M832 629L800 718M1168 629L1204 718" stroke="#705a49" stroke-width="18"/>
+<rect x="1068" y="556" width="88" height="44" rx="5" fill="#ebe0cc"/>
+<path d="M1070 554q41 -56 83 0" stroke="#ab795f" stroke-width="5" fill="none"/>
+<ellipse cx="1110" cy="551" rx="14" ry="10" fill="#61705b"/>
+<path d="M1110 542Q1050 495 1060 455M1110 540Q1175 490 1175 451" stroke="#526b55" stroke-width="8" fill="none"/>
+<path d="M1060 485q-45 -27 -58 -3M1170 480q40 -28 66 0" stroke="#647d5e" stroke-width="18" fill="none"/>
+<path d="M1285 170V380" stroke="#725e4c" stroke-width="9"/><path d="M1242 364H1328L1290 430Z" fill="url(#lamp)"/>
+</g>
+<g filter="url(#shadow)">
+<rect x="657" y="536" width="257" height="237" fill="#f6eee4" stroke="#eee3d8" stroke-width="10"/>
+<rect x="671" y="550" width="229" height="209" fill="#798874"/>
+<path d="M672 688L897 625V758H672Z" fill="#d5c9b0"/>
+<path d="M734 732V581M786 730V565M842 715V596" stroke="#4d6351" stroke-width="18"/>
+<path d="M684 617Q783 580 879 607" stroke="#a8b59a" stroke-width="28" fill="none"/>
+</g>
+<rect x="0" y="810" width="1400" height="40" fill="#e2d9cd"/>
+<text x="79" y="838" font-family="Arial,sans-serif" font-size="15" fill="#655b52" letter-spacing="2">ATELIER / KREATIV PORTFØLJE</text>
+<text x="1090" y="838" font-family="Arial,sans-serif" font-size="15" fill="#655b52" letter-spacing="2">DESIGNILLUSTRASJON</text>
+</svg>
