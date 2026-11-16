@@ -57,6 +57,12 @@ test("Nettsider and DemoSites do not depend on third-party screenshot service",(
  for(const layout of ["cinematic","bento","atelier","kinetic","panorama"]){
    assert.ok(page.includes("showcase-"+layout+"-2026?present=1"),layout+" demo URL must be preserved");
  }
- for(const layout of ["mosaic","signal"])
-   assert.ok(page.includes("layout="+layout),layout+" variation URL must be preserved");
+ assert.ok(page.includes("layout=mosaic"),"Mosaic variant URL must be preserved");
+ assert.ok(page.includes("showcase-signal-studio-2026?present=1"),"Signal dedicated demo must be linked");
+});
+
+test("Signal catalog link uses real independent fictional technology showcase",()=>{
+ assert.match(page,/showcase-signal-studio-2026\?present=1/);
+ assert.doesNotMatch(page,/showcase-kinetic-2026\?layout=signal/);
+ assert.match(page,/Aster Data Studio/);
 });
