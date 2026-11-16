@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Mosaic – designillustrasjon</title><desc id="desc">Stilisert lokalt lagret designillustrasjon av Mosaic, ikke et skjermbilde av en levende nettside.</desc>
+<rect width="1400" height="850" fill="#efe9de"/>
+<g transform="rotate(6 1030 410)"><rect x="810" y="115" width="455" height="585" fill="#c2a18a"/><path d="M840 630V185H1235V630Z" fill="#dbc8b3"/><circle cx="1055" cy="350" r="127" fill="#92866c"/><rect x="896" y="505" width="315" height="95" rx="14" fill="#b38d6f"/></g><g transform="rotate(-8 800 655)"><rect x="710" y="520" width="305" height="270" fill="#f6f0e5"/><rect x="732" y="540" width="260" height="228" fill="#6f8b78"/><path d="M735 700L970 600V770H735Z" fill="#cbbda0"/></g>
+<rect x="0" y="0" width="1400" height="90" fill="#efe9de" opacity=".92"/>
+<text x="70" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#382f29">KREATIVT STUDIO</text>
+<text x="70" y="182" font-family="Arial,sans-serif" font-size="21" letter-spacing="4" fill="#ad8467">KUNST · HISTORIEFORTELLING</text>
+<text x="66" y="316" font-family="Georgia,serif" font-size="92" font-weight="600" fill="#382f29">Rom for nye</text>
+<text x="66" y="425" font-family="Georgia,serif" font-size="78" fill="#382f29">perspektiver</text>
+<rect x="72" y="502" width="335" height="70" rx="8" fill="#ad8467"/><text x="97" y="547" font-family="Arial,sans-serif" font-size="21" fill="#efe9de" font-weight="700">UTFORSK DESIGNET ↗</text>
+<rect x="0" y="808" width="1400" height="42" fill="#efe9de" opacity=".93"/><text x="70" y="835" font-family="Arial,sans-serif" font-size="16" letter-spacing="3" fill="#382f29">MOSAIC / LOKAL DESIGNILLUSTRASJON</text>
+</svg>
