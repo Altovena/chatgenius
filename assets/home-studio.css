@@ -54,3 +54,8 @@
 @media(max-width:840px){.studio-hero{grid-template-columns:1fr;padding-top:70px;gap:42px}.studio-story,.studio-approach,.studio-person,.studio-altovena{grid-template-columns:1fr;gap:20px}.studio-altovena{padding:75px 28px}.studio-hero-work{grid-template-rows:240px 175px}.studio-mini-grid{grid-template-columns:1fr}.studio-heading-row{align-items:start;flex-direction:column}.studio-home .site-header{height:auto;flex-wrap:wrap}.studio-home .site-nav{display:flex;flex-wrap:wrap;justify-content:center;order:3;width:100%;gap:2px}.studio-home .site-nav a{font-size:.8rem;padding:7px 9px}}
 @media(max-width:520px){.studio-hero{padding:56px 18px 70px}.studio-hero-work{grid-template-rows:195px 155px;gap:9px}.studio-showcase span{bottom:11px;left:12px;right:9px}.studio-showcase strong{font-size:.83rem}.studio-showcase small{font-size:.6rem}.studio-section{padding:65px 18px}.studio-product-grid{grid-template-columns:1fr}.studio-product-card{min-height:265px}.studio-altovena{padding:65px 18px}.studio-hero-actions .button{width:100%}}
 @media(prefers-reduced-motion:reduce){.studio-showcase img,.studio-product-card{transition:none}.studio-showcase:hover img,.studio-product-card:hover{transform:none}}
+
+/* Keep the actual work visible and the linked image gallery keyboard-accessible. */
+.studio-showcase:focus-visible{outline:3px solid #a5f3e5;outline-offset:4px}
+.studio-showcase img{color:transparent}
+@media(max-width:520px){.studio-hero-work{grid-template-rows:210px 155px}.studio-showcase-large img{object-position:center center}.studio-showcase span{left:14px;right:14px}.studio-showcase::after{inset:25% 0 0}}
