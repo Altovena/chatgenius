@@ -21,7 +21,7 @@ DESIGNS = [
     ("kinetic", "showcase-kinetic-2026", {}),
     ("panorama", "showcase-panorama-2026", {}),
     ("mosaic", "showcase-atelier-2026", {"layout": "mosaic", "style": "warm"}),
-    ("signal", "showcase-kinetic-2026", {"layout": "signal", "style": "tech"}),
+    ("signal", "showcase-signal-studio-2026", {}),
     ("split", "showcase-cinematic-2026", {"layout": "split", "style": "modern"}),
     ("fullbleed", "showcase-cinematic-2026", {"layout": "fullbleed", "style": "warm"}),
     ("editorial", "showcase-cinematic-2026", {"layout": "editorial", "style": "elegant"}),
@@ -62,6 +62,15 @@ async def audit_design(browser, name, token, params, device, options):
         )
         if name in {"cinematic", "bento", "atelier", "kinetic", "panorama", "mosaic", "signal"}:
             result["checks"]["signature_renderer"] = root > 0
+        if name == "signal":
+            result["checks"]["independent_software_showcase"] = (
+                bool(h1) and "Data som gir retning" in h1[0]
+                and "Aster Data Studio" in body
+                and "Momentum Trening" not in body
+            )
+            result["checks"]["fictional_showcase_labeled"] = "fiktiv eksempelbedrift" in body.lower()
+            result["checks"]["no_customer_lead_form"] = await page.locator('form').count() == 0
+
         layout_metrics = await page.evaluate("""() => ({
           viewport: window.innerWidth,
           documentWidth: document.documentElement.scrollWidth,
