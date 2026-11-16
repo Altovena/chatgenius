@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 const page=fs.readFileSync("demosites/index.html","utf8");
 const signatures=["cinematic","bento","atelier","kinetic","panorama"];
-test("all five signature screenshots have distinct labelled fallback artwork",()=>{
+test("all five original signature cards have distinct fallback artwork",()=>{
  for(const name of signatures){
    assert.match(page,new RegExp('data-signature="'+name+'"'));
    assert.match(page,new RegExp('cg-signature-'+name));
@@ -34,4 +34,29 @@ test("Atelier thumbnail is served locally in gallery and builder",()=>{
  assert.match(art,/<title[^>]*>Atelier/);
  assert.match(page,/Designillustrasjon – åpne demoen/);
  assert.ok(page.includes("showcase-atelier-2026?present=1"),"real demo link must remain");
+});
+
+test("all seven Signature designs have stable local illustrations in both gallery and builder",()=>{
+ const signatures=["cinematic","bento","atelier","kinetic","panorama","mosaic","signal"];
+ for(const id of signatures){
+   const local="/assets/demosites/"+id+"-design-preview.svg";
+   const usage=page.split('src="'+local+'"').length-1;
+   assert.equal(usage,2,id+" local image required in gallery and builder");
+   const svgPath="assets/demosites/"+id+"-design-preview.svg";
+   assert.ok(fs.existsSync(svgPath),svgPath+" missing");
+   const svg=fs.readFileSync(svgPath,"utf8");
+   assert.match(svg,/<svg\b[^>]*viewBox="0 0 1400 850"/,id+" canvas");
+   assert.match(svg,/designillustrasjon/i,id+" must be labeled");
+ }
+});
+test("Nettsider and DemoSites do not depend on third-party screenshot service",()=>{
+ const websites=fs.readFileSync("nettsider/index.html","utf8");
+ assert.doesNotMatch(page,/image\.thum\.io/i);
+ assert.doesNotMatch(websites,/image\.thum\.io/i);
+ assert.match(websites,/assets\/demosites\/cinematic-design-preview\.svg/);
+ for(const layout of ["cinematic","bento","atelier","kinetic","panorama"]){
+   assert.ok(page.includes("showcase-"+layout+"-2026?present=1"),layout+" demo URL must be preserved");
+ }
+ for(const layout of ["mosaic","signal"])
+   assert.ok(page.includes("layout="+layout),layout+" variation URL must be preserved");
 });
