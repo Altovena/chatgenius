@@ -23,3 +23,15 @@ test("gallery contains ten layout choices with proper context",()=>{
    assert.ok(page.includes('name="design_layout" value="'+name+'"'),name+" missing");
  assert.match(page,/Ti layoutvalg/);
 });
+
+test("Atelier thumbnail is served locally in gallery and builder",()=>{
+ const local="/assets/demosites/atelier-design-preview.svg";
+ const usage=(page.match(/src="\/assets\/demosites\/atelier-design-preview\.svg"/g)||[]).length;
+ assert.equal(usage,2,"the gallery and the builder must both use the same local image");
+ assert.ok(fs.existsSync("assets/demosites/atelier-design-preview.svg"));
+ const art=fs.readFileSync("assets/demosites/atelier-design-preview.svg","utf8");
+ assert.match(art,/<svg[^>]*viewBox="0 0 1400 850"/);
+ assert.match(art,/<title[^>]*>Atelier/);
+ assert.match(page,/Designillustrasjon – åpne demoen/);
+ assert.ok(page.includes("showcase-atelier-2026?present=1"),"real demo link must remain");
+});
