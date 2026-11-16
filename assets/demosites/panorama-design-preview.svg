@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Panorama – designillustrasjon</title><desc id="desc">Stilisert lokalt lagret designillustrasjon av Panorama, ikke et skjermbilde av en levende nettside.</desc>
+<rect width="1400" height="850" fill="#e7eceb"/>
+<rect x="697" y="155" width="610" height="550" rx="42" fill="#244a53"/><path d="M730 670L730 420L1010 235L1275 420V670Z" fill="#a1bcc0"/><rect x="810" y="443" width="132" height="200" fill="#2b5660"/><rect x="960" y="443" width="250" height="200" fill="#ecddc2"/><path d="M775 429L1008 277L1245 429" stroke="#d1b493" stroke-width="16" fill="none"/><circle cx="1205" cy="239" r="68" fill="#cdb89b"/><path d="M705 682H1305" stroke="#b2d1c6" stroke-width="18"/>
+<rect x="0" y="0" width="1400" height="90" fill="#e7eceb" opacity=".92"/>
+<text x="70" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#17303a">FJORD &amp; FASADE</text>
+<text x="70" y="182" font-family="Arial,sans-serif" font-size="21" letter-spacing="4" fill="#528f8e">ARKITEKTUR · ROM</text>
+<text x="66" y="316" font-family="Georgia,serif" font-size="92" font-weight="600" fill="#17303a">Bygg for</text>
+<text x="66" y="425" font-family="Georgia,serif" font-size="78" fill="#17303a">fremtiden</text>
+<rect x="72" y="502" width="335" height="70" rx="8" fill="#528f8e"/><text x="97" y="547" font-family="Arial,sans-serif" font-size="21" fill="#e7eceb" font-weight="700">UTFORSK DESIGNET ↗</text>
+<rect x="0" y="808" width="1400" height="42" fill="#e7eceb" opacity=".93"/><text x="70" y="835" font-family="Arial,sans-serif" font-size="16" letter-spacing="3" fill="#17303a">PANORAMA / LOKAL DESIGNILLUSTRASJON</text>
+</svg>

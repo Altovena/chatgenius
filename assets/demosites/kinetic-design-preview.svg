@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 850" role="img" aria-labelledby="title desc">
+<title id="title">Kinetic – designillustrasjon</title><desc id="desc">Stilisert lokalt lagret designillustrasjon av Kinetic, ikke et skjermbilde av en levende nettside.</desc>
+<rect width="1400" height="850" fill="#090715"/>
+<defs><linearGradient id="orb"><stop stop-color="#ae49ef"/><stop offset="1" stop-color="#3b204d"/></linearGradient></defs><circle cx="1125" cy="395" r="288" fill="url(#orb)" opacity=".65"/><circle cx="1125" cy="395" r="217" fill="none" stroke="#e59ef7" stroke-width="7"/><circle cx="1125" cy="395" r="160" fill="none" stroke="#8a5dde" stroke-width="32"/><path d="M660 680L1320 130M650 745L1390 210" stroke="#85eacb" stroke-width="18" opacity=".8"/><circle cx="922" cy="530" r="23" fill="#82f4d2"/>
+<rect x="0" y="0" width="1400" height="90" fill="#090715" opacity=".92"/>
+<text x="70" y="58" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="4" fill="#f6f1ff">MOMENTUM TRENING</text>
+<text x="70" y="182" font-family="Arial,sans-serif" font-size="21" letter-spacing="4" fill="#bd89f4">BEVEGELSE · ENERGI</text>
+<text x="66" y="316" font-family="Georgia,serif" font-size="92" font-weight="600" fill="#f6f1ff">BEVEG</text>
+<text x="66" y="425" font-family="Georgia,serif" font-size="78" fill="#f6f1ff">DEG VIDERE</text>
+<rect x="72" y="502" width="335" height="70" rx="8" fill="#bd89f4"/><text x="97" y="547" font-family="Arial,sans-serif" font-size="21" fill="#090715" font-weight="700">UTFORSK DESIGNET ↗</text>
+<rect x="0" y="808" width="1400" height="42" fill="#090715" opacity=".93"/><text x="70" y="835" font-family="Arial,sans-serif" font-size="16" letter-spacing="3" fill="#f6f1ff">KINETIC / LOKAL DESIGNILLUSTRASJON</text>
+</svg>
