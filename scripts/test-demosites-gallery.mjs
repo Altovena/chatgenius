@@ -18,8 +18,8 @@ test("screenshots can fail without leaving an empty gallery",()=>{
  assert.match(page,/preview-unavailable/);
  assert.match(page,/DESIGNSKISSE/g);
 });
-test("gallery contains eight layout choices with proper context",()=>{
- for(const name of [...signatures,"split","fullbleed","editorial"])
+test("gallery contains ten layout choices with proper context",()=>{
+ for(const name of [...signatures,"mosaic","signal","split","fullbleed","editorial"])
    assert.ok(page.includes('name="design_layout" value="'+name+'"'),name+" missing");
- assert.match(page,/Åtte layoutvalg/);
+ assert.match(page,/Ti layoutvalg/);
 });
