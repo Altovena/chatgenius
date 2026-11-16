@@ -21,7 +21,7 @@ test("seven Signature layouts and three classics accurately labeled",()=>{
   for(const id of classics)assert.ok(builder.includes("layout="+id),id);
   assert.ok(builder.includes("Ti layoutvalg"));
   assert.ok(sales.includes("Ti layoutvalg"));
-  assert.match(builder,/ikke nye kundecaser/i);
+  assert.match(builder,/Ingen av dem er ekte kundecaser/i);
 });
 test("Nettsider is the product menu name everywhere touched",()=>{
   assert.match(builder,/href="\/nettsider\/">Nettsider<\/a>/);
