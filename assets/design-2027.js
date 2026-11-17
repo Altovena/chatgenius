@@ -1,3 +1,15 @@
+/* Google Tag Manager – ChatGenius.pro. Load once per document. */
+(function () {
+  if (window.__chatgeniusGtmLoaded) return;
+  window.__chatgeniusGtmLoaded = true;
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  var script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-KMBPNK4C';
+  document.head.appendChild(script);
+})();
+
 (() => {
   "use strict";
 
