@@ -1,6 +1,10 @@
 {
   "routes": [
     {
+      "src": "/api/demosites-request",
+      "dest": "https://realtyflow.chatgenius.pro/api/saas/demosites/request"
+    },
+    {
       "src": "/privacy-policy/?",
       "dest": "/privacy-policy.html"
     },
